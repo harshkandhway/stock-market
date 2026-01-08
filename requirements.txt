@@ -1,0 +1,16 @@
+# Stock Market Analyzer Pro - Dependencies
+# Python 3.9+ required
+
+# Data fetching
+yahooquery>=2.3.0
+
+# Data manipulation
+pandas>=1.5.0
+numpy>=1.23.0
+
+# Technical analysis indicators
+ta>=0.10.0
+
+# Development dependencies (optional, for running tests)
+# pytest>=7.0.0
+

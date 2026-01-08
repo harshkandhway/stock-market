@@ -253,18 +253,79 @@ def calculate_position_size(
     The 1% Rule: Never risk more than 1-2% of capital per trade
     
     Formula: Position Size = (Capital × Risk%) / (Entry - Stop)
+    
+    Args:
+        capital: Total capital available
+        entry_price: Entry price for the trade
+        stop_loss: Stop loss price
+        mode: Risk mode ('conservative', 'balanced', 'aggressive')
+    
+    Returns:
+        Dictionary with position sizing details or error information
     """
+    # Validate inputs
+    if capital is None or not isinstance(capital, (int, float)):
+        return {
+            'error': True,
+            'message': 'Invalid capital: must be a number',
+        }
+    
+    if capital <= 0:
+        return {
+            'error': True,
+            'message': f'Invalid capital: {capital} must be greater than 0',
+        }
+    
+    if entry_price is None or not isinstance(entry_price, (int, float)):
+        return {
+            'error': True,
+            'message': 'Invalid entry price: must be a number',
+        }
+    
+    if entry_price <= 0:
+        return {
+            'error': True,
+            'message': f'Invalid entry price: {entry_price} must be greater than 0',
+        }
+    
+    if stop_loss is None or not isinstance(stop_loss, (int, float)):
+        return {
+            'error': True,
+            'message': 'Invalid stop loss: must be a number',
+        }
+    
+    if stop_loss <= 0:
+        return {
+            'error': True,
+            'message': f'Invalid stop loss: {stop_loss} must be greater than 0',
+        }
+    
+    # Validate mode
+    if mode not in RISK_MODES:
+        return {
+            'error': True,
+            'message': f'Invalid mode: {mode}. Must be one of {list(RISK_MODES.keys())}',
+        }
+    
     mode_config = RISK_MODES[mode]
     risk_pct = mode_config['risk_per_trade']
     
     risk_amount = capital * risk_pct
     stop_distance = abs(entry_price - stop_loss)
-    stop_distance_pct = (stop_distance / entry_price) * 100
     
+    # Check for zero stop distance
     if stop_distance == 0:
         return {
             'error': True,
-            'message': 'Invalid stop loss (same as entry price)',
+            'message': 'Invalid stop loss: same as entry price (no risk)',
+        }
+    
+    # Check for unreasonably large stop distance (more than 50% of entry)
+    stop_distance_pct = (stop_distance / entry_price) * 100
+    if stop_distance_pct > 50:
+        return {
+            'error': True,
+            'message': f'Stop distance too large: {stop_distance_pct:.1f}% of entry price',
         }
     
     # Calculate position size

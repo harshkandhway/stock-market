@@ -53,26 +53,75 @@ from output import (
 
 
 def fetch_data(symbol: str, period: str = '1y') -> pd.DataFrame:
-    """Fetch historical data from Yahoo Finance"""
+    """
+    Fetch historical data from Yahoo Finance
+    
+    Args:
+        symbol: Stock ticker symbol (e.g., 'RELIANCE.NS')
+        period: Data period ('1y', '3mo', etc.)
+    
+    Returns:
+        DataFrame with OHLCV data, or empty DataFrame on error
+    """
+    if not symbol or not isinstance(symbol, str):
+        print(f"  Error: Invalid symbol '{symbol}'")
+        return pd.DataFrame()
+    
     try:
         ticker = Ticker(symbol)
         df = ticker.history(period=period, interval='1d')
         
+        # Check for error message (yahooquery sometimes returns strings)
         if isinstance(df, str):
             print(f"  Error fetching {symbol}: {df}")
             return pd.DataFrame()
         
-        if df.empty or 'close' not in df.columns:
-            print(f"  No data available for {symbol}")
+        # Validate DataFrame structure
+        if not isinstance(df, pd.DataFrame):
+            print(f"  Error: Unexpected data type for {symbol}")
+            return pd.DataFrame()
+        
+        if df.empty:
+            print(f"  Warning: No data available for {symbol} (period: {period})")
+            return pd.DataFrame()
+        
+        # Check required columns
+        required_columns = ['close', 'high', 'low', 'open']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            print(f"  Error: Missing required columns for {symbol}: {missing_columns}")
+            return pd.DataFrame()
+        
+        # Validate data quality
+        if len(df) < 50:
+            print(f"  Warning: Insufficient data for {symbol} ({len(df)} rows, need at least 50)")
+        
+        # Check for NaN values in critical columns
+        if df['close'].isna().all():
+            print(f"  Error: No valid price data for {symbol}")
             return pd.DataFrame()
         
         # Flatten multi-index if present
         if isinstance(df.index, pd.MultiIndex):
             df = df.reset_index(level=0, drop=True)
         
+        # Ensure index is datetime
+        if not isinstance(df.index, pd.DatetimeIndex):
+            try:
+                df.index = pd.to_datetime(df.index)
+            except (ValueError, TypeError):
+                print(f"  Warning: Could not convert index to datetime for {symbol}")
+        
         return df
+        
+    except KeyError as e:
+        print(f"  Error: Invalid period '{period}' for {symbol}: {e}")
+        return pd.DataFrame()
+    except AttributeError as e:
+        print(f"  Error: Invalid symbol format '{symbol}': {e}")
+        return pd.DataFrame()
     except Exception as e:
-        print(f"  Error fetching {symbol}: {e}")
+        print(f"  Error fetching {symbol}: {type(e).__name__}: {e}")
         return pd.DataFrame()
 
 
@@ -85,14 +134,42 @@ def analyze_stock(
     """
     Perform complete technical analysis on a stock
     
-    Returns comprehensive analysis dictionary
+    Args:
+        symbol: Stock ticker symbol
+        df: DataFrame with OHLCV data
+        mode: Risk mode ('conservative', 'balanced', 'aggressive')
+        timeframe: Timeframe ('short' or 'medium')
+    
+    Returns:
+        Comprehensive analysis dictionary
+    
+    Raises:
+        ValueError: If inputs are invalid or analysis cannot be performed
     """
+    # Validate inputs
+    if not symbol or not isinstance(symbol, str):
+        raise ValueError(f"Invalid symbol: {symbol}")
+    
+    if df is None or df.empty:
+        raise ValueError(f"Invalid or empty DataFrame for {symbol}")
+    
+    if mode not in RISK_MODES:
+        raise ValueError(f"Invalid mode: {mode}. Must be one of {list(RISK_MODES.keys())}")
+    
+    if timeframe not in TIMEFRAME_CONFIGS:
+        raise ValueError(f"Invalid timeframe: {timeframe}. Must be 'short' or 'medium'")
+    
     # Get configurations
     tf_config = TIMEFRAME_CONFIGS[timeframe]
     mode_config = RISK_MODES[mode]
     
-    # Calculate all indicators
-    indicators = calculate_all_indicators(df, timeframe)
+    # Calculate all indicators (may raise ValueError)
+    try:
+        indicators = calculate_all_indicators(df, timeframe)
+    except ValueError as e:
+        raise ValueError(f"Indicator calculation failed for {symbol}: {e}")
+    except Exception as e:
+        raise RuntimeError(f"Unexpected error calculating indicators for {symbol}: {e}")
     
     # Check hard filters
     is_buy_blocked, buy_block_reasons = check_hard_filters(indicators, 'buy')
@@ -182,16 +259,66 @@ def analyze_stock(
 
 
 def get_capital_interactive() -> Optional[float]:
-    """Get capital from user interactively"""
+    """
+    Get capital from user interactively with validation
+    
+    Returns:
+        Capital amount as float, or None if cancelled/invalid
+    """
     try:
         response = input("\n  Would you like to calculate position sizes? (y/n): ").strip().lower()
-        if response in ['y', 'yes']:
+        if response not in ['y', 'yes']:
+            return None
+        
+        max_attempts = 3
+        for attempt in range(max_attempts):
             capital_str = input(f"  Enter your capital ({CURRENCY_SYMBOL}): ").strip()
-            capital_str = capital_str.replace(',', '').replace(CURRENCY_SYMBOL, '')
-            return float(capital_str)
-    except (ValueError, EOFError, KeyboardInterrupt):
-        pass
-    return None
+            
+            if not capital_str:
+                print("  Error: Capital cannot be empty")
+                continue
+            
+            # Clean input: remove commas, currency symbols, whitespace
+            capital_str = capital_str.replace(',', '').replace(CURRENCY_SYMBOL, '').strip()
+            
+            try:
+                capital = float(capital_str)
+                
+                # Validate capital amount
+                if capital <= 0:
+                    print(f"  Error: Capital must be greater than 0")
+                    continue
+                
+                if capital < 1000:
+                    print(f"  Warning: Capital ({CURRENCY_SYMBOL}{capital:,.2f}) is very low")
+                    confirm = input("  Continue anyway? (y/n): ").strip().lower()
+                    if confirm not in ['y', 'yes']:
+                        return None
+                
+                if capital > 1e12:  # 1 trillion
+                    print(f"  Error: Capital amount seems unreasonably high")
+                    continue
+                
+                return capital
+                
+            except ValueError:
+                print(f"  Error: Invalid number format. Please enter a valid amount (attempt {attempt + 1}/{max_attempts})")
+                if attempt == max_attempts - 1:
+                    print("  Maximum attempts reached. Skipping position sizing.")
+                    return None
+                continue
+        
+        return None
+        
+    except EOFError:
+        print("\n  Input cancelled (EOF)")
+        return None
+    except KeyboardInterrupt:
+        print("\n  Input cancelled by user")
+        return None
+    except Exception as e:
+        print(f"  Unexpected error getting capital: {e}")
+        return None
 
 
 def main():
@@ -261,10 +388,21 @@ Examples:
     tf_config = TIMEFRAME_CONFIGS[args.timeframe]
     data_period = tf_config['data_period']
     
+    # Validate symbols
+    if not args.symbols:
+        print("\n  Error: No symbols provided for analysis")
+        return
+    
     # Analyze each stock
     analyses = []
     
     for symbol in args.symbols:
+        # Validate symbol format
+        if not symbol or not isinstance(symbol, str) or len(symbol.strip()) == 0:
+            print(f"  Warning: Skipping invalid symbol '{symbol}'")
+            continue
+        
+        symbol = symbol.strip().upper()
         print(f"\n  Fetching data for {symbol}...")
         df = fetch_data(symbol, data_period)
         
@@ -273,8 +411,15 @@ Examples:
             continue
         
         print(f"  Analyzing {symbol}...")
-        analysis = analyze_stock(symbol, df, args.mode, args.timeframe)
-        analyses.append(analysis)
+        try:
+            analysis = analyze_stock(symbol, df, args.mode, args.timeframe)
+            analyses.append(analysis)
+        except ValueError as e:
+            print(f"  Error analyzing {symbol}: {e}")
+            continue
+        except Exception as e:
+            print(f"  Unexpected error analyzing {symbol}: {type(e).__name__}: {e}")
+            continue
     
     if not analyses:
         print("\n  No stocks could be analyzed. Please check your symbols.")
@@ -282,6 +427,14 @@ Examples:
     
     # Get capital if not provided via CLI
     capital = args.capital
+    if capital is not None:
+        # Validate CLI-provided capital
+        if capital <= 0:
+            print(f"\n  Error: Invalid capital amount: {capital}")
+            capital = None
+        elif capital < 1000:
+            print(f"\n  Warning: Capital ({CURRENCY_SYMBOL}{capital:,.2f}) is very low")
+    
     if capital is None and (args.allocate or len(analyses) == 1):
         capital = get_capital_interactive()
     

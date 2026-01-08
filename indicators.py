@@ -485,15 +485,56 @@ def calculate_all_indicators(df: pd.DataFrame, timeframe: str = 'medium') -> Dic
     
     Returns:
         Dictionary containing all calculated indicators
+    
+    Raises:
+        ValueError: If DataFrame is invalid or insufficient data
     """
+    # Validate inputs
+    if df is None or not isinstance(df, pd.DataFrame):
+        raise ValueError("Invalid DataFrame: must be a pandas DataFrame")
+    
+    if df.empty:
+        raise ValueError("DataFrame is empty")
+    
+    # Validate timeframe
+    if timeframe not in TIMEFRAME_CONFIGS:
+        raise ValueError(f"Invalid timeframe '{timeframe}'. Must be 'short' or 'medium'")
+    
     config = TIMEFRAME_CONFIGS[timeframe]
+    
+    # Check required columns
+    required_columns = ['close', 'high', 'low']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        raise ValueError(f"Missing required columns: {missing_columns}")
+    
+    # Check minimum data length (need at least 200 days for medium, 100 for short)
+    min_length = 200 if timeframe == 'medium' else 100
+    if len(df) < min_length:
+        raise ValueError(
+            f"Insufficient data: {len(df)} rows, need at least {min_length} "
+            f"for {timeframe} timeframe"
+        )
     
     close = df['close']
     high = df['high']
     low = df['low']
     
+    # Validate price data
+    if close.isna().all() or close.iloc[-1] <= 0:
+        raise ValueError("Invalid price data: close prices are missing or invalid")
+    
+    if (high < low).any():
+        raise ValueError("Invalid OHLC data: high < low detected")
+    
+    if (high < close).any() or (low > close).any():
+        raise ValueError("Invalid OHLC data: close price outside high/low range")
+    
     # Current price
-    current_price = close.iloc[-1]
+    current_price = float(close.iloc[-1])
+    
+    if current_price <= 0:
+        raise ValueError(f"Invalid current price: {current_price}")
     
     # Calculate all indicators
     emas = calculate_emas(close, config)
