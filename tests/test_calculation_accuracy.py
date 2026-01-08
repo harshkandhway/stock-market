@@ -4,19 +4,25 @@ Tests that calculations match expected mathematical formulas and known values
 """
 
 import unittest
+import sys
+import os
 import pandas as pd
 import numpy as np
-from indicators import (
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.indicators import (
     calculate_rsi, calculate_macd, calculate_emas,
     calculate_atr, calculate_bollinger_bands,
     calculate_support_resistance, calculate_all_indicators
 )
-from signals import calculate_all_signals, get_confidence_level
-from risk_management import (
+from src.core.signals import calculate_all_signals, get_confidence_level
+from src.core.risk_management import (
     calculate_position_size, validate_risk_reward,
     calculate_targets, calculate_stoploss
 )
-from config import TIMEFRAME_CONFIGS, RISK_MODES
+from src.core.config import TIMEFRAME_CONFIGS, RISK_MODES
 
 
 class TestCalculationAccuracy(unittest.TestCase):

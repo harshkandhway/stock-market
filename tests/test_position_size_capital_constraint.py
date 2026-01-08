@@ -4,8 +4,14 @@ These test cases verify behavior when calculated position size exceeds available
 """
 
 import unittest
-from risk_management import calculate_position_size
-from config import RISK_MODES
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.risk_management import calculate_position_size
+from src.core.config import RISK_MODES
 
 
 class TestPositionSizeCapitalConstraint(unittest.TestCase):

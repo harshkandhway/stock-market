@@ -3,12 +3,18 @@ Unit tests for signals module
 """
 
 import unittest
-from signals import (
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.signals import (
     check_hard_filters, calculate_trend_signals, calculate_momentum_signals,
     calculate_confirmation_signals, calculate_all_signals,
     get_confidence_level, determine_recommendation
 )
-from config import HARD_FILTERS, RISK_MODES
+from src.core.config import HARD_FILTERS, RISK_MODES
 
 
 class TestSignals(unittest.TestCase):

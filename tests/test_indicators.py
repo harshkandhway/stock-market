@@ -5,13 +5,19 @@ Unit tests for indicators module
 import unittest
 import pandas as pd
 import numpy as np
-from indicators import (
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.indicators import (
     calculate_emas, calculate_rsi, calculate_macd, calculate_adx,
     calculate_atr, calculate_bollinger_bands, calculate_stochastic,
     calculate_volume_indicators, calculate_support_resistance,
     calculate_fibonacci_levels, calculate_momentum, calculate_all_indicators
 )
-from config import TIMEFRAME_CONFIGS
+from src.core.config import TIMEFRAME_CONFIGS
 
 
 class TestIndicators(unittest.TestCase):

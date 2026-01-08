@@ -3,7 +3,13 @@ Unit tests for config module
 """
 
 import unittest
-from config import (
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.config import (
     TIMEFRAME_CONFIGS, RISK_MODES, SIGNAL_WEIGHTS,
     HARD_FILTERS, RECOMMENDATION_THRESHOLDS,
     CONFIDENCE_LEVELS, DEFAULT_MODE, DEFAULT_TIMEFRAME

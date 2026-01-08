@@ -3,7 +3,13 @@ Unit tests for risk_management module
 """
 
 import unittest
-from risk_management import (
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.risk_management import (
     calculate_targets, calculate_stoploss, validate_risk_reward,
     calculate_trailing_stops, calculate_position_size,
     calculate_portfolio_allocation

@@ -1,0 +1,191 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+*.pyd
+
+# =============================================================================
+# Virtual Environment
+# =============================================================================
+venv/
+ENV/
+env/
+.venv
+venv.bak/
+env.bak/
+
+# =============================================================================
+# Build / Distribution / Packaging
+# =============================================================================
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# =============================================================================
+# IDE / Editor
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.vscode-test/
+
+# =============================================================================
+# Environment Variables & Secrets
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# =============================================================================
+# Database Files
+# =============================================================================
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+data/bot.db
+data/bot.db-journal
+data/*.db
+data/*.db-journal
+
+# =============================================================================
+# Logs
+# =============================================================================
+logs/
+*.log
+*.log.*
+log/
+
+# =============================================================================
+# OS Files
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# =============================================================================
+# Testing & Coverage
+# =============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+test-results/
+coverage/
+
+# =============================================================================
+# Type Checkers
+# =============================================================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# =============================================================================
+# Jupyter Notebook
+# =============================================================================
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# =============================================================================
+# PyInstaller
+# =============================================================================
+*.manifest
+*.spec
+
+# =============================================================================
+# Project Specific
+# =============================================================================
+# Database migrations (keep structure, ignore versions)
+# src/bot/database/migrations/versions/*.py
+# Uncomment above if you want to ignore migration versions
+
+# Chart/Image outputs
+*.png
+*.jpg
+*.jpeg
+charts/
+images/
+output/
+
+# Cache files
+.cache/
+*.cache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Data files (keep structure, ignore generated data)
+# Uncomment if you want to ignore all data files:
+# data/*.csv
+# data/*.json
+
+# Alembic
+alembic.ini.bak
+
+# =============================================================================
+# OneDrive / Cloud Storage
+# =============================================================================
+# OneDrive specific files
+~$*
+*.odtmp

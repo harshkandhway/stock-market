@@ -4,11 +4,17 @@ Tests at least 10 different stocks/ETFs to verify calculations work with real da
 """
 
 import unittest
-from stock_analyzer_pro import fetch_data, analyze_stock
-from indicators import calculate_all_indicators
-from signals import calculate_all_signals
-from risk_management import calculate_position_size, validate_risk_reward
-from config import RISK_MODES, TIMEFRAME_CONFIGS
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.cli.stock_analyzer_pro import fetch_data, analyze_stock
+from src.core.indicators import calculate_all_indicators
+from src.core.signals import calculate_all_signals
+from src.core.risk_management import calculate_position_size, validate_risk_reward
+from src.core.config import RISK_MODES, TIMEFRAME_CONFIGS
 
 
 class TestRealMarketData(unittest.TestCase):

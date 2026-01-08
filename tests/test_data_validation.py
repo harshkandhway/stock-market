@@ -4,12 +4,18 @@ with real-world scenarios and known reference values
 """
 
 import unittest
+import sys
+import os
 import pandas as pd
 import numpy as np
-from stock_analyzer_pro import fetch_data, analyze_stock
-from indicators import calculate_all_indicators
-from signals import calculate_all_signals
-from risk_management import calculate_position_size, validate_risk_reward
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.cli.stock_analyzer_pro import fetch_data, analyze_stock
+from src.core.indicators import calculate_all_indicators
+from src.core.signals import calculate_all_signals
+from src.core.risk_management import calculate_position_size, validate_risk_reward
 
 
 class TestDataValidation(unittest.TestCase):
