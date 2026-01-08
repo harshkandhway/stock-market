@@ -102,7 +102,47 @@ def init_db():
     
     # Create all tables
     Base.metadata.create_all(bind=engine)
+    
+    # Run migrations to add new columns
+    migrate_database()
+    
     safe_print("✅ Database initialized successfully!")
+
+
+def migrate_database():
+    """
+    Run migrations to add new columns to existing tables.
+    SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we check first.
+    """
+    from sqlalchemy import text, inspect
+    
+    try:
+        inspector = inspect(engine)
+        
+        # Check if user_settings table exists
+        if 'user_settings' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('user_settings')]
+            
+            # Add investment_horizon column if it doesn't exist
+            if 'investment_horizon' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN investment_horizon VARCHAR(20) DEFAULT '3months'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added investment_horizon column")
+            
+            # Add beginner_mode column if it doesn't exist
+            if 'beginner_mode' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN beginner_mode BOOLEAN DEFAULT 1"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added beginner_mode column")
+    
+    except Exception as e:
+        safe_print(f"⚠️ Migration warning: {e}")
 
 
 def drop_db():
@@ -523,6 +563,328 @@ def clear_user_alerts(db: Session, telegram_id: int) -> int:
     count = db.query(Alert).filter(Alert.user_id == user.id).delete()
     db.commit()
     return count
+
+
+# =============================================================================
+# PORTFOLIO MANAGEMENT
+# =============================================================================
+
+def get_user_portfolio(db: Session, telegram_id: int) -> List:
+    """
+    Get user's portfolio positions
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+    
+    Returns:
+        List of Portfolio objects
+    """
+    from src.bot.database.models import User, Portfolio
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return []
+    
+    return db.query(Portfolio).filter(Portfolio.user_id == user.id).order_by(Portfolio.added_at.desc()).all()
+
+
+def add_portfolio_position(
+    db: Session,
+    telegram_id: int,
+    symbol: str,
+    shares: float,
+    avg_buy_price: float,
+    notes: Optional[str] = None
+) -> Optional[Any]:
+    """
+    Add or update a portfolio position
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        symbol: Stock symbol
+        shares: Number of shares
+        avg_buy_price: Average buy price per share
+        notes: Optional notes
+    
+    Returns:
+        Portfolio object or None if failed
+    """
+    from src.bot.database.models import User, Portfolio
+    from datetime import datetime
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return None
+    
+    symbol = symbol.upper().strip()
+    
+    # Check if position already exists
+    existing = db.query(Portfolio).filter(
+        Portfolio.user_id == user.id,
+        Portfolio.symbol == symbol
+    ).first()
+    
+    if existing:
+        # Update existing position (weighted average for price)
+        total_cost = (existing.shares * existing.avg_buy_price) + (shares * avg_buy_price)
+        total_shares = existing.shares + shares
+        new_avg_price = total_cost / total_shares if total_shares > 0 else avg_buy_price
+        
+        existing.shares = total_shares
+        existing.avg_buy_price = new_avg_price
+        existing.updated_at = datetime.utcnow()
+        if notes:
+            existing.notes = notes
+        
+        db.commit()
+        db.refresh(existing)
+        return existing
+    else:
+        # Create new position
+        position = Portfolio(
+            user_id=user.id,
+            symbol=symbol,
+            shares=shares,
+            avg_buy_price=avg_buy_price,
+            notes=notes
+        )
+        
+        db.add(position)
+        db.commit()
+        db.refresh(position)
+        return position
+
+
+def remove_portfolio_position(db: Session, telegram_id: int, symbol: str) -> bool:
+    """
+    Remove a portfolio position
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        symbol: Stock symbol to remove
+    
+    Returns:
+        True if removed, False if not found
+    """
+    from src.bot.database.models import User, Portfolio
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return False
+    
+    symbol = symbol.upper().strip()
+    
+    position = db.query(Portfolio).filter(
+        Portfolio.user_id == user.id,
+        Portfolio.symbol == symbol
+    ).first()
+    
+    if not position:
+        return False
+    
+    db.delete(position)
+    db.commit()
+    return True
+
+
+def update_portfolio_position(
+    db: Session,
+    telegram_id: int,
+    symbol: str,
+    shares: Optional[float] = None,
+    avg_buy_price: Optional[float] = None,
+    notes: Optional[str] = None
+) -> Optional[Any]:
+    """
+    Update a portfolio position
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        symbol: Stock symbol
+        shares: New number of shares (optional)
+        avg_buy_price: New average buy price (optional)
+        notes: New notes (optional)
+    
+    Returns:
+        Updated Portfolio object or None if not found
+    """
+    from src.bot.database.models import User, Portfolio
+    from datetime import datetime
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return None
+    
+    symbol = symbol.upper().strip()
+    
+    position = db.query(Portfolio).filter(
+        Portfolio.user_id == user.id,
+        Portfolio.symbol == symbol
+    ).first()
+    
+    if not position:
+        return None
+    
+    if shares is not None:
+        position.shares = shares
+    if avg_buy_price is not None:
+        position.avg_buy_price = avg_buy_price
+    if notes is not None:
+        position.notes = notes
+    
+    position.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(position)
+    
+    return position
+
+
+# =============================================================================
+# SCHEDULED REPORTS MANAGEMENT
+# =============================================================================
+
+def get_user_scheduled_reports(db: Session, telegram_id: int, active_only: bool = True) -> List:
+    """
+    Get user's scheduled reports
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        active_only: Only return active reports
+    
+    Returns:
+        List of ScheduledReport objects
+    """
+    from src.bot.database.models import User, ScheduledReport
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return []
+    
+    query = db.query(ScheduledReport).filter(ScheduledReport.user_id == user.id)
+    
+    if active_only:
+        query = query.filter(ScheduledReport.is_active == True)
+    
+    return query.order_by(ScheduledReport.created_at.desc()).all()
+
+
+def create_scheduled_report(
+    db: Session,
+    telegram_id: int,
+    report_type: str,
+    frequency: str,
+    symbols: Optional[List[str]] = None
+) -> Optional[Any]:
+    """
+    Create a new scheduled report
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        report_type: Type of report (watchlist, portfolio, combined)
+        frequency: Frequency string (e.g., "09:00" for daily, "Monday 09:00" for weekly)
+        symbols: Optional list of symbols (for custom reports)
+    
+    Returns:
+        ScheduledReport object or None if failed
+    """
+    from src.bot.database.models import User, ScheduledReport
+    import json
+    from datetime import datetime
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return None
+    
+    report = ScheduledReport(
+        user_id=user.id,
+        report_type=report_type,
+        frequency=frequency,
+        symbols=json.dumps(symbols) if symbols else None,
+        is_active=True
+    )
+    
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    
+    return report
+
+
+def delete_scheduled_report(db: Session, telegram_id: int, report_id: int) -> bool:
+    """
+    Delete a scheduled report
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        report_id: Report ID to delete
+    
+    Returns:
+        True if deleted, False if not found
+    """
+    from src.bot.database.models import User, ScheduledReport
+    
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return False
+    
+    report = db.query(ScheduledReport).filter(
+        ScheduledReport.id == report_id,
+        ScheduledReport.user_id == user.id
+    ).first()
+    
+    if not report:
+        return False
+    
+    db.delete(report)
+    db.commit()
+    return True
+
+
+def update_scheduled_report_status(db: Session, report_id: int, is_active: bool) -> bool:
+    """
+    Update scheduled report active status
+    
+    Args:
+        db: Database session
+        report_id: Report ID
+        is_active: New active status
+    
+    Returns:
+        True if updated, False if not found
+    """
+    from src.bot.database.models import ScheduledReport
+    
+    report = db.query(ScheduledReport).filter(ScheduledReport.id == report_id).first()
+    if not report:
+        return False
+    
+    report.is_active = is_active
+    db.commit()
+    return True
+
+
+def get_all_active_scheduled_reports(db: Session) -> List:
+    """
+    Get all active scheduled reports (for scheduler)
+    
+    Args:
+        db: Database session
+    
+    Returns:
+        List of active ScheduledReport objects
+    """
+    from src.bot.database.models import ScheduledReport
+    
+    return db.query(ScheduledReport).filter(
+        ScheduledReport.is_active == True
+    ).all()
 
 
 # =============================================================================

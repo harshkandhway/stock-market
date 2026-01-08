@@ -6,9 +6,107 @@ Author: Harsh Kandhway
 """
 
 from typing import Dict, List, Tuple, Any
+from datetime import datetime, timedelta
 
 # =============================================================================
-# TIMEFRAME CONFIGURATIONS
+# INVESTMENT HORIZON CONFIGURATIONS (Beginner-Friendly)
+# =============================================================================
+
+INVESTMENT_HORIZONS = {
+    '1week': {
+        'name': 'Quick Trade',
+        'display_name': '1 Week',
+        'description': 'Very short-term trade for quick gains',
+        'min_days': 3,
+        'max_days': 7,
+        'avg_days': 5,
+        'data_period': '3mo',
+        'timeframe_key': 'short',
+        'expected_return_min': 1.5,
+        'expected_return_max': 3.0,
+        'risk_level': 'HIGH',
+        'suitable_for': 'Experienced traders only',
+        'emoji': '⚡',
+    },
+    '2weeks': {
+        'name': 'Swing Trade',
+        'display_name': '2 Weeks',
+        'description': 'Short-term swing trade',
+        'min_days': 7,
+        'max_days': 14,
+        'avg_days': 10,
+        'data_period': '3mo',
+        'timeframe_key': 'short',
+        'expected_return_min': 2.0,
+        'expected_return_max': 5.0,
+        'risk_level': 'MEDIUM-HIGH',
+        'suitable_for': 'Active traders',
+        'emoji': '🔄',
+    },
+    '1month': {
+        'name': 'Short Position',
+        'display_name': '1 Month',
+        'description': 'Hold for about a month',
+        'min_days': 21,
+        'max_days': 35,
+        'avg_days': 28,
+        'data_period': '6mo',
+        'timeframe_key': 'short',
+        'expected_return_min': 3.0,
+        'expected_return_max': 8.0,
+        'risk_level': 'MEDIUM',
+        'suitable_for': 'Most investors',
+        'emoji': '📅',
+    },
+    '3months': {
+        'name': 'Medium Position',
+        'display_name': '3 Months',
+        'description': 'Standard investment period',
+        'min_days': 60,
+        'max_days': 100,
+        'avg_days': 90,
+        'data_period': '1y',
+        'timeframe_key': 'medium',
+        'expected_return_min': 5.0,
+        'expected_return_max': 15.0,
+        'risk_level': 'MEDIUM-LOW',
+        'suitable_for': 'Recommended for beginners',
+        'emoji': '📊',
+    },
+    '6months': {
+        'name': 'Long Position',
+        'display_name': '6 Months',
+        'description': 'Patient investment for better returns',
+        'min_days': 150,
+        'max_days': 200,
+        'avg_days': 180,
+        'data_period': '2y',
+        'timeframe_key': 'medium',
+        'expected_return_min': 8.0,
+        'expected_return_max': 25.0,
+        'risk_level': 'LOW',
+        'suitable_for': 'Ideal for beginners',
+        'emoji': '🎯',
+    },
+    '1year': {
+        'name': 'Long-Term Investment',
+        'display_name': '1 Year',
+        'description': 'Wealth building investment',
+        'min_days': 300,
+        'max_days': 400,
+        'avg_days': 365,
+        'data_period': '5y',
+        'timeframe_key': 'medium',
+        'expected_return_min': 12.0,
+        'expected_return_max': 40.0,
+        'risk_level': 'VERY LOW',
+        'suitable_for': 'Best for wealth creation',
+        'emoji': '💎',
+    },
+}
+
+# =============================================================================
+# TIMEFRAME CONFIGURATIONS (Technical)
 # =============================================================================
 
 TIMEFRAME_CONFIGS = {
@@ -19,7 +117,7 @@ TIMEFRAME_CONFIGS = {
         'ema_fast': 9,
         'ema_medium': 21,
         'ema_slow': 50,
-        'ema_trend': 100,  # For trend filter in short-term
+        'ema_trend': 100,
         'rsi_period': 9,
         'macd_fast': 8,
         'macd_slow': 17,
@@ -41,7 +139,7 @@ TIMEFRAME_CONFIGS = {
         'ema_fast': 20,
         'ema_medium': 50,
         'ema_slow': 100,
-        'ema_trend': 200,  # Primary trend filter
+        'ema_trend': 200,
         'rsi_period': 14,
         'macd_fast': 12,
         'macd_slow': 26,
@@ -56,6 +154,27 @@ TIMEFRAME_CONFIGS = {
         'divergence_lookback': 14,
         'volume_avg_period': 20,
     }
+}
+
+# =============================================================================
+# MARKET HEALTH THRESHOLDS (Beginner-Friendly Scoring)
+# =============================================================================
+
+MARKET_HEALTH_SCORES = {
+    'EXCELLENT': {'min': 80, 'max': 100, 'emoji': '🟢', 'advice': 'Great time to invest!'},
+    'GOOD': {'min': 65, 'max': 79, 'emoji': '🟢', 'advice': 'Good opportunity to buy'},
+    'FAIR': {'min': 50, 'max': 64, 'emoji': '🟡', 'advice': 'Proceed with caution'},
+    'POOR': {'min': 35, 'max': 49, 'emoji': '🟠', 'advice': 'Wait for better entry'},
+    'BAD': {'min': 0, 'max': 34, 'emoji': '🔴', 'advice': 'Avoid buying now'},
+}
+
+# Safety rating for beginners
+SAFETY_RATINGS = {
+    'VERY_SAFE': {'min': 80, 'stars': 5, 'emoji': '⭐⭐⭐⭐⭐'},
+    'SAFE': {'min': 65, 'stars': 4, 'emoji': '⭐⭐⭐⭐'},
+    'MODERATE': {'min': 50, 'stars': 3, 'emoji': '⭐⭐⭐'},
+    'RISKY': {'min': 35, 'stars': 2, 'emoji': '⭐⭐'},
+    'VERY_RISKY': {'min': 0, 'stars': 1, 'emoji': '⭐'},
 }
 
 # =============================================================================
@@ -301,6 +420,7 @@ MARKET_PHASES = {
 
 DEFAULT_MODE = 'balanced'
 DEFAULT_TIMEFRAME = 'medium'
+DEFAULT_HORIZON = '3months'
 DEFAULT_TICKERS = ['SILVERBEES.NS', 'GOLDBEES.NS']
 
 # =============================================================================
@@ -309,3 +429,133 @@ DEFAULT_TICKERS = ['SILVERBEES.NS', 'GOLDBEES.NS']
 
 CURRENCY_SYMBOL = '₹'
 REPORT_WIDTH = 80
+
+# =============================================================================
+# BEGINNER-FRIENDLY EXPLANATIONS
+# =============================================================================
+
+SIMPLE_EXPLANATIONS = {
+    'rsi': {
+        'name': 'Momentum Check',
+        'simple': 'Shows if the stock is being bought too much (overbought) or sold too much (oversold)',
+        'overbought': 'Stock has been bought a lot recently - price might drop soon',
+        'oversold': 'Stock has been sold a lot recently - price might rise soon',
+        'neutral': 'Stock is trading normally - no extreme buying or selling',
+    },
+    'macd': {
+        'name': 'Trend Direction',
+        'simple': 'Shows if the stock price trend is going up or down',
+        'bullish': 'Trend is turning positive - good sign for buyers',
+        'bearish': 'Trend is turning negative - be cautious',
+    },
+    'adx': {
+        'name': 'Trend Strength',
+        'simple': 'Shows how strong the current price movement is',
+        'strong': 'Price is moving strongly in one direction - trend is reliable',
+        'weak': 'Price is moving slowly - no clear direction yet',
+    },
+    'volume': {
+        'name': 'Trading Activity',
+        'simple': 'Shows how many people are buying/selling this stock',
+        'high': 'Many traders are active - confirms the price movement',
+        'low': 'Few traders active - price movement may not last',
+    },
+    'support': {
+        'name': 'Safety Net',
+        'simple': 'Price level where the stock usually stops falling',
+    },
+    'resistance': {
+        'name': 'Ceiling',
+        'simple': 'Price level where the stock usually stops rising',
+    },
+}
+
+# =============================================================================
+# ACTION RECOMMENDATIONS (Plain English)
+# =============================================================================
+
+ACTION_RECOMMENDATIONS = {
+    'STRONG_BUY': {
+        'emoji': '🟢',
+        'title': 'STRONG BUY',
+        'simple': 'Excellent opportunity to invest!',
+        'action': 'You can buy this stock now with confidence',
+        'timing': 'Buy today or within the next 1-2 trading days',
+    },
+    'BUY': {
+        'emoji': '🟢',
+        'title': 'BUY',
+        'simple': 'Good opportunity to invest',
+        'action': 'Consider buying this stock',
+        'timing': 'Buy within this week for best results',
+    },
+    'WEAK_BUY': {
+        'emoji': '🟡',
+        'title': 'WEAK BUY',
+        'simple': 'Okay to buy, but be cautious',
+        'action': 'You can buy, but start with a smaller amount',
+        'timing': 'Buy on any price dip for better entry',
+    },
+    'HOLD': {
+        'emoji': '🟡',
+        'title': 'HOLD',
+        'simple': 'No clear direction right now',
+        'action': 'If you own it, keep it. If not, wait for a better signal',
+        'timing': 'Wait 1-2 weeks for clearer signals',
+    },
+    'WEAK_SELL': {
+        'emoji': '🟠',
+        'title': 'AVOID BUYING',
+        'simple': 'Not a good time to buy',
+        'action': 'Do not buy now. Wait for the stock to stabilize',
+        'timing': 'Check again after 1-2 weeks',
+    },
+    'SELL': {
+        'emoji': '🔴',
+        'title': 'DO NOT BUY',
+        'simple': 'Bad time to invest',
+        'action': 'Avoid this stock for now',
+        'timing': 'Wait for trend reversal (may take weeks)',
+    },
+    'STRONG_SELL': {
+        'emoji': '🔴',
+        'title': 'DANGER - AVOID',
+        'simple': 'Risky investment right now',
+        'action': 'Do not invest - high risk of losses',
+        'timing': 'Avoid until significant improvement',
+    },
+}
+
+# =============================================================================
+# TRADING DAY CALCULATIONS
+# =============================================================================
+
+TRADING_DAYS_PER_WEEK = 5
+TRADING_DAYS_PER_MONTH = 22
+TRADING_DAYS_PER_YEAR = 252
+
+def get_expected_dates(horizon_key: str) -> dict:
+    """Calculate expected buy/sell dates based on horizon"""
+    from datetime import datetime, timedelta
+    
+    horizon = INVESTMENT_HORIZONS.get(horizon_key, INVESTMENT_HORIZONS['3months'])
+    today = datetime.now()
+    
+    # Skip weekends for buy date
+    buy_date = today
+    if buy_date.weekday() >= 5:  # Weekend
+        days_until_monday = 7 - buy_date.weekday()
+        buy_date = buy_date + timedelta(days=days_until_monday)
+    
+    # Calculate sell dates (business days approximation)
+    min_sell = buy_date + timedelta(days=int(horizon['min_days'] * 7 / 5))
+    max_sell = buy_date + timedelta(days=int(horizon['max_days'] * 7 / 5))
+    expected_sell = buy_date + timedelta(days=int(horizon['avg_days'] * 7 / 5))
+    
+    return {
+        'buy_date': buy_date,
+        'min_sell_date': min_sell,
+        'max_sell_date': max_sell,
+        'expected_sell_date': expected_sell,
+        'holding_days': horizon['avg_days'],
+    }

@@ -1,12 +1,17 @@
 """
 Risk Management Module for Stock Analyzer Pro
-Handles position sizing, stop losses, targets, and trailing stops
+Handles position sizing, stop losses, targets, trailing stops, and time estimation
 
 Author: Harsh Kandhway
 """
 
 from typing import Dict, Tuple, Optional
-from .config import RISK_MODES, FIBONACCI_EXTENSION, CURRENCY_SYMBOL
+from datetime import datetime, timedelta
+import math
+from .config import (
+    RISK_MODES, FIBONACCI_EXTENSION, CURRENCY_SYMBOL,
+    INVESTMENT_HORIZONS, TRADING_DAYS_PER_YEAR, TRADING_DAYS_PER_MONTH
+)
 
 
 def calculate_targets(
@@ -451,13 +456,7 @@ def calculate_portfolio_allocation(
 ) -> Dict[str, any]:
     """
     Calculate suggested portfolio allocation across multiple stocks
-    
-    Allocation is weighted by:
-    1. Confidence score
-    2. Risk/Reward validity
-    3. Recommendation type (only BUY recommendations get allocated)
     """
-    # Filter for investable stocks (BUY recommendations with valid R:R)
     investable = []
     not_recommended = []
     
@@ -482,7 +481,6 @@ def calculate_portfolio_allocation(
             'explanation': "No stocks meet investment criteria. Hold cash.",
         }
     
-    # Calculate weights based on confidence
     total_confidence = sum(a['confidence'] for a in investable)
     
     allocations = []
@@ -492,7 +490,6 @@ def calculate_portfolio_allocation(
         weight = analysis['confidence'] / total_confidence
         allocation_amount = capital * weight
         
-        # Calculate shares
         entry = analysis['current_price']
         shares = int(allocation_amount / entry)
         actual_amount = shares * entry
@@ -516,4 +513,330 @@ def calculate_portfolio_allocation(
         'total_allocated': total_allocated,
         'cash_remaining': capital - total_allocated,
         'num_positions': len(allocations),
+    }
+
+
+def estimate_time_to_target(
+    current_price: float,
+    target_price: float,
+    atr: float,
+    atr_percent: float,
+    momentum: float,
+    adx: float,
+    horizon: str = '3months'
+) -> Dict[str, any]:
+    """
+    Estimate the time required to reach the target price.
+    
+    Uses:
+    - Historical volatility (ATR)
+    - Current momentum
+    - Trend strength (ADX)
+    - Selected investment horizon
+    
+    Returns estimated days and dates for target achievement.
+    """
+    horizon_config = INVESTMENT_HORIZONS.get(horizon, INVESTMENT_HORIZONS['3months'])
+    
+    # Calculate required move percentage
+    required_move = ((target_price - current_price) / current_price) * 100
+    
+    if required_move <= 0:
+        return {
+            'days_to_target': 0,
+            'estimated_date': datetime.now(),
+            'confidence': 0,
+            'explanation': 'Target is at or below current price',
+        }
+    
+    # Daily expected move based on ATR
+    daily_move_pct = atr_percent  # ATR as % of price
+    
+    # Adjust for momentum
+    momentum_factor = 1.0
+    if momentum > 5:
+        momentum_factor = 1.5  # Strong upward momentum, faster target
+    elif momentum > 2:
+        momentum_factor = 1.2
+    elif momentum < -2:
+        momentum_factor = 0.7  # Against momentum, slower
+    elif momentum < -5:
+        momentum_factor = 0.5
+    
+    # Adjust for trend strength
+    trend_factor = 1.0
+    if adx >= 40:
+        trend_factor = 1.4  # Strong trend, more reliable
+    elif adx >= 25:
+        trend_factor = 1.2
+    elif adx < 20:
+        trend_factor = 0.8  # Weak trend, less reliable
+    
+    # Effective daily progress (conservative estimate: stocks don't go straight up)
+    # Using 30-40% of ATR as expected daily progress in trending direction
+    effective_daily_move = daily_move_pct * 0.35 * momentum_factor * trend_factor
+    
+    if effective_daily_move <= 0:
+        effective_daily_move = daily_move_pct * 0.2  # Minimum progress
+    
+    # Calculate trading days to target
+    trading_days = required_move / effective_daily_move
+    trading_days = max(1, int(trading_days))  # At least 1 day
+    
+    # Cap at horizon maximum
+    trading_days = min(trading_days, horizon_config['max_days'])
+    
+    # Convert to calendar days (5 trading days = 7 calendar days)
+    calendar_days = int(trading_days * 7 / 5)
+    
+    # Calculate confidence in estimate
+    estimate_confidence = 50  # Base confidence
+    
+    if adx >= 30:
+        estimate_confidence += 15
+    elif adx >= 25:
+        estimate_confidence += 10
+    
+    if momentum > 2:
+        estimate_confidence += 10
+    elif momentum > 0:
+        estimate_confidence += 5
+    
+    if trading_days <= horizon_config['avg_days']:
+        estimate_confidence += 10
+    
+    estimate_confidence = min(85, estimate_confidence)  # Cap at 85%
+    
+    # Calculate dates
+    today = datetime.now()
+    target_date = today + timedelta(days=calendar_days)
+    
+    # Provide date ranges
+    early_date = today + timedelta(days=int(calendar_days * 0.7))
+    late_date = today + timedelta(days=int(calendar_days * 1.4))
+    
+    return {
+        'trading_days': trading_days,
+        'calendar_days': calendar_days,
+        'estimated_date': target_date,
+        'earliest_date': early_date,
+        'latest_date': late_date,
+        'confidence': estimate_confidence,
+        'required_move_pct': required_move,
+        'daily_move_pct': effective_daily_move,
+        'within_horizon': trading_days <= horizon_config['max_days'],
+        'explanation': generate_time_estimate_explanation(
+            trading_days, target_date, early_date, late_date,
+            estimate_confidence, required_move, horizon_config
+        ),
+    }
+
+
+def generate_time_estimate_explanation(
+    trading_days: int,
+    target_date: datetime,
+    early_date: datetime,
+    late_date: datetime,
+    confidence: int,
+    required_move: float,
+    horizon_config: dict
+) -> str:
+    """Generate beginner-friendly explanation of time estimate"""
+    
+    if trading_days <= 7:
+        time_desc = "within 1-2 weeks"
+    elif trading_days <= 14:
+        time_desc = "within 2-3 weeks"
+    elif trading_days <= 30:
+        time_desc = "within 1-1.5 months"
+    elif trading_days <= 60:
+        time_desc = "within 2-3 months"
+    elif trading_days <= 120:
+        time_desc = "within 4-6 months"
+    else:
+        time_desc = "within 6-12 months"
+    
+    return f"""
+Expected to reach target {time_desc}
+
+📅 WHEN TO EXPECT RESULTS:
+   Best Case:    {early_date.strftime('%d %b %Y')} (if market is favorable)
+   Expected:     {target_date.strftime('%d %b %Y')} (most likely)
+   Worst Case:   {late_date.strftime('%d %b %Y')} (if market is slow)
+
+📊 WHAT THIS MEANS:
+   • Stock needs to move +{required_move:.1f}% to hit target
+   • Based on current trend and momentum
+   • Estimate confidence: {confidence}%
+   
+💡 TIP: Set a calendar reminder for {target_date.strftime('%d %b %Y')} to review your investment.
+"""
+
+
+def calculate_investment_summary(
+    current_price: float,
+    target_price: float,
+    stop_loss: float,
+    investment_amount: float,
+    horizon: str = '3months'
+) -> Dict[str, any]:
+    """
+    Calculate a complete beginner-friendly investment summary.
+    
+    Shows potential profit, potential loss, and ROI in simple terms.
+    """
+    horizon_config = INVESTMENT_HORIZONS.get(horizon, INVESTMENT_HORIZONS['3months'])
+    
+    # Calculate shares
+    shares = int(investment_amount / current_price)
+    actual_investment = shares * current_price
+    
+    # Potential profit
+    if target_price > current_price:
+        profit_per_share = target_price - current_price
+        total_profit = shares * profit_per_share
+        profit_pct = ((target_price - current_price) / current_price) * 100
+    else:
+        total_profit = 0
+        profit_pct = 0
+    
+    # Potential loss
+    if stop_loss < current_price:
+        loss_per_share = current_price - stop_loss
+        total_loss = shares * loss_per_share
+        loss_pct = ((current_price - stop_loss) / current_price) * 100
+    else:
+        total_loss = 0
+        loss_pct = 0
+    
+    # ROI calculation (annualized)
+    holding_days = horizon_config['avg_days']
+    if holding_days > 0 and profit_pct > 0:
+        annualized_roi = (profit_pct / holding_days) * TRADING_DAYS_PER_YEAR
+    else:
+        annualized_roi = 0
+    
+    return {
+        'investment_amount': actual_investment,
+        'shares': shares,
+        'current_price': current_price,
+        'target_price': target_price,
+        'stop_loss': stop_loss,
+        'potential_profit': total_profit,
+        'potential_profit_pct': profit_pct,
+        'potential_loss': total_loss,
+        'potential_loss_pct': loss_pct,
+        'roi_expected': profit_pct,
+        'roi_annualized': annualized_roi,
+        'holding_period': horizon_config['display_name'],
+        'risk_level': horizon_config['risk_level'],
+    }
+
+
+def calculate_safety_score(
+    confidence: float,
+    risk_reward: float,
+    adx: float,
+    rsi: float,
+    is_blocked: bool,
+    horizon: str = '3months'
+) -> Dict[str, any]:
+    """
+    Calculate an overall safety score for beginners.
+    
+    Returns a 1-5 star rating with explanation.
+    """
+    horizon_config = INVESTMENT_HORIZONS.get(horizon, INVESTMENT_HORIZONS['3months'])
+    
+    # Start with base score
+    score = 50
+    
+    # Confidence contribution (0-25 points)
+    if confidence >= 80:
+        score += 25
+    elif confidence >= 70:
+        score += 20
+    elif confidence >= 60:
+        score += 15
+    elif confidence >= 50:
+        score += 10
+    else:
+        score += 0
+    
+    # Risk/Reward contribution (0-20 points)
+    if risk_reward >= 3:
+        score += 20
+    elif risk_reward >= 2.5:
+        score += 15
+    elif risk_reward >= 2:
+        score += 10
+    elif risk_reward >= 1.5:
+        score += 5
+    else:
+        score += 0
+    
+    # Trend strength contribution (0-15 points)
+    if adx >= 30:
+        score += 15
+    elif adx >= 25:
+        score += 10
+    elif adx >= 20:
+        score += 5
+    
+    # RSI contribution (penalty for extremes)
+    if 40 <= rsi <= 60:
+        score += 10  # Neutral is good
+    elif 30 <= rsi <= 70:
+        score += 5
+    else:
+        score -= 10  # Extreme RSI is risky
+    
+    # Blocked trade penalty
+    if is_blocked:
+        score -= 30
+    
+    # Horizon contribution
+    if horizon_config['risk_level'] in ['LOW', 'VERY LOW']:
+        score += 10
+    elif horizon_config['risk_level'] == 'MEDIUM':
+        score += 5
+    elif horizon_config['risk_level'] in ['HIGH', 'MEDIUM-HIGH']:
+        score -= 5
+    
+    # Clamp score
+    score = max(0, min(100, score))
+    
+    # Convert to stars
+    if score >= 80:
+        stars = 5
+        rating = 'VERY SAFE'
+        emoji = '⭐⭐⭐⭐⭐'
+        advice = 'This looks like a safe investment opportunity.'
+    elif score >= 65:
+        stars = 4
+        rating = 'SAFE'
+        emoji = '⭐⭐⭐⭐'
+        advice = 'Good investment opportunity with manageable risk.'
+    elif score >= 50:
+        stars = 3
+        rating = 'MODERATE'
+        emoji = '⭐⭐⭐'
+        advice = 'Average risk. Invest only what you can afford to lose.'
+    elif score >= 35:
+        stars = 2
+        rating = 'RISKY'
+        emoji = '⭐⭐'
+        advice = 'High risk. Consider waiting for a better opportunity.'
+    else:
+        stars = 1
+        rating = 'VERY RISKY'
+        emoji = '⭐'
+        advice = 'Very high risk. Not recommended for beginners.'
+    
+    return {
+        'score': score,
+        'stars': stars,
+        'rating': rating,
+        'emoji': emoji,
+        'advice': advice,
     }

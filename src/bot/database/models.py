@@ -52,15 +52,17 @@ class UserSettings(Base):
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
     risk_mode = Column(String(20), default='balanced')  # conservative, balanced, aggressive
     timeframe = Column(String(20), default='medium')  # short, medium
-    default_capital = Column(Float)
+    investment_horizon = Column(String(20), default='3months')  # 1week, 2weeks, 1month, 3months, 6months, 1year
+    default_capital = Column(Float, default=100000.0)
     timezone = Column(String(50), default='Asia/Kolkata')
     notifications_enabled = Column(Boolean, default=True)
+    beginner_mode = Column(Boolean, default=True)  # Show simplified reports
     
     # Relationship
     user = relationship("User", back_populates="settings")
     
     def __repr__(self):
-        return f"<UserSettings user_id={self.user_id} mode={self.risk_mode}>"
+        return f"<UserSettings user_id={self.user_id} mode={self.risk_mode} horizon={self.investment_horizon}>"
 
 
 class Watchlist(Base):

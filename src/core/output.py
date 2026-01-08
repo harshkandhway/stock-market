@@ -1,21 +1,593 @@
 """
 Output Module for Stock Analyzer Pro
-Handles all report formatting and display
+Beginner-Friendly Report Formatting
 
 Author: Harsh Kandhway
 """
 
+import sys
+import io
 from typing import Dict, List, Optional
-from datetime import datetime
-from .config import CURRENCY_SYMBOL, REPORT_WIDTH, SIGNAL_WEIGHTS
+from datetime import datetime, timedelta
+from .config import (
+    CURRENCY_SYMBOL, REPORT_WIDTH, SIGNAL_WEIGHTS,
+    INVESTMENT_HORIZONS, ACTION_RECOMMENDATIONS, SIMPLE_EXPLANATIONS,
+    MARKET_HEALTH_SCORES, get_expected_dates
+)
+
+# Fix Windows console encoding for Unicode characters
+if sys.platform == 'win32':
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
+# ASCII-safe alternatives for special characters
+BOX_DOUBLE = "="
+BOX_SINGLE = "-"
+BULLET = "*"
+ARROW = "->"
+CHECK = "[Y]"
+CROSS = "[X]"
+WARNING = "[!]"
 
 
+def get_market_health_indicator(confidence: float) -> dict:
+    """Get market health indicator based on confidence"""
+    for rating, config in MARKET_HEALTH_SCORES.items():
+        if config['min'] <= confidence <= config['max']:
+            return {
+                'rating': rating,
+                'emoji': config['emoji'],
+                'advice': config['advice'],
+            }
+    return {'rating': 'UNKNOWN', 'emoji': '⚪', 'advice': 'Unable to determine'}
+
+
+def format_price(price: float) -> str:
+    """Format price with currency symbol"""
+    return f"{CURRENCY_SYMBOL}{price:,.2f}"
+
+
+def format_percentage(pct: float, include_sign: bool = True) -> str:
+    """Format percentage"""
+    if include_sign:
+        return f"{pct:+.1f}%"
+    return f"{pct:.1f}%"
+
+
+def print_beginner_header(symbol: str, horizon: str, analysis_date: datetime = None):
+    """Print a clean, beginner-friendly header"""
+    if analysis_date is None:
+        analysis_date = datetime.now()
+    
+    horizon_config = INVESTMENT_HORIZONS.get(horizon, INVESTMENT_HORIZONS['3months'])
+    
+    print(f"\n{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  {horizon_config['emoji']} INVESTMENT ANALYSIS REPORT")
+    print(f"  Stock: {symbol}")
+    print(f"  Date: {analysis_date.strftime('%A, %d %B %Y')}")
+    print(f"  Investment Period: {horizon_config['display_name']} ({horizon_config['name']})")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}")
+
+
+def print_quick_summary(analysis: Dict, horizon: str = '3months'):
+    """Print the most important information first - for quick decision making"""
+    horizon_config = INVESTMENT_HORIZONS.get(horizon, INVESTMENT_HORIZONS['3months'])
+    rec_type = analysis['recommendation_type']
+    rec_config = ACTION_RECOMMENDATIONS.get(analysis['recommendation'], ACTION_RECOMMENDATIONS.get('HOLD'))
+    
+    health = get_market_health_indicator(analysis['confidence'])
+    safety = analysis.get('safety_score', {})
+    
+    print(f"\n  {BOX_SINGLE * 40}")
+    print(f"  QUICK SUMMARY - What Should You Do?")
+    print(f"  {BOX_SINGLE * 40}")
+    
+    # Main recommendation with emoji
+    if rec_config:
+        print(f"\n  {rec_config['emoji']} {rec_config['title']}")
+        print(f"  {rec_config['simple']}")
+        print(f"\n  {ARROW} Action: {rec_config['action']}")
+        print(f"  {ARROW} Timing: {rec_config['timing']}")
+    
+    # Safety rating
+    if safety:
+        print(f"\n  Safety Rating: {safety.get('emoji', '')} ({safety.get('rating', 'N/A')})")
+        print(f"  {safety.get('advice', '')}")
+    
+    # Current price
+    print(f"\n  Current Price: {format_price(analysis['current_price'])}")
+
+
+def print_investment_plan(analysis: Dict, horizon: str = '3months'):
+    """Print the investment plan with clear buy/sell guidance"""
+    horizon_config = INVESTMENT_HORIZONS.get(horizon, INVESTMENT_HORIZONS['3months'])
+    dates = get_expected_dates(horizon)
+    
+    target = analysis.get('target', 0)
+    stop_loss = analysis.get('stop_loss', 0)
+    current = analysis['current_price']
+    
+    target_pct = ((target - current) / current * 100) if target > current else 0
+    stop_pct = ((current - stop_loss) / current * 100) if stop_loss < current else 0
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  YOUR INVESTMENT PLAN")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    # When to Buy
+    print(f"\n  WHEN TO BUY:")
+    if analysis['recommendation_type'] == 'BUY':
+        print(f"     {CHECK} Now is a good time to buy")
+        print(f"     Buy between: {dates['buy_date'].strftime('%d %b')} - {(dates['buy_date'] + timedelta(days=7)).strftime('%d %b %Y')}")
+    elif analysis['recommendation_type'] == 'HOLD':
+        print(f"     [WAIT] Wait for a better entry point")
+        print(f"     Look for price to drop to {format_price(analysis['indicators'].get('support', current * 0.95))}")
+    else:
+        print(f"     {CROSS} Not recommended to buy now")
+        print(f"     Wait until the trend improves")
+    
+    # Target Price
+    print(f"\n  TARGET PRICE (When to Sell for Profit):")
+    print(f"     Target: {format_price(target)} ({format_percentage(target_pct)})")
+    if analysis.get('target_data', {}).get('conservative_target'):
+        conservative = analysis['target_data']['conservative_target']
+        cons_pct = ((conservative - current) / current * 100)
+        print(f"     Safe Target: {format_price(conservative)} ({format_percentage(cons_pct)})")
+    
+    # Expected Timeline
+    time_estimate = analysis.get('time_estimate', {})
+    if time_estimate:
+        print(f"\n  EXPECTED TIMELINE:")
+        print(f"     Earliest: {time_estimate.get('earliest_date', dates['min_sell_date']).strftime('%d %b %Y')}")
+        print(f"     Expected: {time_estimate.get('estimated_date', dates['expected_sell_date']).strftime('%d %b %Y')}")
+        print(f"     Latest:   {time_estimate.get('latest_date', dates['max_sell_date']).strftime('%d %b %Y')}")
+    else:
+        print(f"\n  EXPECTED TIMELINE:")
+        print(f"     Hold for approximately {horizon_config['avg_days']} trading days")
+        print(f"     Expected sell date: Around {dates['expected_sell_date'].strftime('%d %b %Y')}")
+    
+    # Stop Loss
+    print(f"\n  STOP LOSS (Exit to Limit Loss):")
+    print(f"     If price falls to {format_price(stop_loss)}, SELL immediately")
+    print(f"     Maximum loss: -{stop_pct:.1f}% of your investment")
+    print(f"     This protects you from larger losses")
+    
+    # Holding Period
+    print(f"\n  RECOMMENDED HOLDING PERIOD:")
+    print(f"     {horizon_config['display_name']} ({horizon_config['min_days']}-{horizon_config['max_days']} trading days)")
+    print(f"     Risk Level: {horizon_config['risk_level']}")
+    print(f"     {horizon_config['suitable_for']}")
+
+
+def print_profit_loss_calculator(analysis: Dict, capital: Optional[float] = None):
+    """Print potential profit/loss in simple terms"""
+    if capital is None:
+        capital = 10000  # Default example capital
+    
+    current = analysis['current_price']
+    target = analysis.get('target', current * 1.05)
+    stop_loss = analysis.get('stop_loss', current * 0.95)
+    
+    shares = int(capital / current)
+    investment = shares * current
+    
+    # Profit scenario
+    profit = shares * (target - current)
+    profit_pct = ((target - current) / current) * 100
+    
+    # Loss scenario
+    loss = shares * (current - stop_loss)
+    loss_pct = ((current - stop_loss) / current) * 100
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  PROFIT/LOSS CALCULATOR")
+    print(f"  {BOX_DOUBLE * 40}")
+    print(f"  (Example with {format_price(capital)} investment)")
+    
+    print(f"\n  Investment Details:")
+    print(f"     Amount: {format_price(investment)}")
+    print(f"     Shares: {shares} units @ {format_price(current)}")
+    
+    print(f"\n  {CHECK} If Stock Reaches Target ({format_price(target)}):")
+    print(f"     Your Profit: {format_price(profit)}")
+    print(f"     Return: +{profit_pct:.1f}%")
+    print(f"     Total Value: {format_price(investment + profit)}")
+    
+    print(f"\n  {CROSS} If Stock Hits Stop Loss ({format_price(stop_loss)}):")
+    print(f"     Your Loss: {format_price(loss)}")
+    print(f"     Loss: -{loss_pct:.1f}%")
+    print(f"     Remaining Value: {format_price(investment - loss)}")
+    
+    # Risk/Reward
+    rr = analysis.get('risk_reward', 0)
+    print(f"\n  Risk vs Reward:")
+    print(f"     For every Rs.1 you risk, you could gain Rs.{rr:.2f}")
+    if rr >= 2:
+        print(f"     {CHECK} Good risk/reward ratio!")
+    elif rr >= 1.5:
+        print(f"     {WARNING} Acceptable, but not ideal")
+    else:
+        print(f"     {CROSS} Poor risk/reward - consider waiting")
+
+
+def print_market_conditions(analysis: Dict):
+    """Print current market conditions in simple terms"""
+    indicators = analysis['indicators']
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  CURRENT MARKET CONDITIONS")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    # Market Trend
+    phase = indicators['market_phase'].replace('_', ' ').title()
+    if 'uptrend' in indicators['market_phase']:
+        trend_emoji = '[UP]'
+    elif 'downtrend' in indicators['market_phase']:
+        trend_emoji = '[DOWN]'
+    else:
+        trend_emoji = '[SIDEWAYS]'
+    print(f"\n  {trend_emoji} Market Trend: {phase}")
+    
+    if 'strong_uptrend' in indicators['market_phase']:
+        print(f"     Stock is moving UP strongly - Good for buying!")
+    elif 'uptrend' in indicators['market_phase']:
+        print(f"     Stock is moving UP - Favorable for buying")
+    elif 'weak_uptrend' in indicators['market_phase']:
+        print(f"     Stock is slightly UP - Okay to buy with caution")
+    elif 'consolidation' in indicators['market_phase']:
+        print(f"     Stock is moving SIDEWAYS - Wait for clear direction")
+    elif 'weak_downtrend' in indicators['market_phase']:
+        print(f"     Stock is slightly DOWN - Not ideal for buying")
+    elif 'downtrend' in indicators['market_phase']:
+        print(f"     Stock is moving DOWN - Avoid buying now")
+    else:
+        print(f"     Stock is moving DOWN strongly - Do not buy!")
+    
+    # Trend Strength
+    adx = indicators['adx']
+    strength = indicators['adx_strength'].replace('_', ' ').title()
+    if adx >= 30:
+        strength_desc = "Strong and reliable trend"
+        strength_emoji = '[STRONG]'
+    elif adx >= 25:
+        strength_desc = "Moderate trend, reasonably reliable"
+        strength_emoji = '[MODERATE]'
+    elif adx >= 20:
+        strength_desc = "Weak trend, less reliable"
+        strength_emoji = '[WEAK]'
+    else:
+        strength_desc = "No clear trend, unpredictable"
+        strength_emoji = '[UNCLEAR]'
+    
+    print(f"\n  {strength_emoji} Trend Strength: {strength}")
+    print(f"     {strength_desc}")
+    
+    # Momentum
+    rsi = indicators['rsi']
+    rsi_zone = indicators['rsi_zone']
+    
+    if rsi >= 70:
+        momentum_desc = "Stock is OVERBOUGHT - might fall soon"
+        momentum_emoji = '[HIGH]'
+    elif rsi <= 30:
+        momentum_desc = "Stock is OVERSOLD - might rise soon"
+        momentum_emoji = '[LOW]'
+    else:
+        momentum_desc = "Stock momentum is NORMAL"
+        momentum_emoji = '[NORMAL]'
+    
+    print(f"\n  {momentum_emoji} Buying/Selling Pressure:")
+    print(f"     {momentum_desc}")
+    
+    # Volume
+    vol_ratio = indicators['volume_ratio']
+    if vol_ratio >= 1.5:
+        vol_desc = "HIGH trading activity - many traders interested"
+        vol_emoji = '[HIGH]'
+    elif vol_ratio >= 0.7:
+        vol_desc = "NORMAL trading activity"
+        vol_emoji = '[NORMAL]'
+    else:
+        vol_desc = "LOW trading activity - fewer traders interested"
+        vol_emoji = '[LOW]'
+    
+    print(f"\n  {vol_emoji} Trading Activity: {vol_ratio:.1f}x average")
+    print(f"     {vol_desc}")
+
+
+def print_important_price_levels(analysis: Dict):
+    """Print key price levels in simple terms"""
+    indicators = analysis['indicators']
+    current = analysis['current_price']
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  IMPORTANT PRICE LEVELS")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    # Current Price
+    print(f"\n  Current Price: {format_price(current)}")
+    
+    # Resistance (Ceiling)
+    resistance = indicators['resistance']
+    res_pct = ((resistance - current) / current) * 100
+    print(f"\n  [UP] Resistance (Price Ceiling): {format_price(resistance)} ({format_percentage(res_pct)})")
+    print(f"     Stock may struggle to go above this level")
+    
+    # Support (Floor)
+    support = indicators['support']
+    sup_pct = ((support - current) / current) * 100
+    print(f"\n  [DOWN] Support (Price Floor): {format_price(support)} ({format_percentage(sup_pct)})")
+    print(f"     Stock usually bounces back from this level")
+    
+    # 52-week range
+    high_52 = indicators['high_52w']
+    low_52 = indicators['low_52w']
+    print(f"\n  52-Week Range:")
+    print(f"     Highest: {format_price(high_52)}")
+    print(f"     Lowest:  {format_price(low_52)}")
+    
+    # Where is current price in the range
+    range_pct = ((current - low_52) / (high_52 - low_52)) * 100 if high_52 != low_52 else 50
+    print(f"     Current position: {range_pct:.0f}% of range")
+    
+    if range_pct >= 80:
+        print(f"     {WARNING} Near yearly high - expensive, limited upside")
+    elif range_pct <= 20:
+        print(f"     {CHECK} Near yearly low - potentially good value")
+    else:
+        print(f"     {BULLET} In middle range - fair price")
+
+
+def print_simple_checklist(analysis: Dict):
+    """Print a simple checklist for beginners"""
+    indicators = analysis['indicators']
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  INVESTMENT CHECKLIST")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    checks = []
+    
+    # Trend check
+    if indicators['price_vs_trend_ema'] == 'above':
+        checks.append(("Price above long-term average", True, "Stock is in uptrend"))
+    else:
+        checks.append(("Price above long-term average", False, "Stock is in downtrend"))
+    
+    # RSI check
+    if 30 <= indicators['rsi'] <= 70:
+        checks.append(("Not overbought or oversold", True, "Healthy momentum"))
+    elif indicators['rsi'] > 70:
+        checks.append(("Not overbought or oversold", False, "Stock may be too expensive"))
+    else:
+        checks.append(("Not overbought or oversold", False, "Stock may be too cheap (risky)"))
+    
+    # Trend strength check
+    if indicators['adx'] >= 25:
+        checks.append(("Clear trend direction", True, "Reliable movement"))
+    else:
+        checks.append(("Clear trend direction", False, "Unclear direction"))
+    
+    # Volume check
+    if indicators['volume_ratio'] >= 0.7:
+        checks.append(("Adequate trading volume", True, "Enough market interest"))
+    else:
+        checks.append(("Adequate trading volume", False, "Low interest, harder to sell"))
+    
+    # Risk/Reward check
+    rr = analysis.get('risk_reward', 0)
+    if rr >= 2:
+        checks.append(("Good risk/reward ratio", True, "Potential gain > potential loss"))
+    else:
+        checks.append(("Good risk/reward ratio", False, "Risk may exceed reward"))
+    
+    # Print checklist
+    passed = 0
+    for check_name, passed_check, explanation in checks:
+        emoji = CHECK if passed_check else CROSS
+        print(f"\n  {emoji} {check_name}")
+        print(f"     {explanation}")
+        if passed_check:
+            passed += 1
+    
+    # Summary
+    print(f"\n  {BOX_SINGLE * 40}")
+    print(f"  Passed {passed}/{len(checks)} checks")
+    
+    if passed >= 4:
+        print(f"  {CHECK} Good investment opportunity!")
+    elif passed >= 3:
+        print(f"  {BULLET} Moderate opportunity - proceed with caution")
+    else:
+        print(f"  {CROSS} Not recommended at this time")
+
+
+def print_when_to_sell(analysis: Dict, horizon: str = '3months'):
+    """Print clear guidance on when to sell"""
+    target = analysis.get('target', 0)
+    stop_loss = analysis.get('stop_loss', 0)
+    current = analysis['current_price']
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  WHEN TO SELL - SET THESE ALERTS!")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    print(f"\n  Set Price Alerts for These Levels:")
+    
+    # Take Profit
+    print(f"\n  1. TAKE PROFIT ALERT: {format_price(target)}")
+    print(f"      When price reaches this {ARROW} SELL for profit")
+    print(f"      Expected profit: {format_percentage(((target - current) / current) * 100)}")
+    
+    # Partial Profit
+    partial_target = current + (target - current) * 0.5
+    print(f"\n  2. PARTIAL PROFIT ALERT: {format_price(partial_target)}")
+    print(f"      Consider selling half your shares here")
+    print(f"      This locks in some profit safely")
+    
+    # Stop Loss
+    loss_pct = ((current - stop_loss) / current) * 100
+    print(f"\n  3. STOP LOSS ALERT: {format_price(stop_loss)}")
+    print(f"      When price falls to this {ARROW} SELL to limit loss")
+    print(f"      Maximum loss: -{loss_pct:.1f}%")
+    print(f"      {WARNING} DO NOT IGNORE THIS - protects your capital!")
+    
+    print(f"\n  IMPORTANT:")
+    print(f"     {BULLET} Set these alerts in your trading app")
+    print(f"     {BULLET} Don't change stop loss to avoid loss - discipline is key!")
+    print(f"     {BULLET} Review your position every week")
+
+
+def print_beginner_tips(analysis: Dict):
+    """Print helpful tips for beginners"""
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  TIPS FOR BEGINNERS")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    tips = [
+        "Never invest money you can't afford to lose",
+        "Start with small amounts to learn the market",
+        "Always set a stop loss to protect your capital",
+        "Don't check prices every hour - it causes stress",
+        "Diversify - don't put all money in one stock",
+        "Patience is key - don't panic sell on small dips",
+        "Markets go up and down - temporary drops are normal",
+    ]
+    
+    for i, tip in enumerate(tips, 1):
+        print(f"\n  {i}. {tip}")
+
+
+def print_full_report(analysis: Dict, position_data: Optional[Dict] = None, horizon: str = '3months'):
+    """Print the complete beginner-friendly analysis report"""
+    
+    # Header
+    print_beginner_header(analysis['symbol'], horizon)
+    
+    # Quick Summary (most important info first)
+    print_quick_summary(analysis, horizon)
+    
+    # Investment Plan
+    print_investment_plan(analysis, horizon)
+    
+    # Profit/Loss Calculator
+    if position_data and 'capital' in position_data:
+        print_profit_loss_calculator(analysis, position_data['capital'])
+    else:
+        print_profit_loss_calculator(analysis)
+    
+    # When to Sell
+    print_when_to_sell(analysis, horizon)
+    
+    # Market Conditions
+    print_market_conditions(analysis)
+    
+    # Important Price Levels
+    print_important_price_levels(analysis)
+    
+    # Checklist
+    print_simple_checklist(analysis)
+    
+    # Tips
+    print_beginner_tips(analysis)
+    
+    # Footer
+    print_disclaimer()
+
+
+def print_summary_table(analyses: List[Dict]):
+    """Print summary table for multiple stocks"""
+    print(f"\n{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  COMPARISON SUMMARY")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}")
+    
+    print(f"\n  {'Stock':<15} {'Price':>10} {'Action':>12} {'Safety':>10} {'Target':>10} {'Timeline':>12}")
+    print(f"  {BOX_SINGLE * 70}")
+    
+    for a in analyses:
+        safety = a.get('safety_score', {})
+        rec = a['recommendation'].replace('STRONG ', '').replace('WEAK ', '')[:10]
+        target_pct = ((a.get('target', 0) - a['current_price']) / a['current_price'] * 100) if a.get('target') else 0
+        
+        time_est = a.get('time_estimate', {})
+        timeline = f"{time_est.get('trading_days', '?')} days" if time_est else "N/A"
+        
+        safety_str = f"{safety.get('stars', 0)}/5" if safety else "N/A"
+        print(f"  {a['symbol']:<15} {format_price(a['current_price']):>10} {rec:>12} {safety_str:>10} {format_percentage(target_pct):>10} {timeline:>12}")
+    
+    print(f"\n{BOX_DOUBLE * REPORT_WIDTH}")
+
+
+def print_portfolio_ranking(analyses: List[Dict]):
+    """Print stocks ranked by investment quality"""
+    print(f"\n{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  RANKED BY INVESTMENT QUALITY")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}")
+    
+    # Sort by safety score
+    sorted_analyses = sorted(
+        analyses,
+        key=lambda x: x.get('safety_score', {}).get('score', 0),
+        reverse=True
+    )
+    
+    for i, a in enumerate(sorted_analyses, 1):
+        safety = a.get('safety_score', {})
+        rank_label = f"#{i}"
+        
+        print(f"\n  {rank_label} {a['symbol']}")
+        print(f"     Safety: {safety.get('stars', 0)}/5 stars - {safety.get('rating', 'N/A')}")
+        print(f"     {safety.get('advice', '')}")
+
+
+def print_portfolio_allocation(allocation_data: Dict, capital: float):
+    """Print portfolio allocation suggestions"""
+    print(f"\n{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  SUGGESTED PORTFOLIO ALLOCATION")
+    print(f"  (Total Capital: {format_price(capital)})")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}")
+    
+    if not allocation_data['investable']:
+        print(f"\n  {WARNING} No stocks recommended for investment right now.")
+        print(f"  Suggestion: Keep your money in savings and wait for better opportunities.")
+    else:
+        print(f"\n  RECOMMENDED INVESTMENTS:")
+        for alloc in allocation_data['investable']:
+            print(f"\n  {BULLET} {alloc['symbol']}")
+            print(f"     Invest: {format_price(alloc['allocated_amount'])} ({alloc['weight_pct']:.0f}%)")
+            print(f"     Buy: {alloc['shares']} shares @ {format_price(alloc['entry_price'])}")
+        
+        print(f"\n  {BOX_SINGLE * 40}")
+        print(f"  Total to Invest: {format_price(allocation_data['total_allocated'])}")
+        print(f"  Keep as Cash: {format_price(allocation_data['cash_remaining'])}")
+    
+    if allocation_data['not_recommended']:
+        print(f"\n  {CROSS} NOT RECOMMENDED:")
+        for nr in allocation_data['not_recommended']:
+            print(f"     {nr['symbol']}: {nr['reason']}")
+
+
+def print_disclaimer():
+    """Print disclaimer"""
+    print(f"\n{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  {WARNING} IMPORTANT DISCLAIMER")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  {BULLET} This is for educational purposes only - NOT financial advice")
+    print(f"  {BULLET} Past performance does not guarantee future results")
+    print(f"  {BULLET} Always consult a SEBI-registered financial advisor")
+    print(f"  {BULLET} Never invest more than you can afford to lose")
+    print(f"  {BULLET} The author is not responsible for any investment losses")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}")
+    print(f"  Developed by Harsh Kandhway | v3.0 (Beginner-Friendly Edition)")
+    print(f"{BOX_DOUBLE * REPORT_WIDTH}\n")
+
+
+# Legacy functions for backward compatibility
 def print_header(symbol: str, mode: str, timeframe: str):
-    """Print report header"""
-    print(f"\n{'='*REPORT_WIDTH}")
-    print(f"  {symbol} - PROFESSIONAL TECHNICAL ANALYSIS")
-    print(f"  Mode: {mode.upper()} | Timeframe: {timeframe.upper()} | Date: {datetime.now().strftime('%b %d, %Y')}")
-    print(f"{'='*REPORT_WIDTH}")
+    """Legacy header function"""
+    print_beginner_header(symbol, '3months')
 
 
 def print_hard_filter_warning(is_blocked: bool, block_reasons: List[str], direction: str):
@@ -23,387 +595,58 @@ def print_hard_filter_warning(is_blocked: bool, block_reasons: List[str], direct
     if not is_blocked:
         return
     
-    header = f"HARD FILTER TRIGGERED - {direction.upper()} BLOCKED"
-    print(f"\n  {'⚠️  ' + header:^{REPORT_WIDTH-4}}")
-    print(f"  {'─'*40}")
+    print(f"\n  {'!' * 40}")
+    print(f"  {WARNING} WARNING: {direction.upper()} NOT RECOMMENDED")
     for reason in block_reasons:
-        print(f"  • {reason}")
+        print(f"     {BULLET} {reason}")
+    print(f"  {'!' * 40}")
 
 
 def print_market_regime(indicators: Dict):
-    """Print market regime section"""
-    print(f"\n  MARKET REGIME")
-    print(f"  {'─'*40}")
-    
-    # Primary trend
-    price_vs_trend = indicators['price_vs_trend_ema']
-    trend_ema_period = indicators['ema_trend_period']
-    trend_status = "BULLISH" if price_vs_trend == 'above' else "BEARISH"
-    print(f"  Primary Trend:       {trend_status} (Price {'>' if price_vs_trend == 'above' else '<'} {trend_ema_period} EMA)")
-    
-    # Trend strength
-    adx = indicators['adx']
-    strength = indicators['adx_strength'].replace('_', ' ').upper()
-    print(f"  Trend Strength:      {strength} (ADX = {adx:.1f})")
-    
-    # Market phase
-    phase = indicators['market_phase'].replace('_', ' ').upper()
-    print(f"  Market Phase:        {phase}")
-    
-    # EMA alignment
-    alignment = indicators['ema_alignment'].replace('_', ' ').upper()
-    print(f"  EMA Alignment:       {alignment}")
+    """Legacy - now handled by print_market_conditions"""
+    pass
 
 
 def print_indicator_table(indicators: Dict, signal_data: Dict):
-    """Print technical indicators table"""
-    print(f"\n  TECHNICAL INDICATORS")
-    print(f"  {'─'*70}")
-    print(f"  {'Indicator':<22} {'Value':>12} {'Signal':>12} {'Weight':>8}")
-    print(f"  {'─'*70}")
-    
-    # Get signals for display
-    signals = signal_data['signals']
-    
-    # RSI
-    rsi = indicators['rsi']
-    rsi_signal = '▲ BUY' if signals['rsi_zone'][0] > 0 else '▼ SELL' if signals['rsi_zone'][0] < 0 else '○ NEUTRAL'
-    print(f"  {'RSI (' + str(indicators['rsi_period']) + ')':<22} {rsi:>12.2f} {rsi_signal:>12} {SIGNAL_WEIGHTS['rsi_zone']:>7}%")
-    
-    # MACD
-    macd_hist = indicators['macd_hist']
-    macd_signal = '▲ BUY' if signals['macd_signal'][0] > 0 else '▼ SELL' if signals['macd_signal'][0] < 0 else '○ NEUTRAL'
-    crossover = ' [CROSS]' if indicators['macd_crossover'] != 'none' else ''
-    print(f"  {'MACD Histogram':<22} {macd_hist:>12.4f} {macd_signal:>12} {SIGNAL_WEIGHTS['macd_signal']:>7}%{crossover}")
-    
-    # Trend EMA
-    trend_ema = indicators['ema_trend']
-    trend_signal = '▲ BUY' if signals['price_vs_trend_ema'][0] > 0 else '▼ SELL'
-    print(f"  {'Price vs ' + str(indicators['ema_trend_period']) + ' EMA':<22} {trend_ema:>12.2f} {trend_signal:>12} {SIGNAL_WEIGHTS['price_vs_trend_ema']:>7}%")
-    
-    # Medium EMA
-    med_ema = indicators['ema_medium']
-    med_signal = '▲ BUY' if signals['price_vs_medium_ema'][0] > 0 else '▼ SELL'
-    print(f"  {'Price vs ' + str(indicators['ema_medium_period']) + ' EMA':<22} {med_ema:>12.2f} {med_signal:>12} {SIGNAL_WEIGHTS['price_vs_medium_ema']:>7}%")
-    
-    # ADX
-    adx = indicators['adx']
-    adx_signal = '▲ TREND' if indicators['trend_exists'] else '○ NO TREND'
-    print(f"  {'ADX':<22} {adx:>12.2f} {adx_signal:>12} {SIGNAL_WEIGHTS['adx_strength']:>7}%")
-    
-    # Volume
-    vol_ratio = indicators['volume_ratio']
-    vol_signal = '▲ HIGH' if vol_ratio > 1.5 else '▼ LOW' if vol_ratio < 0.5 else '○ NORMAL'
-    print(f"  {'Volume Ratio':<22} {vol_ratio:>11.2f}x {vol_signal:>12} {SIGNAL_WEIGHTS['volume_confirmation']:>7}%")
-    
-    # Bollinger %B
-    bb_pct = indicators['bb_percent']
-    bb_signal = '▼ SELL' if bb_pct > 0.8 else '▲ BUY' if bb_pct < 0.2 else '○ NEUTRAL'
-    print(f"  {'Bollinger %B':<22} {bb_pct:>12.2f} {bb_signal:>12} {SIGNAL_WEIGHTS['bollinger_position']:>7}%")
-    
-    # Divergence
-    div = indicators['divergence']
-    div_signal = '▲ BULLISH' if div == 'bullish' else '▼ BEARISH' if div == 'bearish' else '○ NONE'
-    print(f"  {'Divergence':<22} {div.upper():>12} {div_signal:>12} {SIGNAL_WEIGHTS['divergence']:>7}%")
-    
-    print(f"  {'─'*70}")
+    """Legacy - now hidden from beginners"""
+    pass
 
 
 def print_signal_summary(signal_data: Dict):
-    """Print signal summary"""
-    print(f"\n  SIGNAL SUMMARY")
-    print(f"  {'─'*40}")
-    print(f"  Bullish Signals:     {signal_data['bullish_count']} ({signal_data['bullish_score']:.1f} points)")
-    print(f"  Bearish Signals:     {signal_data['bearish_count']} ({signal_data['bearish_score']:.1f} points)")
-    print(f"  Neutral Signals:     {signal_data['neutral_count']}")
-    print(f"  Net Score:           {signal_data['net_score']:+.1f}")
+    """Legacy - now hidden from beginners"""
+    pass
 
 
-def print_recommendation_box(
-    recommendation: str,
-    confidence: float,
-    confidence_level: str,
-    is_blocked: bool
-):
-    """Print the main recommendation box"""
-    print(f"\n  {'═'*40}")
-    
-    if is_blocked:
-        print(f"  {'RECOMMENDATION:':<20} ⛔ {recommendation}")
-        print(f"  {'CONFIDENCE:':<20} N/A (Blocked)")
-    else:
-        # Color-code recommendation (using text symbols)
-        if 'BUY' in recommendation:
-            symbol = '🟢'
-        elif 'SELL' in recommendation:
-            symbol = '🔴'
-        else:
-            symbol = '🟡'
-        
-        print(f"  {'RECOMMENDATION:':<20} {symbol} {recommendation}")
-        print(f"  {'CONFIDENCE:':<20} {confidence:.0f}% ({confidence_level})")
-    
-    print(f"  {'═'*40}")
+def print_recommendation_box(recommendation: str, confidence: float, confidence_level: str, is_blocked: bool):
+    """Legacy - now handled by print_quick_summary"""
+    pass
 
 
 def print_reasoning(reasoning: List[str]):
-    """Print reasoning section"""
-    print(f"\n  REASONING")
-    print(f"  {'─'*40}")
-    for reason in reasoning:
-        if reason.startswith('WARNING'):
-            print(f"  ⚠️  {reason}")
-        else:
-            print(f"  • {reason}")
+    """Legacy - now simplified"""
+    pass
 
 
 def print_action_plan(actions: Dict[str, str]):
-    """Print action plan for different investor types"""
-    print(f"\n  ACTION PLAN")
-    print(f"  {'─'*40}")
-    print(f"  ├── NEW INVESTORS: {actions['new_investors']}")
-    print(f"  ├── EXISTING HOLDERS: {actions['existing_holders']}")
-    print(f"  └── TRADERS: {actions['traders']}")
+    """Legacy - now handled by print_investment_plan"""
+    pass
 
 
-def print_price_levels(
-    indicators: Dict,
-    target_data: Dict,
-    stop_data: Dict
-):
-    """Print price levels section"""
-    print(f"\n  LEVELS TO WATCH")
-    print(f"  {'─'*40}")
-    
-    current = indicators['current_price']
-    print(f"  Current Price:       {CURRENCY_SYMBOL}{current:.2f}")
-    print()
-    
-    # Resistance levels
-    print(f"  RESISTANCE:")
-    print(f"    52-Week High:      {CURRENCY_SYMBOL}{indicators['high_52w']:.2f} ({((indicators['high_52w'] - current) / current * 100):+.1f}%)")
-    print(f"    Recent High:       {CURRENCY_SYMBOL}{indicators['resistance']:.2f} ({((indicators['resistance'] - current) / current * 100):+.1f}%)")
-    
-    # Targets
-    print(f"\n  TARGETS:")
-    print(f"    Conservative:      {CURRENCY_SYMBOL}{target_data['conservative_target']:.2f} ({target_data['conservative_target_pct']:+.1f}%)")
-    print(f"    ATR-Based:         {CURRENCY_SYMBOL}{target_data['atr_target']:.2f} ({target_data['atr_target_pct']:+.1f}%)")
-    if 'aggressive_target' in target_data:
-        print(f"    Aggressive:        {CURRENCY_SYMBOL}{target_data['aggressive_target']:.2f} ({target_data['aggressive_target_pct']:+.1f}%)")
-    
-    # Support levels
-    print(f"\n  SUPPORT:")
-    print(f"    Recent Low:        {CURRENCY_SYMBOL}{indicators['support']:.2f} ({((indicators['support'] - current) / current * 100):+.1f}%)")
-    print(f"    52-Week Low:       {CURRENCY_SYMBOL}{indicators['low_52w']:.2f} ({((indicators['low_52w'] - current) / current * 100):+.1f}%)")
-    
-    # Stop loss
-    print(f"\n  STOP LOSS:")
-    print(f"    Recommended:       {CURRENCY_SYMBOL}{stop_data['recommended_stop']:.2f} ({-stop_data['recommended_stop_pct']:.1f}%)")
+def print_price_levels(indicators: Dict, target_data: Dict, stop_data: Dict):
+    """Legacy - now handled by print_important_price_levels"""
+    pass
 
 
-def print_risk_reward(
-    risk_reward: float,
-    is_valid: bool,
-    explanation: str,
-    mode: str
-):
-    """Print risk/reward section"""
-    print(f"\n  RISK MANAGEMENT")
-    print(f"  {'─'*40}")
-    
-    status = "✓ VALID" if is_valid else "✗ INVALID"
-    print(f"  Risk/Reward Ratio:   {risk_reward:.2f}:1 [{status}]")
-    print(f"  {explanation}")
-    
-    if not is_valid:
-        print(f"\n  ⛔ TRADE NOT RECOMMENDED AT CURRENT LEVELS")
-        print(f"  Reason: R:R below professional minimum")
+def print_risk_reward(risk_reward: float, is_valid: bool, explanation: str, mode: str):
+    """Legacy - now simplified in profit/loss calculator"""
+    pass
 
 
 def print_position_sizing(position_data: Dict):
-    """Print position sizing section"""
-    if position_data.get('error'):
-        print(f"\n  POSITION SIZING")
-        print(f"  {'─'*40}")
-        print(f"  Error: {position_data['message']}")
-        return
-    
-    print(position_data['explanation'])
+    """Legacy - now handled by print_profit_loss_calculator"""
+    pass
 
 
 def print_trailing_stop_strategy(trailing_data: Dict):
-    """Print trailing stop strategy"""
-    print(trailing_data['explanation'])
-
-
-def print_full_report(analysis: Dict, position_data: Optional[Dict] = None):
-    """Print the complete analysis report"""
-    
-    # Header
-    print_header(
-        analysis['symbol'],
-        analysis['mode'],
-        analysis['timeframe']
-    )
-    
-    # Hard filter warnings
-    print_hard_filter_warning(
-        analysis['is_buy_blocked'],
-        analysis.get('buy_block_reasons', []),
-        'buy'
-    )
-    print_hard_filter_warning(
-        analysis['is_sell_blocked'],
-        analysis.get('sell_block_reasons', []),
-        'sell'
-    )
-    
-    # Market regime
-    print_market_regime(analysis['indicators'])
-    
-    # Indicator table
-    print_indicator_table(analysis['indicators'], analysis['signal_data'])
-    
-    # Signal summary
-    print_signal_summary(analysis['signal_data'])
-    
-    # Recommendation
-    print_recommendation_box(
-        analysis['recommendation'],
-        analysis['confidence'],
-        analysis['confidence_level'],
-        analysis['is_buy_blocked'] or analysis['is_sell_blocked']
-    )
-    
-    # Reasoning
-    print_reasoning(analysis['reasoning'])
-    
-    # Action plan
-    print_action_plan(analysis['actions'])
-    
-    # Price levels
-    print_price_levels(
-        analysis['indicators'],
-        analysis['target_data'],
-        analysis['stop_data']
-    )
-    
-    # Risk/Reward
-    print_risk_reward(
-        analysis['risk_reward'],
-        analysis['rr_valid'],
-        analysis['rr_explanation'],
-        analysis['mode']
-    )
-    
-    # Position sizing (if capital provided)
-    if position_data:
-        print_position_sizing(position_data)
-    
-    # Trailing stops
-    if analysis.get('trailing_data'):
-        print_trailing_stop_strategy(analysis['trailing_data'])
-    
-    print(f"\n{'='*REPORT_WIDTH}")
-
-
-def print_summary_table(analyses: List[Dict]):
-    """Print summary table for multiple stocks"""
-    print(f"\n{'='*REPORT_WIDTH}")
-    print(f"  SUMMARY")
-    print(f"{'='*REPORT_WIDTH}")
-    
-    print(f"\n  {'Symbol':<20} {'Price':>10} {'Confidence':>12} {'Recommendation':<15} {'R:R':>8} {'Valid':>6}")
-    print(f"  {'-'*75}")
-    
-    for a in analyses:
-        rr_str = f"{a['risk_reward']:.2f}:1" if a['risk_reward'] > 0 else "N/A"
-        valid_str = "✓" if a['rr_valid'] else "✗"
-        conf_str = f"{a['confidence']:.0f}%" if not a['is_buy_blocked'] else "N/A"
-        
-        print(f"  {a['symbol']:<20} {CURRENCY_SYMBOL}{a['current_price']:>8.2f} {conf_str:>12} {a['recommendation']:<15} {rr_str:>8} {valid_str:>6}")
-    
-    print(f"\n{'='*REPORT_WIDTH}")
-
-
-def print_portfolio_ranking(analyses: List[Dict]):
-    """Print stocks ranked by confidence"""
-    print(f"\n{'='*REPORT_WIDTH}")
-    print(f"  PORTFOLIO RANKING BY CONFIDENCE")
-    print(f"{'='*REPORT_WIDTH}")
-    
-    # Sort by confidence (handle blocked ones)
-    sorted_analyses = sorted(
-        analyses,
-        key=lambda x: x['confidence'] if not x['is_buy_blocked'] else -1,
-        reverse=True
-    )
-    
-    print(f"\n  {'Rank':<6} {'Symbol':<20} {'Confidence':>12} {'Recommendation':<18} {'R:R':>8} {'Valid':>6}")
-    print(f"  {'-'*75}")
-    
-    for i, a in enumerate(sorted_analyses, 1):
-        rr_str = f"{a['risk_reward']:.2f}:1" if a['risk_reward'] > 0 else "-"
-        valid_str = "✓" if a['rr_valid'] else "✗"
-        
-        if a['is_buy_blocked']:
-            conf_str = "BLOCKED"
-            rec_str = "⛔ " + a['recommendation']
-        else:
-            conf_str = f"{a['confidence']:.0f}%"
-            if 'BUY' in a['recommendation']:
-                rec_str = "🟢 " + a['recommendation']
-            elif 'SELL' in a['recommendation']:
-                rec_str = "🔴 " + a['recommendation']
-            else:
-                rec_str = "🟡 " + a['recommendation']
-        
-        print(f"  {i:<6} {a['symbol']:<20} {conf_str:>12} {rec_str:<18} {rr_str:>8} {valid_str:>6}")
-    
-    print(f"\n{'='*REPORT_WIDTH}")
-
-
-def print_portfolio_allocation(allocation_data: Dict, capital: float):
-    """Print portfolio allocation suggestions"""
-    print(f"\n{'='*REPORT_WIDTH}")
-    print(f"  SUGGESTED PORTFOLIO ALLOCATION (Capital: {CURRENCY_SYMBOL}{capital:,.2f})")
-    print(f"{'='*REPORT_WIDTH}")
-    
-    if not allocation_data['investable']:
-        print(f"\n  ⛔ NO STOCKS MEET INVESTMENT CRITERIA")
-        print(f"\n  Hold cash and wait for better opportunities.")
-    else:
-        print(f"\n  INVESTABLE STOCKS (Meet all criteria):")
-        print(f"  {'─'*65}")
-        print(f"  {'Symbol':<20} {'Confidence':>12} {'Allocation':>12} {'Amount':>12} {'Shares':>8}")
-        print(f"  {'─'*65}")
-        
-        for alloc in allocation_data['investable']:
-            print(f"  {alloc['symbol']:<20} {alloc['confidence']:>11.0f}% {alloc['weight_pct']:>11.1f}% {CURRENCY_SYMBOL}{alloc['allocated_amount']:>10,.2f} {alloc['shares']:>8}")
-        
-        print(f"  {'─'*65}")
-        print(f"  {'TOTAL INVESTED:':<20} {'':<12} {'':<12} {CURRENCY_SYMBOL}{allocation_data['total_allocated']:>10,.2f}")
-        print(f"  {'CASH REMAINING:':<20} {'':<12} {'':<12} {CURRENCY_SYMBOL}{allocation_data['cash_remaining']:>10,.2f}")
-    
-    if allocation_data['not_recommended']:
-        print(f"\n  NOT RECOMMENDED:")
-        print(f"  {'─'*65}")
-        for nr in allocation_data['not_recommended']:
-            print(f"  • {nr['symbol']}: {nr['reason']}")
-    
-    print(f"\n{'='*REPORT_WIDTH}")
-
-
-def print_disclaimer():
-    """Print disclaimer"""
-    print(f"\n{'='*REPORT_WIDTH}")
-    print(f"  DISCLAIMER")
-    print(f"{'='*REPORT_WIDTH}")
-    print(f"  • This is technical analysis for educational purposes only.")
-    print(f"  • Past performance is NOT indicative of future results.")
-    print(f"  • Always consult a SEBI-registered financial advisor.")
-    print(f"  • Never invest more than you can afford to lose.")
-    print(f"  • Use proper position sizing and risk management.")
-    print(f"{'='*REPORT_WIDTH}")
-    print(f"  Developed by Harsh Kandhway")
-    print(f"{'='*REPORT_WIDTH}\n")
+    """Legacy - simplified for beginners"""
+    pass

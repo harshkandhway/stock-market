@@ -7,10 +7,13 @@ Author: Harsh Kandhway
 
 import sys
 import os
+import logging
 from typing import Dict, Optional, Any, List
 from datetime import datetime, timedelta
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
@@ -23,7 +26,7 @@ from src.core.signals import (
 )
 from src.core.risk_management import (
     calculate_targets, calculate_stoploss, validate_risk_reward,
-    calculate_trailing_stops
+    calculate_trailing_stops, estimate_time_to_target, calculate_safety_score
 )
 
 from src.bot.config import ENABLE_ANALYSIS_CACHE, CACHE_EXPIRY_MINUTES
@@ -159,6 +162,7 @@ def analyze_stock(
     symbol: str,
     mode: str = 'balanced',
     timeframe: str = 'medium',
+    horizon: str = '3months',
     use_cache: bool = True
 ) -> Dict[str, Any]:
     """
@@ -168,6 +172,7 @@ def analyze_stock(
         symbol: Stock ticker symbol
         mode: Risk mode (conservative, balanced, aggressive)
         timeframe: Analysis timeframe (short, medium)
+        horizon: Investment horizon (1week, 2weeks, 1month, 3months, 6months, 1year)
         use_cache: Whether to use cached results
     
     Returns:
@@ -196,7 +201,6 @@ def analyze_stock(
     
     # Get configuration
     tf_config = TIMEFRAME_CONFIGS[timeframe]
-    mode_config = RISK_MODES[mode]
     data_period = tf_config['data_period']
     
     # Fetch data
@@ -235,8 +239,8 @@ def analyze_stock(
     resistance = indicators['resistance']
     fib_extensions = indicators['fib_extensions']
     
-    # Direction based on recommendation
-    direction = 'long' if recommendation_type in ['BUY', 'HOLD'] else 'short'
+    # Always calculate long targets for beginners
+    direction = 'long'
     
     # Calculate targets
     target_data = calculate_targets(
@@ -275,11 +279,33 @@ def analyze_stock(
     # Calculate trailing stops
     trailing_data = calculate_trailing_stops(current_price, atr, mode)
     
+    # Calculate time estimate for target
+    time_estimate = estimate_time_to_target(
+        current_price,
+        target_data['recommended_target'],
+        atr,
+        indicators['atr_percent'],
+        indicators['momentum'],
+        indicators['adx'],
+        horizon
+    )
+    
+    # Calculate safety score
+    safety_score = calculate_safety_score(
+        confidence,
+        risk_reward,
+        indicators['adx'],
+        indicators['rsi'],
+        is_blocked,
+        horizon
+    )
+    
     # Compile analysis result
     analysis = {
         'symbol': symbol,
         'mode': mode,
         'timeframe': tf_config['name'],
+        'horizon': horizon,
         'current_price': current_price,
         'indicators': indicators,
         'signal_data': signal_data,
@@ -301,6 +327,8 @@ def analyze_stock(
         'reasoning': reasoning,
         'actions': actions,
         'trailing_data': trailing_data,
+        'time_estimate': time_estimate,
+        'safety_score': safety_score,
         'analyzed_at': datetime.utcnow().isoformat(),
     }
     
@@ -386,40 +414,95 @@ def search_symbol(query: str, limit: int = 10) -> List[Dict[str, str]]:
     """
     Search for stock symbols by name or ticker
     
+    Uses yahooquery to search for symbols and get company information.
+    
     Args:
-        query: Search query
+        query: Search query (can be company name or ticker)
         limit: Maximum results
     
     Returns:
-        List of matching stocks
+        List of matching stocks with symbol, name, and exchange
     """
-    # This is a simplified implementation
-    # In production, you'd query a stock database or API
+    from yahooquery import Ticker
     
-    query = query.upper().strip()
+    query = query.strip().upper()
     results = []
     
-    # Try to read from stock_tickers.csv if available
+    # First, try to read from stock_tickers.csv if available (faster)
     try:
         import csv
         tickers_file = os.path.join(os.path.dirname(__file__), '../../../data/stock_tickers.csv')
         
         if os.path.exists(tickers_file):
-            with open(tickers_file, 'r') as f:
+            with open(tickers_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    ticker = row.get('ticker', '')
-                    if query in ticker:
-                        results.append({
-                            'symbol': ticker,
-                            'market': row.get('market', 'Unknown')
-                        })
+                    ticker = row.get('ticker', '').upper()
+                    name = row.get('name', '').upper()
+                    market = row.get('market', '')
+                    
+                    # Check if query matches ticker or name
+                    if query in ticker or (name and query in name):
+                        # Try to get company info from yahooquery
+                        try:
+                            ticker_obj = Ticker(ticker)
+                            quote = ticker_obj.quote_type
+                            
+                            if quote and ticker in quote:
+                                company_info = quote[ticker]
+                                full_name = company_info.get('longName', company_info.get('shortName', name))
+                                exchange = company_info.get('exchange', market)
+                                
+                                results.append({
+                                    'symbol': ticker,
+                                    'name': full_name,
+                                    'exchange': exchange or market or 'Unknown'
+                                })
+                            else:
+                                # Fallback to CSV data
+                                results.append({
+                                    'symbol': ticker,
+                                    'name': row.get('name', ''),
+                                    'exchange': market or 'Unknown'
+                                })
+                        except Exception:
+                            # Fallback to CSV data
+                            results.append({
+                                'symbol': ticker,
+                                'name': row.get('name', ''),
+                                'exchange': market or 'Unknown'
+                            })
+                        
                         if len(results) >= limit:
                             break
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Error reading tickers file: {e}")
     
-    return results
+    # If no results from CSV, try direct yahooquery lookup
+    if not results:
+        # Try common suffixes for Indian stocks
+        suffixes = ['.NS', '.BO', '']
+        for suffix in suffixes:
+            test_symbol = query + suffix if suffix else query
+            try:
+                ticker_obj = Ticker(test_symbol)
+                quote = ticker_obj.quote_type
+                
+                if quote and test_symbol in quote:
+                    company_info = quote[test_symbol]
+                    full_name = company_info.get('longName', company_info.get('shortName', ''))
+                    exchange = company_info.get('exchange', 'Unknown')
+                    
+                    results.append({
+                        'symbol': test_symbol,
+                        'name': full_name,
+                        'exchange': exchange
+                    })
+                    break
+            except Exception:
+                continue
+    
+    return results[:limit]
 
 
 def validate_symbol(symbol: str) -> bool:

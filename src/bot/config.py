@@ -214,25 +214,39 @@ SETTINGS_MENU_BUTTONS = [
 # =============================================================================
 
 WELCOME_MESSAGE = f"""
-👋 Welcome to **{BOT_NAME}**!
+👋 *Welcome to {BOT_NAME}!*
 
-I'm your professional stock analysis assistant powered by advanced technical indicators and risk management strategies.
+Your one-stop platform for smart stock investing.
+━━━━━━━━━━━━━━━━━━━━
 
-**What I can do:**
-• 📊 Analyze stocks with 14+ technical indicators
-• 📈 Compare multiple stocks side-by-side
-• ⭐ Manage your watchlist
-• 🔔 Set smart price and technical alerts
-• 💼 Track your portfolio performance
-• 📅 Schedule daily/weekly reports
-• 📊 Generate beautiful charts
-• 🔬 Quick backtesting
+*🎯 WHAT I CAN DO FOR YOU:*
 
-**Getting Started:**
-Try analyzing a stock: `/analyze RELIANCE.NS`
-Or use the menu below to explore all features!
+📊 *Analyze Stocks* - Get clear BUY/HOLD/AVOID recommendations
+💰 *Position Sizing* - Know exactly how much to invest
+🎯 *Target & Stop Loss* - Know when to take profits or cut losses
+⏱️ *Timeline* - When to expect results
+⭐ *Watchlist* - Track your favorite stocks
+🔔 *Alerts* - Get notified on price changes
+💼 *Portfolio* - Track your investments
 
-💡 **Tip:** Use `/help` anytime to see all available commands.
+━━━━━━━━━━━━━━━━━━━━
+
+*🚀 QUICK START:*
+
+1️⃣ First, set up your preferences:
+   `/settings` - Choose your risk level & investment period
+
+2️⃣ Then analyze any stock:
+   `/analyze RELIANCE.NS`
+   `/analyze TCS.NS`
+
+━━━━━━━━━━━━━━━━━━━━
+
+*💡 NEW TO INVESTING?*
+No worries! I'll explain everything in simple terms.
+Start with `/settings` to configure your preferences.
+
+Use `/help` for all commands.
 """
 
 HELP_MESSAGE = """
@@ -257,32 +271,38 @@ HELP_MESSAGE = """
 • `/clearalerts` - Clear all alerts
 
 **💼 Portfolio:**
-• `/portfolio` - View portfolio (coming soon)
+• `/portfolio` - View portfolio with P&L
+• `/portfolio add SYMBOL SHARES PRICE` - Add position
+• `/portfolio remove SYMBOL` - Remove position
+• `/portfolio update SYMBOL SHARES PRICE` - Update position
 
-**⚙️ Settings:**
-• `/settings` - View/change settings
-• `/setmode MODE` - Set risk mode (conservative/moderate/aggressive)
-• `/settimeframe TF` - Set timeframe (1d/1wk/1mo)
+**⚙️ Settings:** *(NEW: Interactive buttons!)*
+• `/settings` - View/change ALL settings with buttons
+• `/sethorizon PERIOD` - Set investment period:
+  `1week`, `2weeks`, `1month`, `3months`, `6months`, `1year`
+• `/setmode MODE` - Set risk mode:
+  `conservative`, `balanced`, `aggressive`
 • `/setcapital AMOUNT` - Set default capital
 • `/resetsettings` - Reset to defaults
-• `/portfolio remove [SYM]` - Remove position
 
-**Settings:**
-• `/settings` - Settings menu
-• `/setmode [conservative|balanced|aggressive]` - Risk mode
-• `/settimeframe [short|medium]` - Timeframe
-• `/setcapital [AMOUNT]` - Default capital
+**📅 Investment Horizons:**
+• 1 week - Quick trade (HIGH risk)
+• 2 weeks - Swing trade (MEDIUM-HIGH risk)
+• 1 month - Short position (MEDIUM risk)
+• 3 months - Recommended (MEDIUM-LOW risk) ⭐
+• 6 months - Ideal for beginners (LOW risk) ⭐
+• 1 year - Long-term wealth (VERY LOW risk)
 
 **Advanced:**
-• `/backtest [SYM] [DAYS]` - Backtest strategy
-• `/search [KEYWORD]` - Search stock ticker
+• `/backtest SYMBOL DAYS` - Backtest strategy
+• `/search KEYWORD` - Search stock ticker
 • `/schedule` - Manage scheduled reports
 
 **Help:**
 • `/help` - This message
 • `/about` - Bot information
 
-💡 **Tip:** Most commands also have interactive buttons!
+💡 **Tip:** Use `/settings` to access all options through easy-to-use buttons!
 """
 
 ABOUT_MESSAGE = f"""

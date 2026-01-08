@@ -59,8 +59,6 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         context: Bot context
     """
     query = update.callback_query
-    await query.answer()  # Acknowledge the callback
-    
     user_id = query.from_user.id
     callback_data = query.data
     
@@ -71,6 +69,15 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         parts = callback_data.split(':')
         action = parts[0]
         params = parts[1:] if len(parts) > 1 else []
+        
+        # Handle settings callbacks through the settings handler
+        if callback_data.startswith("settings_"):
+            from ..handlers.settings import handle_settings_callback
+            await handle_settings_callback(update, context)
+            return
+        
+        # Acknowledge the callback for other handlers
+        await query.answer()
         
         # Route to appropriate handler
         if action == "watchlist_add":
@@ -89,12 +96,6 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_alert_signal_setup(query, context, params)
         elif action == "alert_delete":
             await handle_alert_delete(query, context, params)
-        elif action == "settings_menu":
-            await handle_settings_menu(query, context)
-        elif action == "settings_mode":
-            await handle_settings_mode(query, context, params)
-        elif action == "settings_timeframe":
-            await handle_settings_timeframe(query, context, params)
         elif action == "analyze_quick":
             await handle_analyze_quick(query, context, params)
         elif action == "analyze_full":
@@ -103,6 +104,15 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_back(query, context, params)
         elif action == "close":
             await handle_close(query, context)
+        elif action == "main_menu":
+            await handle_main_menu(query, context)
+        elif action == "noop":
+            # No operation - just acknowledge
+            pass
+        elif action == "confirm":
+            await handle_confirm(query, context, params)
+        elif action == "cancel":
+            await handle_cancel(query, context, params)
         else:
             await query.edit_message_text(
                 format_error(f"Unknown action: {action}")
@@ -110,9 +120,12 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     
     except Exception as e:
         logger.error(f"Error handling callback {callback_data}: {e}", exc_info=True)
-        await query.edit_message_text(
-            format_error(f"An error occurred: {str(e)}")
-        )
+        try:
+            await query.edit_message_text(
+                format_error(f"An error occurred: {str(e)}")
+            )
+        except Exception:
+            pass
 
 
 # ============================================================================
@@ -549,3 +562,60 @@ async def handle_back(query, context, params: list) -> None:
 async def handle_close(query, context) -> None:
     """Close/delete the message."""
     await query.message.delete()
+
+
+async def handle_main_menu(query, context) -> None:
+    """Return to main menu with helpful guide."""
+    await query.edit_message_text(
+        """
+*📊 STOCK ANALYZER PRO - MAIN MENU*
+━━━━━━━━━━━━━━━━━━━━
+
+*🔍 ANALYZE STOCKS*
+`/analyze RELIANCE.NS` - Full analysis with recommendation
+`/quick TCS.NS` - Quick summary
+
+*📈 COMPARE STOCKS*
+`/compare INFY.NS TCS.NS` - Side by side comparison
+
+*⚙️ YOUR SETTINGS*
+`/settings` - Customize your preferences
+_(Risk level, investment period, capital)_
+
+*⭐ TRACK FAVORITES*
+`/watchlist` - Manage your stock list
+`/alerts` - Set price notifications
+
+*💼 YOUR PORTFOLIO*
+`/portfolio` - Track your investments
+
+━━━━━━━━━━━━━━━━━━━━
+
+*💡 First time?* Start with `/settings` to configure your preferences!
+
+Use `/help` for complete command list.
+""",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_confirm(query, context, params: list) -> None:
+    """Handle confirmation callbacks."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid confirmation"))
+        return
+    
+    action = params[0]
+    data = params[1] if len(params) > 1 else None
+    user_id = query.from_user.id
+    
+    if action == "confirm_settings_reset":
+        from ..handlers.settings import confirm_settings_reset
+        await confirm_settings_reset(query.message.chat_id, context)
+    else:
+        await query.edit_message_text(format_success(f"Action {action} confirmed"))
+
+
+async def handle_cancel(query, context, params: list) -> None:
+    """Handle cancellation callbacks."""
+    await query.edit_message_text("❌ Operation cancelled")

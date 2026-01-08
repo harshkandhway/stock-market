@@ -545,3 +545,310 @@ def format_warning(warning_message: str) -> str:
         Formatted warning message
     """
     return f"{EMOJI['warning']} {warning_message}"
+
+
+# =============================================================================
+# BEGINNER-FRIENDLY FORMATTERS
+# =============================================================================
+
+def format_analysis_beginner(analysis: Dict[str, Any], horizon: str = '3months') -> str:
+    """
+    Format analysis result in beginner-friendly format with clear guidance.
+    
+    Args:
+        analysis: Analysis dictionary from analysis_service
+        horizon: Investment horizon
+    
+    Returns:
+        Formatted beginner-friendly analysis string
+    """
+    symbol = analysis['symbol']
+    price = analysis['current_price']
+    recommendation = analysis['recommendation']
+    confidence = analysis['confidence']
+    rec_type = analysis['recommendation_type']
+    
+    indicators = analysis['indicators']
+    target_data = analysis['target_data']
+    stop_data = analysis['stop_data']
+    risk_reward = analysis['risk_reward']
+    rr_valid = analysis['rr_valid']
+    
+    # Safety score
+    safety = analysis.get('safety_score', {})
+    time_estimate = analysis.get('time_estimate', {})
+    
+    # Recommendation emoji and text
+    if rec_type == 'BUY':
+        rec_emoji = "🟢"
+        action_text = "Good opportunity to invest"
+        timing_text = "Buy within this week"
+    elif rec_type == 'SELL':
+        rec_emoji = "🔴"
+        action_text = "Not recommended to buy"
+        timing_text = "Wait for better conditions"
+    elif rec_type == 'BLOCKED':
+        rec_emoji = "⛔"
+        action_text = "Avoid this stock for now"
+        timing_text = "Wait until conditions improve"
+    else:
+        rec_emoji = "🟡"
+        action_text = "Wait for clearer signals"
+        timing_text = "Check again in 1-2 weeks"
+    
+    # Calculate profit/loss (example with Rs 10,000)
+    example_capital = 10000
+    shares = int(example_capital / price)
+    target = target_data['recommended_target']
+    stop = stop_data['recommended_stop']
+    
+    potential_profit = shares * (target - price)
+    potential_loss = shares * (price - stop)
+    profit_pct = ((target - price) / price) * 100
+    loss_pct = ((price - stop) / price) * 100
+    
+    # Safety rating
+    safety_stars = safety.get('stars', 3)
+    safety_emoji = '⭐' * safety_stars
+    safety_rating = safety.get('rating', 'MODERATE')
+    
+    message = f"""
+{'='*35}
+{EMOJI['chart']} *{symbol}*
+{'='*35}
+
+{rec_emoji} *{recommendation}*
+_{action_text}_
+
+━━━━━━━━━━━━━━━━━━━━
+
+💰 *Current Price:* {CURRENCY_SYMBOL}{format_number(price)}
+
+🛡️ *Safety Rating:* {safety_emoji}
+   {safety_rating}
+
+━━━━━━━━━━━━━━━━━━━━
+
+📋 *WHAT TO DO*
+━━━━━━━━━━━━━━━━━━━━
+"""
+    
+    if rec_type == 'BUY':
+        message += f"""
+✅ *BUY NOW* at Rs {format_number(price)}
+   Set these price alerts:
+
+🎯 *Sell for Profit:* Rs {format_number(target)} (+{profit_pct:.1f}%)
+🛡️ *Stop Loss:* Rs {format_number(stop)} (-{loss_pct:.1f}%)
+"""
+    elif rec_type == 'HOLD':
+        message += f"""
+⏳ *WAIT* - Don't buy yet
+   Look for price to drop to Rs {format_number(indicators.get('support', price * 0.95))}
+"""
+    else:
+        message += f"""
+❌ *AVOID* - Not a good time
+   Wait until trend improves
+"""
+    
+    # Time estimate
+    if time_estimate:
+        est_date = time_estimate.get('estimated_date')
+        if est_date:
+            from datetime import datetime
+            if isinstance(est_date, datetime):
+                message += f"""
+📅 *Expected Timeline:* ~{time_estimate.get('trading_days', '?')} trading days
+   Target by: {est_date.strftime('%d %b %Y')}
+"""
+    
+    # Profit/Loss example
+    message += f"""
+━━━━━━━━━━━━━━━━━━━━
+
+💵 *Example: Rs 10,000 Investment*
+━━━━━━━━━━━━━━━━━━━━
+   Buy: {shares} shares @ Rs {format_number(price)}
+   
+   ✅ If target reached:
+      Profit: Rs {format_number(potential_profit)} (+{profit_pct:.1f}%)
+   
+   ❌ If stop loss hits:
+      Loss: Rs {format_number(potential_loss)} (-{loss_pct:.1f}%)
+   
+   ⚖️ Risk/Reward: {format_number(risk_reward, 2)}:1
+"""
+    
+    if rr_valid:
+        message += "   ✅ Good ratio\n"
+    else:
+        message += "   ⚠️ Below minimum\n"
+    
+    # Market conditions summary
+    phase = indicators['market_phase'].replace('_', ' ').title()
+    
+    if 'uptrend' in indicators['market_phase']:
+        trend_emoji = "📈"
+        trend_text = "Moving UP"
+    elif 'downtrend' in indicators['market_phase']:
+        trend_emoji = "📉"
+        trend_text = "Moving DOWN"
+    else:
+        trend_emoji = "↔️"
+        trend_text = "Moving SIDEWAYS"
+    
+    message += f"""
+━━━━━━━━━━━━━━━━━━━━
+
+{EMOJI['info']} *MARKET CONDITIONS*
+━━━━━━━━━━━━━━━━━━━━
+{trend_emoji} Trend: {trend_text}
+📊 Strength: {indicators['adx_strength'].replace('_', ' ').title()}
+📈 Momentum: {indicators['rsi_zone'].replace('_', ' ').title()}
+
+━━━━━━━━━━━━━━━━━━━━
+"""
+    
+    # Checklist
+    checks_passed = 0
+    total_checks = 5
+    
+    if indicators['price_vs_trend_ema'] == 'above':
+        checks_passed += 1
+    if 30 <= indicators['rsi'] <= 70:
+        checks_passed += 1
+    if indicators['adx'] >= 25:
+        checks_passed += 1
+    if indicators['volume_ratio'] >= 0.7:
+        checks_passed += 1
+    if risk_reward >= 2:
+        checks_passed += 1
+    
+    message += f"""
+✅ *CHECKLIST:* {checks_passed}/{total_checks} passed
+"""
+    
+    if checks_passed >= 4:
+        message += "   Good investment opportunity!\n"
+    elif checks_passed >= 3:
+        message += "   Moderate - proceed with caution\n"
+    else:
+        message += "   Not recommended at this time\n"
+    
+    message += f"""
+{'='*35}
+_Developed by Harsh Kandhway_
+"""
+    
+    return message.strip()
+
+
+def format_quick_recommendation(analysis: Dict[str, Any]) -> str:
+    """
+    Format a quick recommendation message (very short).
+    
+    Args:
+        analysis: Analysis dictionary
+    
+    Returns:
+        Short recommendation message
+    """
+    symbol = analysis['symbol']
+    price = analysis['current_price']
+    recommendation = analysis['recommendation']
+    rec_type = analysis['recommendation_type']
+    confidence = analysis['confidence']
+    
+    safety = analysis.get('safety_score', {})
+    target = analysis.get('target', price * 1.05)
+    stop = analysis.get('stop_loss', price * 0.95)
+    
+    target_pct = ((target - price) / price) * 100
+    stop_pct = ((price - stop) / price) * 100
+    
+    # Emoji
+    if rec_type == 'BUY':
+        emoji = "🟢"
+    elif rec_type == 'SELL':
+        emoji = "🔴"
+    elif rec_type == 'BLOCKED':
+        emoji = "⛔"
+    else:
+        emoji = "🟡"
+    
+    safety_stars = '⭐' * safety.get('stars', 3)
+    
+    message = f"""
+{emoji} *{symbol}* @ Rs {format_number(price)}
+
+*{recommendation}* ({confidence:.0f}%)
+Safety: {safety_stars}
+
+🎯 Target: Rs {format_number(target)} (+{target_pct:.1f}%)
+🛡️ Stop: Rs {format_number(stop)} (-{stop_pct:.1f}%)
+"""
+    
+    return message.strip()
+
+
+def format_investment_guidance(analysis: Dict[str, Any], capital: float = 100000) -> str:
+    """
+    Format detailed investment guidance with position sizing.
+    
+    Args:
+        analysis: Analysis dictionary
+        capital: User's capital
+    
+    Returns:
+        Formatted guidance message
+    """
+    symbol = analysis['symbol']
+    price = analysis['current_price']
+    target = analysis.get('target', price * 1.05)
+    stop = analysis.get('stop_loss', price * 0.95)
+    risk_reward = analysis.get('risk_reward', 1.0)
+    rec_type = analysis['recommendation_type']
+    
+    # Position sizing
+    risk_per_trade = 0.01  # 1% risk
+    risk_amount = capital * risk_per_trade
+    stop_distance = price - stop
+    
+    if stop_distance > 0:
+        shares = int(risk_amount / stop_distance)
+    else:
+        shares = int(capital * 0.1 / price)  # 10% of capital
+    
+    investment = shares * price
+    potential_profit = shares * (target - price)
+    potential_loss = shares * stop_distance if stop_distance > 0 else shares * price * 0.05
+    
+    message = f"""
+💼 *INVESTMENT GUIDANCE FOR {symbol}*
+━━━━━━━━━━━━━━━━━━━━
+
+💰 *Your Capital:* Rs {capital:,.0f}
+
+📊 *Recommended Position:*
+   Buy: {shares} shares
+   Investment: Rs {investment:,.0f} ({investment/capital*100:.1f}% of capital)
+   
+   Entry: Rs {format_number(price)}
+   Target: Rs {format_number(target)}
+   Stop Loss: Rs {format_number(stop)}
+
+💵 *Potential Outcomes:*
+   ✅ Profit if target hit: Rs {potential_profit:,.0f}
+   ❌ Loss if stop hit: Rs {potential_loss:,.0f}
+   
+   Risk/Reward: {format_number(risk_reward, 2)}:1
+
+⚠️ *IMPORTANT:*
+   • Never invest more than you can afford to lose
+   • Always set a stop loss
+   • Don't put all money in one stock
+━━━━━━━━━━━━━━━━━━━━
+"""
+    
+    return message.strip()

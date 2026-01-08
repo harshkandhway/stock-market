@@ -39,9 +39,12 @@ from src.bot.handlers.watchlist import (
 from src.bot.handlers.settings import (
     settings_command,
     setmode_command,
+    sethorizon_command,
     settimeframe_command,
     setcapital_command,
-    reset_settings_command
+    reset_settings_command,
+    handle_settings_callback,
+    handle_capital_input
 )
 from src.bot.handlers.compare import (
     compare_command
@@ -54,6 +57,15 @@ from src.bot.handlers.alerts import (
 )
 from src.bot.handlers.portfolio import (
     portfolio_command
+)
+from src.bot.handlers.search import (
+    search_command
+)
+from src.bot.handlers.schedule import (
+    schedule_command
+)
+from src.bot.handlers.backtest import (
+    backtest_command
 )
 from src.bot.handlers.callbacks import (
     handle_callback_query
@@ -100,6 +112,87 @@ async def authorization_filter(update, context):
         return False
     
     return True
+
+
+async def send_scheduled_reports(bot):
+    """
+    Send scheduled reports to users
+    
+    Args:
+        bot: Telegram bot instance
+    """
+    from src.bot.database.db import get_db_context, get_all_active_scheduled_reports
+    from src.bot.services.report_service import (
+        generate_watchlist_report,
+        generate_portfolio_report,
+        generate_combined_report
+    )
+    from datetime import datetime, time
+    
+    try:
+        with get_db_context() as db:
+            reports = get_all_active_scheduled_reports(db)
+            
+            current_time = datetime.now().time()
+            current_hour = current_time.hour
+            current_minute = current_time.minute
+            
+            for report in reports:
+                try:
+                    # Parse frequency (simple format: "HH:MM" for daily)
+                    if ':' in report.frequency:
+                        parts = report.frequency.split(':')
+                        if len(parts) == 2:
+                            scheduled_hour = int(parts[0])
+                            scheduled_minute = int(parts[1])
+                            
+                            # Check if it's time to send (within same hour and minute)
+                            if current_hour == scheduled_hour and current_minute == scheduled_minute:
+                                # Check if already sent today
+                                if report.last_sent:
+                                    last_sent_date = report.last_sent.date()
+                                    today = datetime.now().date()
+                                    if last_sent_date == today:
+                                        continue  # Already sent today
+                                
+                                # Generate and send report
+                                user = report.user
+                                telegram_id = user.telegram_id
+                                
+                                try:
+                                    if report.report_type == 'watchlist':
+                                        message = generate_watchlist_report(db, telegram_id)
+                                    elif report.report_type == 'portfolio':
+                                        message = generate_portfolio_report(db, telegram_id)
+                                    elif report.report_type == 'combined':
+                                        message = generate_combined_report(db, telegram_id)
+                                    else:
+                                        continue
+                                    
+                                    # Send message
+                                    await bot.send_message(
+                                        chat_id=telegram_id,
+                                        text=message,
+                                        parse_mode='Markdown'
+                                    )
+                                    
+                                    # Update last_sent
+                                    from datetime import datetime as dt
+                                    report.last_sent = dt.utcnow()
+                                    db.commit()
+                                except Exception as send_error:
+                                    logger.error(f"Error sending report to {telegram_id}: {send_error}")
+                                    continue
+                                
+                                logger.info(
+                                    f"Sent {report.report_type} report to user {telegram_id}"
+                                )
+                except Exception as e:
+                    logger.error(f"Error sending scheduled report {report.id}: {e}")
+                    continue
+                    
+    except Exception as e:
+        logger.error(f"Error in send_scheduled_reports: {e}", exc_info=True)
 
 
 async def error_handler(update, context):
@@ -161,6 +254,7 @@ def create_bot_application() -> Application:
     # Settings commands
     application.add_handler(CommandHandler("settings", settings_command))
     application.add_handler(CommandHandler("setmode", setmode_command))
+    application.add_handler(CommandHandler("sethorizon", sethorizon_command))
     application.add_handler(CommandHandler("settimeframe", settimeframe_command))
     application.add_handler(CommandHandler("setcapital", setcapital_command))
     application.add_handler(CommandHandler("resetsettings", reset_settings_command))
@@ -174,8 +268,24 @@ def create_bot_application() -> Application:
     # Portfolio commands
     application.add_handler(CommandHandler("portfolio", portfolio_command))
     
+    # Search commands
+    application.add_handler(CommandHandler("search", search_command))
+    
+    # Schedule commands
+    application.add_handler(CommandHandler("schedule", schedule_command))
+    
+    # Backtest commands
+    application.add_handler(CommandHandler("backtest", backtest_command))
+    
     # Callback query handler for inline buttons
     application.add_handler(CallbackQueryHandler(handle_callback_query))
+    
+    # Text message handler for custom inputs (capital, etc.)
+    from src.bot.handlers.settings import handle_capital_input
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, 
+        handle_capital_input
+    ))
     
     # Unknown command handler (must be last)
     application.add_handler(MessageHandler(filters.COMMAND, unknown_command))
@@ -235,6 +345,18 @@ async def post_init(application: Application):
             name='Check all alerts',
             replace_existing=True
         )
+        
+        # Add scheduled reports job (runs every hour to check for scheduled reports)
+        scheduler.add_job(
+            send_scheduled_reports,
+            'interval',
+            minutes=60,
+            args=[application.bot],
+            id='send_scheduled_reports',
+            name='Send scheduled reports',
+            replace_existing=True
+        )
+        
         scheduler.start()
         
         # Store in application context
@@ -245,6 +367,7 @@ async def post_init(application: Application):
             f"Alert service started. Checking alerts every "
             f"{ALERT_CHECK_INTERVAL_MINUTES} minute(s)"
         )
+        logger.info("Scheduled reports service started. Checking every hour.")
     except Exception as e:
         logger.error(f"Failed to start alert service: {e}", exc_info=True)
         logger.warning("Bot will run without alert notifications")

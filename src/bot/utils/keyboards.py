@@ -249,23 +249,41 @@ def create_portfolio_item_keyboard(symbol: str) -> InlineKeyboardMarkup:
 
 def create_settings_menu_keyboard() -> InlineKeyboardMarkup:
     """
-    Create inline keyboard for settings menu
+    Create inline keyboard for settings menu with clear labels.
     
     Returns:
         InlineKeyboardMarkup with settings options
     """
     keyboard = [
         [
-            InlineKeyboardButton("⚙️ Risk Mode", callback_data="settings_risk_mode"),
-            InlineKeyboardButton("⏱️ Timeframe", callback_data="settings_timeframe"),
+            InlineKeyboardButton(
+                "📅 How Long to Hold? (Investment Period)", 
+                callback_data="settings_horizon"
+            ),
         ],
         [
-            InlineKeyboardButton("💰 Set Capital", callback_data="settings_capital"),
-            InlineKeyboardButton("🌍 Timezone", callback_data="settings_timezone"),
+            InlineKeyboardButton(
+                "🎯 Risk Comfort Level", 
+                callback_data="settings_risk_mode"
+            ),
         ],
         [
-            InlineKeyboardButton("🔔 Notifications", callback_data="settings_notifications"),
-            InlineKeyboardButton("📋 View Settings", callback_data="settings_show"),
+            InlineKeyboardButton(
+                "💰 My Investment Amount", 
+                callback_data="settings_capital"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📊 Report Style (Simple/Advanced)", 
+                callback_data="settings_report_style"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📋 View All My Settings", 
+                callback_data="settings_show"
+            ),
         ],
         [
             InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
@@ -277,23 +295,31 @@ def create_settings_menu_keyboard() -> InlineKeyboardMarkup:
 
 def create_risk_mode_keyboard(current_mode: str) -> InlineKeyboardMarkup:
     """
-    Create inline keyboard for risk mode selection
+    Create inline keyboard for risk mode selection with info buttons.
     
     Args:
         current_mode: Current risk mode
     
     Returns:
-        InlineKeyboardMarkup with risk mode options
+        InlineKeyboardMarkup with risk mode options and info buttons
     """
-    modes = ['conservative', 'balanced', 'aggressive']
+    modes = [
+        ('conservative', '🛡️ Conservative', 'Safety first'),
+        ('balanced', '⚖️ Balanced ⭐', 'Recommended'),
+        ('aggressive', '🚀 Aggressive', 'High risk'),
+    ]
     keyboard = []
     
-    for mode in modes:
-        is_current = "✅ " if mode == current_mode else ""
+    for mode_key, label, desc in modes:
+        is_current = "✅ " if mode_key == current_mode else ""
         keyboard.append([
             InlineKeyboardButton(
-                f"{is_current}{mode.title()}",
-                callback_data=f"settings_risk_mode:{mode}"
+                f"{is_current}{label}",
+                callback_data=f"settings_risk_mode:{mode_key}"
+            ),
+            InlineKeyboardButton(
+                "ℹ️ Guide",
+                callback_data=f"settings_risk_mode:info_{mode_key}"
             )
         ])
     
@@ -332,6 +358,124 @@ def create_timeframe_keyboard(current_timeframe: str) -> InlineKeyboardMarkup:
     keyboard.append([
         InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
     ])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_horizon_keyboard(current_horizon: str) -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for investment horizon selection with info buttons.
+    
+    Args:
+        current_horizon: Current investment horizon
+    
+    Returns:
+        InlineKeyboardMarkup with horizon options and info buttons
+    """
+    horizons = [
+        ('1week', '⚡ 1 Week', '🔴', 'Quick Trade'),
+        ('2weeks', '🔄 2 Weeks', '🟠', 'Swing Trade'),
+        ('1month', '📅 1 Month', '🟡', 'Short'),
+        ('3months', '📊 3 Months ⭐', '🟢', 'Recommended'),
+        ('6months', '🎯 6 Months ⭐', '🟢', 'Beginner'),
+        ('1year', '💎 1 Year', '🟢', 'Long-Term'),
+    ]
+    keyboard = []
+    
+    for horizon_key, label, risk_emoji, desc in horizons:
+        is_current = "✅ " if horizon_key == current_horizon else ""
+        # Each row has: Select button + Info button
+        keyboard.append([
+            InlineKeyboardButton(
+                f"{is_current}{label} {risk_emoji}",
+                callback_data=f"settings_horizon:{horizon_key}"
+            ),
+            InlineKeyboardButton(
+                "ℹ️ Guide",
+                callback_data=f"settings_horizon:info_{horizon_key}"
+            )
+        ])
+    
+    keyboard.append([
+        InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
+    ])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_report_style_keyboard(beginner_mode: bool) -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for report style selection with clear descriptions.
+    
+    Args:
+        beginner_mode: Whether beginner mode is enabled
+    
+    Returns:
+        InlineKeyboardMarkup with report style options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                f"{'✅ ' if beginner_mode else ''}📱 Beginner-Friendly ⭐",
+                callback_data="settings_report_style:beginner"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "   Simple • Clear • No Jargon",
+                callback_data="noop"  # Info text, no action
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                f"{'✅ ' if not beginner_mode else ''}📊 Advanced/Technical",
+                callback_data="settings_report_style:advanced"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "   RSI • MACD • Support/Resistance",
+                callback_data="noop"  # Info text, no action
+            )
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
+        ],
+    ]
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_capital_preset_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard with capital presets and guide.
+    
+    Returns:
+        InlineKeyboardMarkup with preset capital options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("💡 How Capital Works", callback_data="settings_capital:guide"),
+        ],
+        [
+            InlineKeyboardButton("Rs 25,000", callback_data="settings_capital:25000"),
+            InlineKeyboardButton("Rs 50,000", callback_data="settings_capital:50000"),
+        ],
+        [
+            InlineKeyboardButton("Rs 1,00,000 ⭐", callback_data="settings_capital:100000"),
+            InlineKeyboardButton("Rs 2,50,000", callback_data="settings_capital:250000"),
+        ],
+        [
+            InlineKeyboardButton("Rs 5,00,000", callback_data="settings_capital:500000"),
+            InlineKeyboardButton("Rs 10,00,000", callback_data="settings_capital:1000000"),
+        ],
+        [
+            InlineKeyboardButton("✏️ Enter Custom Amount", callback_data="settings_capital:custom"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
+        ],
+    ]
     
     return InlineKeyboardMarkup(keyboard)
 
