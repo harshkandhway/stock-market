@@ -56,27 +56,50 @@ def create_analysis_action_keyboard(symbol: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def create_watchlist_menu_keyboard() -> InlineKeyboardMarkup:
+def create_watchlist_menu_keyboard(symbols: List[str] = None) -> InlineKeyboardMarkup:
     """
     Create inline keyboard for watchlist menu
+    
+    Args:
+        symbols: Optional list of stock symbols to show as buttons
     
     Returns:
         InlineKeyboardMarkup with watchlist options
     """
-    keyboard = [
+    keyboard = []
+    
+    # If symbols provided, create buttons for each symbol
+    if symbols:
+        # Add buttons for each symbol (2 per row)
+        for i in range(0, len(symbols), 2):
+            row = []
+            row.append(InlineKeyboardButton(
+                f"📊 {symbols[i]}", 
+                callback_data=f"analyze:{symbols[i]}"
+            ))
+            if i + 1 < len(symbols):
+                row.append(InlineKeyboardButton(
+                    f"📊 {symbols[i + 1]}", 
+                    callback_data=f"analyze:{symbols[i + 1]}"
+                ))
+            keyboard.append(row)
+        
+        # Add separator row
+        keyboard.append([
+            InlineKeyboardButton("📊 Analyze All", callback_data="watchlist_analyze"),
+        ])
+    
+    # Add action buttons
+    keyboard.extend([
         [
             InlineKeyboardButton("➕ Add Stock", callback_data="watchlist_add_prompt"),
             InlineKeyboardButton("➖ Remove Stock", callback_data="watchlist_remove_prompt"),
         ],
         [
-            InlineKeyboardButton("📋 View Watchlist", callback_data="watchlist_show"),
-            InlineKeyboardButton("📊 Analyze All", callback_data="watchlist_analyze"),
-        ],
-        [
             InlineKeyboardButton("🗑️ Clear Watchlist", callback_data="watchlist_clear_confirm"),
             InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
         ],
-    ]
+    ])
     
     return InlineKeyboardMarkup(keyboard)
 

@@ -454,7 +454,7 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 *🎯 Risk Mode:* {mode['emoji']} {mode['name']}
    {mode['description']}
 
-*💰 Capital:* Rs {settings.default_capital:,.0f}
+*💰 Capital:* Rs {settings.default_capital or 100000:,.0f}
    For position sizing calculations
 
 *📊 Report Style:* {'📱 Beginner-Friendly' if beginner_mode else '📊 Advanced'}
@@ -741,7 +741,7 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
 *🎯 Risk Mode:* {mode['emoji']} {mode['name']}
    {mode['description']}
 
-*💰 Capital:* Rs {settings.default_capital:,.0f}
+*💰 Capital:* Rs {settings.default_capital or 100000:,.0f}
 
 *📊 Report Style:* {'📱 Beginner-Friendly' if beginner_mode else '📊 Advanced'}
 
@@ -1072,8 +1072,8 @@ Great for detailed technical analysis!
    {settings.timeframe.upper() if settings.timeframe else 'MEDIUM'}
 
 *💰 INVESTMENT CAPITAL*
-   Rs {settings.default_capital:,.0f}
-   (1% risk = Rs {settings.default_capital * 0.01:,.0f} per trade)
+   Rs {(settings.default_capital or 100000):,.0f}
+   (1% risk = Rs {(settings.default_capital or 100000) * 0.01:,.0f} per trade)
 
 *📱 REPORT STYLE*
    {'Beginner-Friendly' if beginner_mode else 'Advanced/Technical'}

@@ -196,6 +196,7 @@ RISK_MODES = {
             'trend': 1.5,         # Emphasize trend
             'momentum': 0.8,
             'confirmation': 1.2,
+            'pattern': 1.3,       # Trust strong patterns
         }
     },
     'balanced': {
@@ -212,6 +213,7 @@ RISK_MODES = {
             'trend': 1.0,
             'momentum': 1.0,
             'confirmation': 1.0,
+            'pattern': 1.0,       # Balanced pattern weight
         }
     },
     'aggressive': {
@@ -228,6 +230,7 @@ RISK_MODES = {
             'trend': 0.8,
             'momentum': 1.3,
             'confirmation': 0.9,
+            'pattern': 1.5,       # More aggressive on patterns
         }
     }
 }
@@ -365,6 +368,236 @@ CONFIDENCE_LEVELS = {
     (55, 74): 'MEDIUM',
     (35, 54): 'LOW',
     (0, 34): 'VERY LOW',
+}
+
+# =============================================================================
+# PATTERN HORIZONS (Industry-Standard Time Expectations)
+# =============================================================================
+
+# Each pattern has empirically-observed timeframes for target achievement
+# Based on technical analysis research and historical performance data
+PATTERN_HORIZONS = {
+    # Reversal Patterns (tend to take longer)
+    'Double Bottom': {
+        'min_days': 60,
+        'max_days': 180,
+        'recommended_horizon': '3months',
+        'reliability': 0.72,  # 72% historical success rate
+        'description': 'Classic bullish reversal - needs time to confirm'
+    },
+    'Double Top': {
+        'min_days': 60,
+        'max_days': 180,
+        'recommended_horizon': '3months',
+        'reliability': 0.70,
+        'description': 'Classic bearish reversal pattern'
+    },
+    'Head and Shoulders': {
+        'min_days': 90,
+        'max_days': 365,
+        'recommended_horizon': '6months',
+        'reliability': 0.83,  # Most reliable chart pattern
+        'description': 'Highly reliable bearish reversal'
+    },
+    'Head and Shoulders (forming)': {
+        'min_days': 60,
+        'max_days': 180,
+        'recommended_horizon': '3months',
+        'reliability': 0.65,
+        'description': 'Developing pattern - watch for confirmation'
+    },
+    'Inverse Head and Shoulders': {
+        'min_days': 90,
+        'max_days': 365,
+        'recommended_horizon': '6months',
+        'reliability': 0.83,
+        'description': 'Highly reliable bullish reversal'
+    },
+    'Inverse Head and Shoulders (forming)': {
+        'min_days': 60,
+        'max_days': 180,
+        'recommended_horizon': '3months',
+        'reliability': 0.65,
+        'description': 'Developing pattern - watch for confirmation'
+    },
+    
+    # Triangle Patterns (moderate time)
+    'Ascending Triangle': {
+        'min_days': 21,
+        'max_days': 90,
+        'recommended_horizon': '3months',
+        'reliability': 0.75,
+        'description': 'Bullish continuation - breakout expected'
+    },
+    'Ascending Triangle Breakout': {
+        'min_days': 14,
+        'max_days': 60,
+        'recommended_horizon': '1month',
+        'reliability': 0.78,
+        'description': 'Confirmed breakout - target in weeks'
+    },
+    'Descending Triangle': {
+        'min_days': 21,
+        'max_days': 90,
+        'recommended_horizon': '3months',
+        'reliability': 0.72,
+        'description': 'Bearish continuation - breakdown expected'
+    },
+    'Descending Triangle Breakdown': {
+        'min_days': 14,
+        'max_days': 60,
+        'recommended_horizon': '1month',
+        'reliability': 0.75,
+        'description': 'Confirmed breakdown - target in weeks'
+    },
+    'Symmetrical Triangle': {
+        'min_days': 14,
+        'max_days': 60,
+        'recommended_horizon': '1month',
+        'reliability': 0.60,
+        'description': 'Direction uncertain - wait for breakout'
+    },
+    'Symmetrical Triangle Bullish Breakout': {
+        'min_days': 14,
+        'max_days': 45,
+        'recommended_horizon': '1month',
+        'reliability': 0.68,
+        'description': 'Bullish breakout from symmetrical'
+    },
+    'Symmetrical Triangle Bearish Breakdown': {
+        'min_days': 14,
+        'max_days': 45,
+        'recommended_horizon': '1month',
+        'reliability': 0.68,
+        'description': 'Bearish breakdown from symmetrical'
+    },
+    
+    # Wedge Patterns
+    'Rising Wedge': {
+        'min_days': 21,
+        'max_days': 90,
+        'recommended_horizon': '1month',
+        'reliability': 0.68,
+        'description': 'Bearish reversal - watch for breakdown'
+    },
+    'Rising Wedge Breakdown': {
+        'min_days': 14,
+        'max_days': 60,
+        'recommended_horizon': '1month',
+        'reliability': 0.72,
+        'description': 'Confirmed bearish breakdown'
+    },
+    'Falling Wedge': {
+        'min_days': 21,
+        'max_days': 90,
+        'recommended_horizon': '1month',
+        'reliability': 0.68,
+        'description': 'Bullish reversal - watch for breakout'
+    },
+    'Falling Wedge Breakout': {
+        'min_days': 14,
+        'max_days': 60,
+        'recommended_horizon': '1month',
+        'reliability': 0.72,
+        'description': 'Confirmed bullish breakout'
+    },
+    
+    # Flag & Pennant (short-term continuation)
+    'Bull Flag': {
+        'min_days': 5,
+        'max_days': 21,
+        'recommended_horizon': '2weeks',
+        'reliability': 0.67,
+        'description': 'Short-term bullish continuation'
+    },
+    'Bull Flag Breakout': {
+        'min_days': 3,
+        'max_days': 14,
+        'recommended_horizon': '1week',
+        'reliability': 0.70,
+        'description': 'Confirmed flag breakout - quick target'
+    },
+    'Bear Flag': {
+        'min_days': 5,
+        'max_days': 21,
+        'recommended_horizon': '2weeks',
+        'reliability': 0.67,
+        'description': 'Short-term bearish continuation'
+    },
+    'Bear Flag Breakdown': {
+        'min_days': 3,
+        'max_days': 14,
+        'recommended_horizon': '1week',
+        'reliability': 0.70,
+        'description': 'Confirmed flag breakdown - quick target'
+    },
+    
+    # Candlestick Patterns (short-term signals)
+    'Morning Star': {
+        'min_days': 3,
+        'max_days': 14,
+        'recommended_horizon': '2weeks',
+        'reliability': 0.70,
+        'description': 'Strong bullish reversal candlestick'
+    },
+    'Evening Star': {
+        'min_days': 3,
+        'max_days': 14,
+        'recommended_horizon': '2weeks',
+        'reliability': 0.70,
+        'description': 'Strong bearish reversal candlestick'
+    },
+    'Bullish Engulfing': {
+        'min_days': 2,
+        'max_days': 10,
+        'recommended_horizon': '1week',
+        'reliability': 0.63,
+        'description': 'Bullish reversal signal'
+    },
+    'Bearish Engulfing': {
+        'min_days': 2,
+        'max_days': 10,
+        'recommended_horizon': '1week',
+        'reliability': 0.63,
+        'description': 'Bearish reversal signal'
+    },
+    'Three White Soldiers': {
+        'min_days': 5,
+        'max_days': 21,
+        'recommended_horizon': '2weeks',
+        'reliability': 0.75,
+        'description': 'Very strong bullish continuation'
+    },
+    'Three Black Crows': {
+        'min_days': 5,
+        'max_days': 21,
+        'recommended_horizon': '2weeks',
+        'reliability': 0.75,
+        'description': 'Very strong bearish continuation'
+    },
+    'Hammer': {
+        'min_days': 2,
+        'max_days': 7,
+        'recommended_horizon': '1week',
+        'reliability': 0.60,
+        'description': 'Potential bullish reversal - needs confirmation'
+    },
+    'Shooting Star': {
+        'min_days': 2,
+        'max_days': 7,
+        'recommended_horizon': '1week',
+        'reliability': 0.60,
+        'description': 'Potential bearish reversal - needs confirmation'
+    },
+}
+
+# Default for patterns not in the list
+DEFAULT_PATTERN_HORIZON = {
+    'min_days': 14,
+    'max_days': 60,
+    'recommended_horizon': '1month',
+    'reliability': 0.55,
+    'description': 'Pattern detected'
 }
 
 # =============================================================================

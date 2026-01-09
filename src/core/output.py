@@ -297,6 +297,80 @@ def print_market_conditions(analysis: Dict):
     print(f"     {vol_desc}")
 
 
+def print_chart_patterns(analysis: Dict):
+    """Print detected chart patterns in beginner-friendly format"""
+    indicators = analysis.get('indicators', {})
+    
+    candlestick_patterns = indicators.get('candlestick_patterns', [])
+    chart_patterns = indicators.get('chart_patterns', [])
+    strongest = indicators.get('strongest_pattern')
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    
+    # Skip if no patterns detected
+    if not candlestick_patterns and not chart_patterns:
+        return
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  CHART PATTERN ANALYSIS")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    # Overall pattern bias
+    if pattern_bias == 'bullish':
+        bias_emoji = '[BULLISH]'
+        bias_desc = "Patterns suggest UPWARD movement"
+    elif pattern_bias == 'bearish':
+        bias_emoji = '[BEARISH]'
+        bias_desc = "Patterns suggest DOWNWARD movement"
+    else:
+        bias_emoji = '[NEUTRAL]'
+        bias_desc = "No clear pattern direction"
+    
+    print(f"\n  {bias_emoji} Overall: {bias_desc}")
+    
+    # Strongest pattern highlight
+    if strongest:
+        print(f"\n  [KEY SIGNAL] {strongest.name}")
+        print(f"     Confidence: {strongest.confidence}%")
+        print(f"     {strongest.description}")
+        print(f"     Action: {strongest.action}")
+    
+    # Candlestick patterns
+    if candlestick_patterns:
+        print(f"\n  Recent Candlestick Patterns:")
+        for p in candlestick_patterns[:3]:  # Show top 3
+            if p.type.value == 'bullish':
+                emoji = '[+]'
+            elif p.type.value == 'bearish':
+                emoji = '[-]'
+            else:
+                emoji = '[?]'
+            
+            print(f"   {emoji} {p.name} ({p.confidence}% confidence)")
+            print(f"      {p.description}")
+    
+    # Chart patterns
+    if chart_patterns:
+        print(f"\n  Chart Formation Patterns:")
+        for p in chart_patterns[:2]:  # Show top 2
+            if p.type.value == 'bullish':
+                emoji = '[+]'
+            elif p.type.value == 'bearish':
+                emoji = '[-]'
+            else:
+                emoji = '[?]'
+            
+            print(f"   {emoji} {p.name} ({p.confidence}% confidence)")
+            print(f"      {p.description}")
+            print(f"      Suggested Action: {p.action}")
+    
+    # Pattern explanation for beginners
+    print(f"\n  {BOX_SINGLE * 40}")
+    print(f"  [INFO] What are these patterns?")
+    print(f"  Patterns are shapes formed by price movements")
+    print(f"  that help predict future price direction.")
+    print(f"  Higher confidence = more reliable signal.")
+
+
 def print_important_price_levels(analysis: Dict):
     """Print key price levels in simple terms"""
     indicators = analysis['indicators']
@@ -460,6 +534,212 @@ def print_beginner_tips(analysis: Dict):
         print(f"\n  {i}. {tip}")
 
 
+def print_decision_breakdown(analysis: Dict):
+    """Print comprehensive decision breakdown showing WHY the recommendation was made"""
+    indicators = analysis['indicators']
+    rec_type = analysis['recommendation_type']
+    confidence = analysis['confidence']
+    risk_reward = analysis['risk_reward']
+    rr_valid = analysis['rr_valid']
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  WHY THIS RECOMMENDATION?")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    # =========================================================================
+    # TREND ANALYSIS
+    # =========================================================================
+    trend_score = 0
+    print(f"\n  [TREND ANALYSIS]")
+    print(f"  {BOX_SINGLE * 40}")
+    
+    # Price vs EMA
+    if indicators['price_vs_trend_ema'] == 'above':
+        trend_score += 1
+        print(f"  {CHECK} Price ABOVE long-term average")
+        print(f"       -> Bullish signal")
+    else:
+        print(f"  {CROSS} Price BELOW long-term average")
+        print(f"       -> Bearish signal")
+    
+    # Market Phase
+    phase = indicators['market_phase']
+    if 'uptrend' in phase:
+        trend_score += 1
+        print(f"  {CHECK} Market Phase: {phase.replace('_', ' ').title()}")
+        print(f"       -> Stock is moving UP")
+    elif 'downtrend' in phase:
+        print(f"  {CROSS} Market Phase: {phase.replace('_', ' ').title()}")
+        print(f"       -> Stock is moving DOWN")
+    else:
+        print(f"  [?] Market Phase: {phase.replace('_', ' ').title()}")
+        print(f"       -> No clear direction")
+    
+    # EMA Alignment
+    ema_alignment = indicators.get('ema_alignment', 'mixed')
+    if ema_alignment in ['strong_bullish', 'bullish']:
+        trend_score += 1
+        print(f"  {CHECK} Moving Averages: All aligned UP")
+        print(f"       -> Strong bullish structure")
+    elif ema_alignment in ['strong_bearish', 'bearish']:
+        print(f"  {CROSS} Moving Averages: All aligned DOWN")
+        print(f"       -> Bearish structure")
+    else:
+        print(f"  [?] Moving Averages: Mixed/Unclear")
+        print(f"       -> No clear trend")
+    
+    print(f"\n  Trend Score: {trend_score}/3 bullish")
+    
+    # =========================================================================
+    # MOMENTUM ANALYSIS
+    # =========================================================================
+    momentum_score = 0
+    print(f"\n  [MOMENTUM ANALYSIS]")
+    print(f"  {BOX_SINGLE * 40}")
+    
+    # RSI
+    rsi = indicators['rsi']
+    rsi_zone = indicators['rsi_zone']
+    if rsi_zone in ['oversold', 'extremely_oversold']:
+        momentum_score += 1
+        print(f"  {CHECK} RSI: {rsi:.1f} (Oversold)")
+        print(f"       -> Price may bounce UP soon")
+    elif rsi_zone in ['overbought', 'extremely_overbought']:
+        print(f"  {CROSS} RSI: {rsi:.1f} (Overbought)")
+        print(f"       -> Price may fall soon")
+    else:
+        print(f"  [?] RSI: {rsi:.1f} (Neutral)")
+        print(f"       -> No extreme condition")
+    
+    # MACD
+    macd_hist = indicators.get('macd_hist', 0)
+    if macd_hist > 0:
+        momentum_score += 1
+        print(f"  {CHECK} MACD: Positive ({macd_hist:.4f})")
+        print(f"       -> Upward momentum")
+    else:
+        print(f"  {CROSS} MACD: Negative ({macd_hist:.4f})")
+        print(f"       -> Downward momentum")
+    
+    # ADX
+    adx = indicators['adx']
+    if adx >= 25:
+        momentum_score += 1
+        print(f"  {CHECK} ADX: {adx:.1f} (Strong Trend)")
+        print(f"       -> Trend is reliable")
+    else:
+        print(f"  {WARNING} ADX: {adx:.1f} (Weak Trend)")
+        print(f"       -> Trend may reverse easily")
+    
+    print(f"\n  Momentum Score: {momentum_score}/3 bullish")
+    
+    # =========================================================================
+    # CHART PATTERN ANALYSIS
+    # =========================================================================
+    pattern_score = 0
+    strongest_pattern = indicators.get('strongest_pattern')
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    
+    print(f"\n  [CHART PATTERN ANALYSIS]")
+    print(f"  {BOX_SINGLE * 40}")
+    
+    if strongest_pattern:
+        pattern_type = strongest_pattern.type.value
+        if pattern_type == 'bullish':
+            pattern_score += 2
+            print(f"  {CHECK} Key Pattern: {strongest_pattern.name}")
+            print(f"       Confidence: {strongest_pattern.confidence}%")
+            print(f"       -> {strongest_pattern.action}")
+        elif pattern_type == 'bearish':
+            print(f"  {CROSS} Key Pattern: {strongest_pattern.name}")
+            print(f"       Confidence: {strongest_pattern.confidence}%")
+            print(f"       -> {strongest_pattern.action}")
+        else:
+            print(f"  [?] Key Pattern: {strongest_pattern.name}")
+            print(f"       -> Neutral, wait for confirmation")
+        
+        # Check for conflict
+        if pattern_type == 'bullish' and rec_type in ['SELL', 'BLOCKED']:
+            print(f"\n  {WARNING} CONFLICT DETECTED:")
+            print(f"       Pattern says BUY but other factors say AVOID")
+            print(f"       -> Wait for trend to confirm the pattern")
+    else:
+        print(f"  [?] No significant patterns detected")
+    
+    if pattern_bias == 'bullish':
+        pattern_score += 1
+        print(f"\n  Overall Pattern Bias: BULLISH")
+    elif pattern_bias == 'bearish':
+        print(f"\n  Overall Pattern Bias: BEARISH")
+    else:
+        print(f"\n  Overall Pattern Bias: NEUTRAL")
+    
+    print(f"\n  Pattern Score: {pattern_score}/3 bullish")
+    
+    # =========================================================================
+    # RISK ANALYSIS
+    # =========================================================================
+    risk_score = 0
+    print(f"\n  [RISK ANALYSIS]")
+    print(f"  {BOX_SINGLE * 40}")
+    
+    if rr_valid:
+        risk_score += 1
+        print(f"  {CHECK} Risk/Reward: {risk_reward:.2f}:1")
+        print(f"       -> Good ratio (minimum is 2:1)")
+    else:
+        print(f"  {CROSS} Risk/Reward: {risk_reward:.2f}:1")
+        print(f"       -> Below minimum 2:1 ratio")
+    
+    # Volume
+    vol_ratio = indicators.get('volume_ratio', 1.0)
+    if vol_ratio >= 1.0:
+        risk_score += 1
+        print(f"  {CHECK} Volume: {vol_ratio:.1f}x average")
+        print(f"       -> Good trading activity")
+    else:
+        print(f"  {WARNING} Volume: {vol_ratio:.1f}x average")
+        print(f"       -> Low trading activity")
+    
+    # Check for blocks
+    if analysis.get('is_buy_blocked'):
+        print(f"\n  {WARNING} HARD FILTER TRIGGERED:")
+        for reason in analysis.get('buy_block_reasons', [])[:2]:
+            print(f"       - {reason}")
+    
+    print(f"\n  Risk Score: {risk_score}/2 favorable")
+    
+    # =========================================================================
+    # OVERALL SCORE
+    # =========================================================================
+    total_score = trend_score + momentum_score + pattern_score + risk_score
+    max_score = 11
+    score_pct = (total_score / max_score) * 100
+    
+    print(f"\n  {BOX_DOUBLE * 40}")
+    print(f"  OVERALL SCORE: {total_score}/{max_score} ({score_pct:.0f}%)")
+    print(f"  {BOX_DOUBLE * 40}")
+    
+    # Visual bar
+    filled = int(score_pct / 10)
+    empty = 10 - filled
+    bar = "[" + "#" * filled + "." * empty + "]"
+    print(f"\n  {bar}")
+    
+    if score_pct >= 70:
+        print(f"\n  {CHECK} STRONG BUY CONDITIONS")
+        print(f"       Most factors are bullish")
+    elif score_pct >= 50:
+        print(f"\n  [?] MODERATE CONDITIONS")
+        print(f"       Mixed signals - proceed with caution")
+    elif score_pct >= 30:
+        print(f"\n  {WARNING} WEAK CONDITIONS")
+        print(f"       Most factors are against buying")
+    else:
+        print(f"\n  {CROSS} POOR CONDITIONS")
+        print(f"       Strongly recommend avoiding")
+
+
 def print_full_report(analysis: Dict, position_data: Optional[Dict] = None, horizon: str = '3months'):
     """Print the complete beginner-friendly analysis report"""
     
@@ -468,6 +748,9 @@ def print_full_report(analysis: Dict, position_data: Optional[Dict] = None, hori
     
     # Quick Summary (most important info first)
     print_quick_summary(analysis, horizon)
+    
+    # === NEW: Decision Breakdown - WHY this recommendation ===
+    print_decision_breakdown(analysis)
     
     # Investment Plan
     print_investment_plan(analysis, horizon)
@@ -483,6 +766,9 @@ def print_full_report(analysis: Dict, position_data: Optional[Dict] = None, hori
     
     # Market Conditions
     print_market_conditions(analysis)
+    
+    # Chart Patterns
+    print_chart_patterns(analysis)
     
     # Important Price Levels
     print_important_price_levels(analysis)

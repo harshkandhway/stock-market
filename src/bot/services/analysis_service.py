@@ -242,10 +242,14 @@ def analyze_stock(
     # Always calculate long targets for beginners
     direction = 'long'
     
-    # Calculate targets
+    # Get strongest pattern for pattern-based target calculation
+    strongest_pattern = indicators.get('strongest_pattern')
+    
+    # Calculate targets (with horizon for multi-timeframe targets + pattern integration)
     target_data = calculate_targets(
         current_price, atr, resistance, support,
-        fib_extensions, mode, direction
+        fib_extensions, mode, direction, horizon,
+        strongest_pattern  # NEW: Pass pattern for measured move integration
     )
     
     # Calculate stop loss

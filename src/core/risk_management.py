@@ -21,25 +21,43 @@ def calculate_targets(
     support: float,
     fib_extensions: Dict[str, float],
     mode: str = 'balanced',
-    direction: str = 'long'
+    direction: str = 'long',
+    horizon: str = '3months',
+    strongest_pattern: Optional[any] = None
 ) -> Dict[str, any]:
     """
-    Calculate price targets using multiple professional methods
+    Calculate price targets using multiple professional methods AND investment horizons
     
     Methods:
     1. ATR-based (volatility)
     2. Support/Resistance based
     3. Fibonacci extension based
+    4. Horizon-based (expected returns for different time periods)
+    5. Pattern-based (industry-standard measured moves) - NEW
     
-    Returns the most conservative target for safety
+    Pattern Integration:
+    - If pattern has measured_target, use 40% pattern + 30% horizon + 30% technical
+    - If pattern reliability > 0.7, increase pattern weight to 50%
+    - Pattern invalidation_level used for tighter stop loss
+    
+    Returns targets for ALL horizons, marking the selected one as recommended
     """
     mode_config = RISK_MODES[mode]
     atr_multiplier = mode_config['atr_target_multiplier']
     
     targets = {}
     
+    # Initialize pattern target info
+    targets['has_pattern_target'] = False
+    targets['pattern_target'] = None
+    targets['pattern_target_pct'] = None
+    targets['pattern_name'] = None
+    targets['pattern_reliability'] = None
+    targets['pattern_horizon'] = None
+    targets['pattern_invalidation'] = None
+    
     if direction == 'long':
-        # ATR-based target
+        # ATR-based target (short-term technical)
         targets['atr_target'] = current_price + (atr_multiplier * atr)
         targets['atr_target_pct'] = ((targets['atr_target'] - current_price) / current_price) * 100
         
@@ -50,10 +68,60 @@ def calculate_targets(
         # Fibonacci extension targets
         fib_127 = fib_extensions.get('fib_ext_127', current_price * 1.05)
         fib_161 = fib_extensions.get('fib_ext_161', current_price * 1.08)
+        fib_200 = fib_extensions.get('fib_ext_200', current_price * 1.12)
         targets['fib_target_1'] = fib_127
         targets['fib_target_1_pct'] = ((fib_127 - current_price) / current_price) * 100
         targets['fib_target_2'] = fib_161
         targets['fib_target_2_pct'] = ((fib_161 - current_price) / current_price) * 100
+        targets['fib_target_3'] = fib_200
+        targets['fib_target_3_pct'] = ((fib_200 - current_price) / current_price) * 100
+        
+        # =====================================================================
+        # HORIZON-BASED TARGETS - Calculate for ALL investment horizons
+        # =====================================================================
+        targets['horizon_targets'] = {}
+        
+        for horizon_key, horizon_config in INVESTMENT_HORIZONS.items():
+            # Get expected return range for this horizon
+            min_return = horizon_config['expected_return_min']
+            max_return = horizon_config['expected_return_max']
+            
+            # Calculate target based on mode
+            if mode == 'conservative':
+                # Use minimum expected return
+                target_pct = min_return
+            elif mode == 'aggressive':
+                # Use maximum expected return
+                target_pct = max_return
+            else:  # balanced/moderate
+                # Use average of min and max
+                target_pct = (min_return + max_return) / 2
+            
+            # Calculate price target
+            horizon_target = current_price * (1 + target_pct / 100)
+            
+            # Combine with technical targets for better accuracy
+            # Give 70% weight to horizon expectation, 30% to technical
+            technical_target = targets['atr_target']
+            if horizon_key in ['1week', '2weeks']:
+                technical_target = targets['atr_target']
+            elif horizon_key in ['1month', '3months']:
+                technical_target = targets['fib_target_1']
+            else:  # 6months, 1year
+                technical_target = targets['fib_target_2']
+            
+            combined_target = (horizon_target * 0.7) + (technical_target * 0.3)
+            
+            targets['horizon_targets'][horizon_key] = {
+                'target': combined_target,
+                'target_pct': ((combined_target - current_price) / current_price) * 100,
+                'horizon_name': horizon_config['display_name'],
+                'timeframe': horizon_config['avg_days'],
+                'min_days': horizon_config['min_days'],
+                'max_days': horizon_config['max_days'],
+                'emoji': horizon_config['emoji'],
+                'is_recommended': horizon_key == horizon
+            }
         
         # Conservative target (lowest of reasonable targets)
         reasonable_targets = [
@@ -61,12 +129,92 @@ def calculate_targets(
             targets['resistance_target'],
             targets['fib_target_1']
         ]
-        targets['conservative_target'] = min(t for t in reasonable_targets if t > current_price)
+        # Filter targets that are above current price
+        valid_targets = [t for t in reasonable_targets if t > current_price]
+        if valid_targets:
+            targets['conservative_target'] = min(valid_targets)
+        else:
+            # Fallback: use ATR target if no valid targets (add small buffer)
+            targets['conservative_target'] = current_price * 1.02  # 2% default
         targets['conservative_target_pct'] = ((targets['conservative_target'] - current_price) / current_price) * 100
         
         # Aggressive target
         targets['aggressive_target'] = targets['fib_target_2']
         targets['aggressive_target_pct'] = targets['fib_target_2_pct']
+        
+        # =====================================================================
+        # PATTERN-BASED TARGETS - Industry-standard measured moves
+        # =====================================================================
+        if strongest_pattern is not None and hasattr(strongest_pattern, 'measured_target'):
+            pattern_target = strongest_pattern.measured_target
+            
+            if pattern_target is not None and pattern_target > current_price:
+                targets['has_pattern_target'] = True
+                targets['pattern_target'] = pattern_target
+                targets['pattern_target_pct'] = ((pattern_target - current_price) / current_price) * 100
+                targets['pattern_name'] = strongest_pattern.name
+                targets['pattern_reliability'] = strongest_pattern.reliability
+                targets['pattern_horizon'] = strongest_pattern.recommended_horizon
+                targets['pattern_invalidation'] = strongest_pattern.invalidation_level
+                targets['pattern_height'] = strongest_pattern.pattern_height
+                targets['pattern_neckline'] = strongest_pattern.neckline
+                targets['pattern_min_days'] = strongest_pattern.min_days
+                targets['pattern_max_days'] = strongest_pattern.max_days
+                
+                # Recalculate horizon targets with pattern integration
+                # When pattern is present with high confidence, give more weight to pattern
+                pattern_reliability = strongest_pattern.reliability or 0.5
+                
+                for horizon_key in targets['horizon_targets'].keys():
+                    horizon_data = targets['horizon_targets'][horizon_key]
+                    old_target = horizon_data['target']
+                    
+                    # Determine weight based on pattern reliability
+                    if pattern_reliability >= 0.75:
+                        # High reliability: 50% pattern, 25% horizon, 25% technical
+                        pattern_weight = 0.50
+                        horizon_weight = 0.25
+                        technical_weight = 0.25
+                    elif pattern_reliability >= 0.65:
+                        # Medium reliability: 40% pattern, 30% horizon, 30% technical
+                        pattern_weight = 0.40
+                        horizon_weight = 0.30
+                        technical_weight = 0.30
+                    else:
+                        # Low reliability: 30% pattern, 40% horizon, 30% technical
+                        pattern_weight = 0.30
+                        horizon_weight = 0.40
+                        technical_weight = 0.30
+                    
+                    # Get technical target for this horizon
+                    if horizon_key in ['1week', '2weeks']:
+                        tech_target = targets['atr_target']
+                    elif horizon_key in ['1month', '3months']:
+                        tech_target = targets['fib_target_1']
+                    else:
+                        tech_target = targets['fib_target_2']
+                    
+                    # Calculate original horizon-only target (before pattern)
+                    horizon_config = INVESTMENT_HORIZONS[horizon_key]
+                    if mode == 'conservative':
+                        exp_return = horizon_config['expected_return_min']
+                    elif mode == 'aggressive':
+                        exp_return = horizon_config['expected_return_max']
+                    else:
+                        exp_return = (horizon_config['expected_return_min'] + horizon_config['expected_return_max']) / 2
+                    horizon_only_target = current_price * (1 + exp_return / 100)
+                    
+                    # Combined target with pattern
+                    combined_target = (
+                        pattern_target * pattern_weight +
+                        horizon_only_target * horizon_weight +
+                        tech_target * technical_weight
+                    )
+                    
+                    targets['horizon_targets'][horizon_key]['target'] = combined_target
+                    targets['horizon_targets'][horizon_key]['target_pct'] = ((combined_target - current_price) / current_price) * 100
+                    targets['horizon_targets'][horizon_key]['pattern_integrated'] = True
+                    targets['horizon_targets'][horizon_key]['pattern_weight'] = pattern_weight
         
     else:  # short
         # ATR-based target
@@ -81,18 +229,43 @@ def calculate_targets(
         targets['conservative_target'] = max(targets['atr_target'], targets['support_target'])
         targets['conservative_target_pct'] = ((current_price - targets['conservative_target']) / current_price) * 100
     
-    # Recommended target based on mode
-    if mode == 'conservative':
-        targets['recommended_target'] = targets['conservative_target']
-        targets['recommended_target_pct'] = targets['conservative_target_pct']
-    elif mode == 'aggressive':
-        targets['recommended_target'] = targets.get('aggressive_target', targets['atr_target'])
-        targets['recommended_target_pct'] = targets.get('aggressive_target_pct', targets['atr_target_pct'])
-    else:  # balanced
-        targets['recommended_target'] = targets['atr_target']
-        targets['recommended_target_pct'] = targets['atr_target_pct']
+    # Recommended target based on SELECTED HORIZON
+    if horizon in targets.get('horizon_targets', {}):
+        horizon_data = targets['horizon_targets'][horizon]
+        targets['recommended_target'] = horizon_data['target']
+        targets['recommended_target_pct'] = horizon_data['target_pct']
+        targets['recommended_timeframe'] = horizon_data['timeframe']
+    else:
+        # Fallback to mode-based (old logic)
+        if mode == 'conservative':
+            targets['recommended_target'] = targets['conservative_target']
+            targets['recommended_target_pct'] = targets['conservative_target_pct']
+        elif mode == 'aggressive':
+            targets['recommended_target'] = targets.get('aggressive_target', targets['atr_target'])
+            targets['recommended_target_pct'] = targets.get('aggressive_target_pct', targets['atr_target_pct'])
+        else:  # balanced
+            targets['recommended_target'] = targets['atr_target']
+            targets['recommended_target_pct'] = targets['atr_target_pct']
+        targets['recommended_timeframe'] = 90  # default 3 months
+    
+    # Check for pattern-horizon mismatch warning
+    targets['pattern_horizon_warning'] = None
+    if targets.get('has_pattern_target') and targets.get('pattern_horizon'):
+        pattern_horizon = targets['pattern_horizon']
+        if pattern_horizon != horizon:
+            # Map horizons to approximate days for comparison
+            horizon_days = INVESTMENT_HORIZONS.get(horizon, {}).get('avg_days', 90)
+            pattern_days = INVESTMENT_HORIZONS.get(pattern_horizon, {}).get('avg_days', 30)
+            
+            if abs(horizon_days - pattern_days) > 30:  # Significant mismatch
+                targets['pattern_horizon_warning'] = (
+                    f"Pattern '{targets['pattern_name']}' typically plays out in {pattern_horizon} "
+                    f"({pattern_days} days), but you selected {horizon} ({horizon_days} days). "
+                    f"Consider adjusting your timeframe for optimal results."
+                )
     
     targets['direction'] = direction
+    targets['selected_horizon'] = horizon
     
     return targets
 

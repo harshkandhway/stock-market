@@ -1,8 +1,6 @@
 """
 Technical Indicators Module for Stock Analyzer Pro
 Calculates all technical indicators used in the analysis
-
-Author: Harsh Kandhway
 """
 
 from typing import Dict, Optional, Tuple
@@ -13,8 +11,7 @@ from ta.trend import MACD, EMAIndicator, SMAIndicator, ADXIndicator
 from ta.volatility import AverageTrueRange, BollingerBands
 from ta.volume import OnBalanceVolumeIndicator
 
-from .config import TIMEFRAME_CONFIGS, FIBONACCI_RETRACEMENT, FIBONACCI_EXTENSION
-from .patterns import detect_all_patterns
+from config import TIMEFRAME_CONFIGS, FIBONACCI_RETRACEMENT, FIBONACCI_EXTENSION
 
 
 def calculate_emas(close: pd.Series, config: dict) -> Dict[str, pd.Series]:
@@ -598,24 +595,6 @@ def calculate_all_indicators(df: pd.DataFrame, timeframe: str = 'medium') -> Dic
     else:
         market_phase = 'consolidation'
     
-    # Detect chart patterns
-    try:
-        pattern_data = detect_all_patterns(df)
-    except Exception as e:
-        # If pattern detection fails, use empty patterns
-        pattern_data = {
-            'candlestick_patterns': [],
-            'chart_patterns': [],
-            'all_patterns': [],
-            'bullish_count': 0,
-            'bearish_count': 0,
-            'bullish_score': 0,
-            'bearish_score': 0,
-            'pattern_bias': 'neutral',
-            'strongest_pattern': None,
-            'pattern_summary': "Pattern detection unavailable",
-        }
-    
     # Compile all indicators
     indicators = {
         'current_price': current_price,
@@ -673,18 +652,6 @@ def calculate_all_indicators(df: pd.DataFrame, timeframe: str = 'medium') -> Dic
         
         # Market phase
         'market_phase': market_phase,
-        
-        # Chart Patterns
-        'candlestick_patterns': pattern_data['candlestick_patterns'],
-        'chart_patterns': pattern_data['chart_patterns'],
-        'all_patterns': pattern_data['all_patterns'],
-        'pattern_bullish_count': pattern_data['bullish_count'],
-        'pattern_bearish_count': pattern_data['bearish_count'],
-        'pattern_bullish_score': pattern_data['bullish_score'],
-        'pattern_bearish_score': pattern_data['bearish_score'],
-        'pattern_bias': pattern_data['pattern_bias'],
-        'strongest_pattern': pattern_data['strongest_pattern'],
-        'pattern_summary': pattern_data['pattern_summary'],
     }
     
     return indicators

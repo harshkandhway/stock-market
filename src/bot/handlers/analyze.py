@@ -20,6 +20,45 @@ from src.bot.database.db import get_user_settings, get_db_context
 logger = logging.getLogger(__name__)
 
 
+def analyze_stock_with_settings(symbol: str, user_id: int, db) -> dict:
+    """
+    Analyze a stock using user settings from database.
+    
+    Args:
+        symbol: Stock ticker symbol
+        user_id: User ID to fetch settings for
+        db: Database session
+    
+    Returns:
+        Analysis dictionary with results, or dict with 'error' key if failed
+    """
+    try:
+        # Get user settings
+        settings = get_user_settings(db, user_id)
+        
+        # Default values
+        mode = 'balanced'
+        timeframe = 'medium'
+        horizon = '3months'
+        
+        # Override with user settings if available
+        if settings:
+            mode = settings.risk_mode or mode
+            timeframe = settings.timeframe or timeframe
+            horizon = getattr(settings, 'investment_horizon', None) or horizon
+        
+        # Perform analysis
+        analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon)
+        return analysis
+        
+    except ValueError as e:
+        logger.error(f"Analysis failed for {symbol}: {e}")
+        return {'error': str(e)}
+    except Exception as e:
+        logger.error(f"Unexpected error analyzing {symbol}: {e}", exc_info=True)
+        return {'error': f"An unexpected error occurred: {str(e)}"}
+
+
 async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handle /analyze command - Analyze a stock

@@ -25,12 +25,13 @@ class TestCLI(unittest.TestCase):
         # Create sample DataFrame with valid price data
         dates = pd.date_range('2024-01-01', periods=250, freq='D')
         base_price = 100.0
-        prices = pd.Series([base_price + i * 0.1 for i in range(250)], dtype=float)
+        # Create upward trending prices to ensure valid targets
+        prices = pd.Series([base_price + i * 0.2 for i in range(250)], dtype=float)
         
         self.sample_df = pd.DataFrame({
             'open': (prices * 0.99).astype(float),
-            'high': (prices * 1.02).astype(float),
-            'low': (prices * 0.98).astype(float),
+            'high': (prices * 1.05).astype(float),  # Higher high to ensure resistance > current
+            'low': (prices * 0.95).astype(float),
             'close': prices.astype(float),
             'volume': pd.Series([1000000] * 250, dtype=float)
         }, index=dates)
@@ -168,12 +169,13 @@ class TestCLI(unittest.TestCase):
         capital = get_capital_interactive()
         self.assertEqual(capital, 100000.0)
     
-    @patch('builtins.input', side_effect=['y', '-100'])
+    @patch('builtins.input', side_effect=['y', '-100', 'n'])
     def test_get_capital_interactive_negative(self, mock_input):
         """Test get_capital_interactive with negative capital"""
         capital = get_capital_interactive()
         # Should return None after max attempts or validation failure
         # The function should handle this gracefully
+        self.assertIsNone(capital)
     
     def test_analyze_stock_with_blocked_trade(self):
         """Test analysis when trade is blocked"""

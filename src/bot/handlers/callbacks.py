@@ -96,6 +96,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_alert_signal_setup(query, context, params)
         elif action == "alert_delete":
             await handle_alert_delete(query, context, params)
+        elif action == "analyze":
+            await handle_analyze_refresh(query, context, params)
         elif action == "analyze_quick":
             await handle_analyze_quick(query, context, params)
         elif action == "analyze_full":
@@ -113,6 +115,40 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_confirm(query, context, params)
         elif action == "cancel":
             await handle_cancel(query, context, params)
+        elif action == "chart":
+            await handle_chart(query, context, params)
+        elif action == "portfolio_add":
+            await handle_portfolio_add(query, context, params)
+        elif action == "watchlist_add_prompt":
+            await handle_watchlist_add_prompt(query, context)
+        elif action == "watchlist_remove_prompt":
+            await handle_watchlist_remove_prompt(query, context)
+        elif action == "watchlist_show":
+            await handle_watchlist_menu(query, context, [])
+        elif action == "watchlist_analyze":
+            await handle_watchlist_analyze(query, context)
+        elif action == "watchlist_clear_confirm":
+            await handle_watchlist_clear_confirm(query, context)
+        elif action == "alert_breakout":
+            await handle_alert_breakout(query, context, params)
+        elif action == "alert_divergence":
+            await handle_alert_divergence(query, context, params)
+        elif action == "alert_view":
+            await handle_alert_view(query, context, params)
+        elif action == "alert_add_prompt":
+            await handle_alert_add_prompt(query, context)
+        elif action == "alert_clear_all_confirm":
+            await handle_alert_clear_all_confirm(query, context)
+        elif action == "alert_disable":
+            await handle_alert_disable(query, context, params)
+        elif action == "alert_enable":
+            await handle_alert_enable(query, context, params)
+        elif action == "confirm_reset":
+            await handle_confirm_reset(query, context)
+        elif action == "cancel_reset":
+            await handle_cancel_reset(query, context)
+        elif action.startswith("schedule_"):
+            await handle_schedule(query, context, action, params)
         else:
             await query.edit_message_text(
                 format_error(f"Unknown action: {action}")
@@ -486,6 +522,67 @@ async def handle_settings_timeframe(query, context, params: list) -> None:
 # ANALYSIS CALLBACKS
 # ============================================================================
 
+async def handle_analyze_refresh(query, context, params: list) -> None:
+    """Handle refresh analysis button - performs full analysis."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid callback data"))
+        return
+    
+    symbol = params[0]
+    user_id = query.from_user.id
+    
+    # Show analyzing message
+    await query.edit_message_text(f"🔄 Refreshing analysis for {symbol}...")
+    
+    try:
+        from src.bot.handlers.analyze import analyze_stock_with_settings
+        from src.bot.database.db import get_db_context, get_or_create_user, get_user_settings
+        
+        with get_db_context() as db:
+            user = get_or_create_user(db, user_id, query.from_user.username)
+            settings = get_user_settings(db, user_id)
+            
+            # Perform full analysis
+            analysis = analyze_stock_with_settings(
+                symbol=symbol,
+                user_id=user_id,
+                db=db
+            )
+            
+            if analysis and 'error' not in analysis:
+                from src.bot.utils.formatters import format_analysis_beginner, format_analysis_full
+                
+                # Use beginner or advanced format based on settings
+                beginner_mode = getattr(settings, 'beginner_mode', True)
+                horizon = getattr(settings, 'investment_horizon', '3months')
+                
+                if beginner_mode:
+                    message = format_analysis_beginner(analysis, horizon)
+                else:
+                    message = format_analysis_full(analysis)
+                
+                # Create action keyboard
+                from src.bot.utils.keyboards import create_analysis_action_keyboard
+                keyboard = create_analysis_action_keyboard(symbol)
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            else:
+                error_msg = analysis.get('error', 'Analysis failed') if analysis else 'Analysis failed'
+                await query.edit_message_text(
+                    format_error(f"Failed to analyze {symbol}: {error_msg}")
+                )
+    
+    except Exception as e:
+        logger.error(f"Error refreshing analysis: {e}", exc_info=True)
+        await query.edit_message_text(
+            format_error(f"Refresh error: {str(e)}")
+        )
+
+
 async def handle_analyze_quick(query, context, params: list) -> None:
     """Perform quick analysis from callback."""
     if not params:
@@ -619,3 +716,315 @@ async def handle_confirm(query, context, params: list) -> None:
 async def handle_cancel(query, context, params: list) -> None:
     """Handle cancellation callbacks."""
     await query.edit_message_text("❌ Operation cancelled")
+
+
+# ============================================================================
+# MISSING HANDLERS - Add implementations
+# ============================================================================
+
+async def handle_chart(query, context, params: list) -> None:
+    """Handle chart view request."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid symbol"))
+        return
+    
+    symbol = params[0]
+    await query.edit_message_text(
+        f"📊 *Chart for {symbol}*\n\n"
+        f"Chart generation coming soon!\n\n"
+        f"For now, use external charting tools or visit:\n"
+        f"https://in.tradingview.com/chart/?symbol=NSE:{symbol.replace('.NS', '')}",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_portfolio_add(query, context, params: list) -> None:
+    """Handle add to portfolio button."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid symbol"))
+        return
+    
+    symbol = params[0]
+    await query.edit_message_text(
+        f"💼 *Add {symbol} to Portfolio*\n\n"
+        f"Use the command:\n"
+        f"`/portfolio add {symbol} SHARES PRICE`\n\n"
+        f"Example:\n"
+        f"`/portfolio add {symbol} 10 3500`",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_watchlist_add_prompt(query, context) -> None:
+    """Prompt user to add stock to watchlist."""
+    await query.edit_message_text(
+        "⭐ *Add Stock to Watchlist*\n\n"
+        "Send me the stock symbol:\n\n"
+        "Example: `RELIANCE.NS`\n\n"
+        "_Just type the symbol and send_",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_watchlist_remove_prompt(query, context) -> None:
+    """Prompt user to remove stock from watchlist."""
+    from src.bot.database.db import get_db_context, get_user_watchlist
+    from src.bot.utils.keyboards import create_watchlist_keyboard
+    
+    user_id = query.from_user.id
+    with get_db_context() as db:
+        watchlist = get_user_watchlist(db, user_id)
+        
+        if not watchlist:
+            await query.edit_message_text("⭐ Your watchlist is empty!")
+            return
+        
+        keyboard = create_watchlist_keyboard([w.symbol for w in watchlist])
+        await query.edit_message_text(
+            "➖ *Remove Stock from Watchlist*\n\n"
+            "Select a stock to remove:",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+
+
+async def handle_watchlist_analyze(query, context) -> None:
+    """Analyze all stocks in watchlist."""
+    from src.bot.database.db import get_db_context, get_user_watchlist, get_user_settings
+    from src.bot.services.analysis_service import analyze_multiple_stocks
+    from src.bot.utils.formatters import format_comparison_table, format_error, format_warning, chunk_message
+    
+    user_id = query.from_user.id
+    
+    with get_db_context() as db:
+        watchlist = get_user_watchlist(db, user_id)
+        
+        if not watchlist:
+            await query.edit_message_text("⭐ Your watchlist is empty!")
+            return
+        
+        settings = get_user_settings(db, user_id)
+        symbols = [w.symbol for w in watchlist]
+        
+        # Show progress message
+        await query.edit_message_text(
+            f"🔍 Analyzing {len(symbols)} stock(s) from your watchlist...\n\n"
+            f"This may take a moment."
+        )
+        
+        try:
+            # Analyze all stocks
+            results = analyze_multiple_stocks(
+                symbols=symbols,
+                mode=settings.risk_mode if settings else 'balanced',
+                timeframe=settings.timeframe if settings else 'medium'
+            )
+            
+            # Filter successful results (successful ones don't have 'error' key)
+            successful_results = [r for r in results if not r.get('error', False)]
+            failed_results = [r for r in results if r.get('error', False)]
+            
+            if not successful_results:
+                await query.edit_message_text(
+                    format_error(
+                        "Failed to analyze any stocks.\n\n"
+                        "Please check if the symbols are valid and try again."
+                    )
+                )
+                return
+            
+            # Format comparison table
+            message = format_comparison_table(successful_results)
+            
+            # Add failed stocks warning if any
+            if failed_results:
+                failed_symbols = [r['symbol'] for r in failed_results]
+                message += f"\n\n⚠️ Failed to analyze: {', '.join(failed_symbols)}"
+            
+            # Handle long messages
+            chunks = chunk_message(message)
+            
+            # Edit message with first chunk
+            await query.edit_message_text(chunks[0], parse_mode='Markdown')
+            
+            # Send remaining chunks as new messages
+            for chunk in chunks[1:]:
+                await query.message.reply_text(chunk, parse_mode='Markdown')
+            
+            logger.info(f"User {user_id} analyzed watchlist: {len(successful_results)} successful, {len(failed_results)} failed")
+        
+        except Exception as e:
+            logger.error(f"Error analyzing watchlist: {e}", exc_info=True)
+            await query.edit_message_text(
+                format_error(f"An error occurred during analysis: {str(e)}")
+            )
+
+
+async def handle_watchlist_clear_confirm(query, context) -> None:
+    """Confirm watchlist clear."""
+    from src.bot.utils.keyboards import create_confirmation_keyboard
+    
+    keyboard = create_confirmation_keyboard("watchlist_clear", "")
+    await query.edit_message_text(
+        "🗑️ *Clear Watchlist?*\n\n"
+        "Are you sure you want to remove all stocks from your watchlist?",
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+async def handle_alert_breakout(query, context, params: list) -> None:
+    """Handle breakout alert setup."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid symbol"))
+        return
+    
+    symbol = params[0]
+    await query.edit_message_text(
+        f"📊 *Breakout Alert for {symbol}*\n\n"
+        f"Use: `/alert {symbol} breakout PRICE`\n\n"
+        f"Example: `/alert {symbol} breakout 3500`",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_alert_divergence(query, context, params: list) -> None:
+    """Handle divergence alert setup."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid symbol"))
+        return
+    
+    symbol = params[0]
+    await query.edit_message_text(
+        f"⚡ *Divergence Alert for {symbol}*\n\n"
+        f"Divergence alerts notify you when RSI or MACD shows divergence patterns.\n\n"
+        f"Use: `/alert {symbol} divergence`",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_alert_view(query, context, params: list) -> None:
+    """View alert details."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid alert ID"))
+        return
+    
+    alert_id = params[0]
+    from src.bot.database.db import get_db_context, get_alert_by_id
+    from src.bot.utils.keyboards import create_alert_detail_keyboard
+    
+    user_id = query.from_user.id
+    with get_db_context() as db:
+        alert = get_alert_by_id(db, alert_id)
+        
+        if not alert or alert.user_id != user_id:
+            await query.edit_message_text(format_error("Alert not found"))
+            return
+        
+        keyboard = create_alert_detail_keyboard(alert_id)
+        status = "✅ Enabled" if alert.is_active else "⏸️ Disabled"
+        
+        await query.edit_message_text(
+            f"🔔 *Alert Details*\n\n"
+            f"Symbol: {alert.symbol}\n"
+            f"Type: {alert.alert_type}\n"
+            f"Condition: {alert.condition}\n"
+            f"Status: {status}",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+
+
+async def handle_alert_add_prompt(query, context) -> None:
+    """Prompt to add alert."""
+    await query.edit_message_text(
+        "🔔 *Add Alert*\n\n"
+        "Send me:\n"
+        "`/alert SYMBOL TYPE VALUE`\n\n"
+        "Examples:\n"
+        "• `/alert RELIANCE.NS price 2500`\n"
+        "• `/alert TCS.NS rsi 30`",
+        parse_mode='Markdown'
+    )
+
+
+async def handle_alert_clear_all_confirm(query, context) -> None:
+    """Confirm clear all alerts."""
+    from src.bot.utils.keyboards import create_confirmation_keyboard
+    
+    keyboard = create_confirmation_keyboard("alert_clear_all", "")
+    await query.edit_message_text(
+        "🗑️ *Clear All Alerts?*\n\n"
+        "Are you sure you want to delete all your alerts?",
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+async def handle_alert_disable(query, context, params: list) -> None:
+    """Disable an alert."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid alert ID"))
+        return
+    
+    alert_id = params[0]
+    from src.bot.database.db import get_db_context, get_alert_by_id, update_alert
+    
+    user_id = query.from_user.id
+    with get_db_context() as db:
+        alert = get_alert_by_id(db, alert_id)
+        
+        if not alert or alert.user_id != user_id:
+            await query.edit_message_text(format_error("Alert not found"))
+            return
+        
+        update_alert(db, alert_id, is_active=False)
+        await query.edit_message_text("⏸️ Alert disabled")
+
+
+async def handle_alert_enable(query, context, params: list) -> None:
+    """Enable an alert."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid alert ID"))
+        return
+    
+    alert_id = params[0]
+    from src.bot.database.db import get_db_context, get_alert_by_id, update_alert
+    
+    user_id = query.from_user.id
+    with get_db_context() as db:
+        alert = get_alert_by_id(db, alert_id)
+        
+        if not alert or alert.user_id != user_id:
+            await query.edit_message_text(format_error("Alert not found"))
+            return
+        
+        update_alert(db, alert_id, is_active=True)
+        await query.edit_message_text("▶️ Alert enabled")
+
+
+async def handle_confirm_reset(query, context) -> None:
+    """Confirm settings reset."""
+    from src.bot.handlers.settings import confirm_settings_reset
+    
+    # Create fake update
+    from telegram import Update
+    fake_update = Update(update_id=0, callback_query=query)
+    await confirm_settings_reset(fake_update, context)
+
+
+async def handle_cancel_reset(query, context) -> None:
+    """Cancel settings reset."""
+    await query.edit_message_text("❌ Settings reset cancelled")
+
+
+async def handle_schedule(query, context, action: str, params: list) -> None:
+    """Handle schedule-related callbacks."""
+    await query.edit_message_text(
+        "📅 *Scheduled Reports*\n\n"
+        "Use commands:\n"
+        "• `/schedule daily HH:MM`\n"
+        "• `/schedule weekly DAY HH:MM`\n"
+        "• `/schedule list`",
+        parse_mode='Markdown'
+    )

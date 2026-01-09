@@ -6,12 +6,14 @@ Author: Harsh Kandhway
 """
 
 import logging
+from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
     filters,
-    CallbackQueryHandler
+    CallbackQueryHandler,
+    ContextTypes
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -112,6 +114,110 @@ async def authorization_filter(update, context):
         return False
     
     return True
+
+
+async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Handle text messages including main menu button clicks and custom inputs.
+    Routes menu button text to appropriate commands.
+    """
+    if not update.message or not update.message.text:
+        return
+    
+    text = update.message.text.strip()
+    user_id = update.effective_user.id
+    
+    # Check authorization
+    if not check_authorization(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot."
+        )
+        return
+    
+    # Handle custom capital input if awaiting
+    if context.user_data.get('awaiting_capital_input'):
+        from src.bot.handlers.settings import handle_capital_input
+        await handle_capital_input(update, context)
+        return
+    
+    # Route main menu button clicks to commands
+    menu_routes = {
+        '📊 Analyze Stock': '/analyze',
+        '📈 Compare Stocks': '/compare',
+        '⭐ Watchlist': '/watchlist',
+        '🔔 Alerts': '/alerts',
+        '💼 Portfolio': '/portfolio',
+        '📅 Schedule Reports': '/schedule',
+        '⚙️ Settings': '/settings',
+        'ℹ️ Help': '/help',
+        '◀️ Back to Menu': '/menu',
+    }
+    
+    if text in menu_routes:
+        # Simulate the corresponding command
+        command = menu_routes[text]
+        logger.info(f"User {user_id} clicked menu button: {text} -> {command}")
+        
+        if command == '/analyze':
+            await update.message.reply_text(
+                "🔍 *Analyze a Stock*\n\n"
+                "Send me a stock symbol to analyze:\n\n"
+                "Examples:\n"
+                "• `/analyze RELIANCE.NS` (NSE)\n"
+                "• `/analyze TCS.NS`\n"
+                "• `/analyze INFY.NS`\n\n"
+                "_Just type `/analyze` followed by the symbol_",
+                parse_mode='Markdown'
+            )
+        elif command == '/compare':
+            await update.message.reply_text(
+                "📈 *Compare Stocks*\n\n"
+                "Compare up to 5 stocks side by side:\n\n"
+                "Example:\n"
+                "`/compare RELIANCE.NS TCS.NS INFY.NS`\n\n"
+                "_Separate symbols with spaces_",
+                parse_mode='Markdown'
+            )
+        elif command == '/watchlist':
+            from src.bot.handlers.watchlist import watchlist_command
+            await watchlist_command(update, context)
+        elif command == '/alerts':
+            from src.bot.handlers.alerts import alerts_command
+            await alerts_command(update, context)
+        elif command == '/portfolio':
+            from src.bot.handlers.portfolio import portfolio_command
+            await portfolio_command(update, context)
+        elif command == '/settings':
+            from src.bot.handlers.settings import settings_command
+            await settings_command(update, context)
+        elif command == '/help':
+            from src.bot.handlers.start import help_command
+            await help_command(update, context)
+        elif command == '/schedule':
+            await update.message.reply_text(
+                "📅 *Scheduled Reports*\n\n"
+                "Set up automatic daily/weekly reports:\n\n"
+                "• `/schedule daily HH:MM` - Daily report at specified time\n"
+                "• `/schedule weekly DAY HH:MM` - Weekly report\n"
+                "• `/schedule list` - View your schedules\n"
+                "• `/schedule cancel ID` - Cancel a schedule\n\n"
+                "_Example: `/schedule daily 09:00`_",
+                parse_mode='Markdown'
+            )
+        elif command == '/menu':
+            from src.bot.handlers.start import start_command
+            await start_command(update, context)
+        return
+    
+    # If no match, suggest using commands
+    await update.message.reply_text(
+        "💡 I didn't understand that.\n\n"
+        "Try using these commands:\n"
+        "• `/analyze SYMBOL` - Analyze a stock\n"
+        "• `/settings` - Change preferences\n"
+        "• `/help` - See all commands\n\n"
+        "_Or tap a button from the menu below_"
+    )
 
 
 async def send_scheduled_reports(bot):
@@ -280,11 +386,10 @@ def create_bot_application() -> Application:
     # Callback query handler for inline buttons
     application.add_handler(CallbackQueryHandler(handle_callback_query))
     
-    # Text message handler for custom inputs (capital, etc.)
-    from src.bot.handlers.settings import handle_capital_input
+    # Text message handler for main menu buttons and custom inputs
     application.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND, 
-        handle_capital_input
+        handle_text_message
     ))
     
     # Unknown command handler (must be last)

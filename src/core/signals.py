@@ -279,6 +279,62 @@ def calculate_confirmation_signals(indicators: Dict, mode: str) -> Dict[str, Tup
     return signals
 
 
+def calculate_pattern_signals(indicators: Dict, mode: str) -> Dict[str, Tuple[float, str]]:
+    """
+    Calculate pattern-based signals (15% of total weight)
+    Uses candlestick and chart pattern detection
+    """
+    mode_config = RISK_MODES[mode]
+    multiplier = mode_config['weight_multipliers'].get('pattern', 1.0)
+    
+    signals = {}
+    
+    # Pattern weight - 15 points max total
+    pattern_weight = 15
+    
+    # Get pattern data
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    bullish_score = indicators.get('pattern_bullish_score', 0)
+    bearish_score = indicators.get('pattern_bearish_score', 0)
+    strongest_pattern = indicators.get('strongest_pattern')
+    
+    # Pattern bias signal
+    if pattern_bias == 'bullish':
+        # Scale based on difference between bullish and bearish scores
+        score_diff = bullish_score - bearish_score
+        normalized_score = min(pattern_weight * multiplier, (score_diff / 100) * pattern_weight * multiplier)
+        signals['pattern_bias'] = (normalized_score, 'bullish')
+    elif pattern_bias == 'bearish':
+        score_diff = bearish_score - bullish_score
+        normalized_score = min(pattern_weight * multiplier, (score_diff / 100) * pattern_weight * multiplier)
+        signals['pattern_bias'] = (-normalized_score, 'bearish')
+    else:
+        signals['pattern_bias'] = (0, 'neutral')
+    
+    # Strongest pattern signal (additional weight for strong patterns)
+    if strongest_pattern:
+        from .patterns import PatternType, PatternStrength
+        
+        strength_multiplier = {
+            PatternStrength.STRONG: 1.0,
+            PatternStrength.MODERATE: 0.6,
+            PatternStrength.WEAK: 0.3,
+        }.get(strongest_pattern.strength, 0.5)
+        
+        bonus_weight = 5 * strength_multiplier * multiplier
+        
+        if strongest_pattern.type == PatternType.BULLISH:
+            signals['strongest_pattern'] = (bonus_weight, 'bullish')
+        elif strongest_pattern.type == PatternType.BEARISH:
+            signals['strongest_pattern'] = (-bonus_weight, 'bearish')
+        else:
+            signals['strongest_pattern'] = (0, 'neutral')
+    else:
+        signals['strongest_pattern'] = (0, 'neutral')
+    
+    return signals
+
+
 def calculate_all_signals(indicators: Dict, mode: str = 'balanced') -> Dict:
     """
     Calculate all signals and aggregate scores
@@ -290,12 +346,14 @@ def calculate_all_signals(indicators: Dict, mode: str = 'balanced') -> Dict:
     trend_signals = calculate_trend_signals(indicators, mode)
     momentum_signals = calculate_momentum_signals(indicators, mode)
     confirmation_signals = calculate_confirmation_signals(indicators, mode)
+    pattern_signals = calculate_pattern_signals(indicators, mode)
     
     # Aggregate all signals
     all_signals = {
         **trend_signals,
         **momentum_signals,
-        **confirmation_signals
+        **confirmation_signals,
+        **pattern_signals,
     }
     
     # Calculate totals
@@ -311,8 +369,8 @@ def calculate_all_signals(indicators: Dict, mode: str = 'balanced') -> Dict:
     net_score = bullish_score - bearish_score
     
     # Normalize to 0-100 scale
-    # Max possible score is roughly sum of all weights (100)
-    max_score = sum(SIGNAL_WEIGHTS.values())
+    # Max possible score is roughly sum of all weights (100) + pattern weights (20)
+    max_score = sum(SIGNAL_WEIGHTS.values()) + 20  # Added pattern weight
     
     # Convert net score to confidence percentage
     # net_score ranges from -max_score to +max_score
@@ -325,6 +383,7 @@ def calculate_all_signals(indicators: Dict, mode: str = 'balanced') -> Dict:
         'trend_signals': trend_signals,
         'momentum_signals': momentum_signals,
         'confirmation_signals': confirmation_signals,
+        'pattern_signals': pattern_signals,
         'bullish_score': bullish_score,
         'bearish_score': bearish_score,
         'net_score': net_score,

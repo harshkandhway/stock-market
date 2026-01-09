@@ -54,8 +54,14 @@ async def watchlist_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_id = update.effective_user.id
     username = update.effective_user.username
     
+    # Handle menu button clicks (text might be "⭐ Watchlist" instead of "/watchlist")
+    text = update.message.text
+    if not text.startswith('/watchlist'):
+        # If it's a menu button click, treat it as just "/watchlist"
+        text = '/watchlist'
+    
     # Parse subcommand
-    args = parse_command_args(update.message.text)
+    args = parse_command_args(text, 'watchlist')
     
     if not args:
         # Show watchlist
@@ -261,9 +267,9 @@ async def watchlist_analyze(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 timeframe=settings.timeframe
             )
             
-            # Filter successful results
-            successful_results = [r for r in results if r['status'] == 'success']
-            failed_results = [r for r in results if r['status'] != 'success']
+            # Filter successful results (successful ones don't have 'error' key)
+            successful_results = [r for r in results if not r.get('error', False)]
+            failed_results = [r for r in results if r.get('error', False)]
             
             if not successful_results:
                 await progress_msg.edit_text(

@@ -210,7 +210,37 @@ Volume Ratio: {format_number(volume_ratio, 2)}x average
         div_text = indicators['divergence'].upper()
         message += f"\n{div_emoji} **{div_text} DIVERGENCE DETECTED**"
     
-    message += "\n\n"
+    # Chart Pattern Analysis
+    strongest_pattern = indicators.get('strongest_pattern')
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    bullish_count = indicators.get('pattern_bullish_count', 0)
+    bearish_count = indicators.get('pattern_bearish_count', 0)
+    
+    if strongest_pattern or bullish_count > 0 or bearish_count > 0:
+        message += f"""
+
+📊 **Chart Patterns**
+{'-'*40}
+Pattern Bias: {pattern_bias.upper()}
+Bullish Patterns: {bullish_count} | Bearish Patterns: {bearish_count}
+"""
+        if strongest_pattern and hasattr(strongest_pattern, 'name'):
+            try:
+                p_name = getattr(strongest_pattern, 'name', 'Unknown')
+                p_conf = getattr(strongest_pattern, 'confidence', 0)
+                p_type = strongest_pattern.type.value.upper() if hasattr(strongest_pattern, 'type') and hasattr(strongest_pattern.type, 'value') else 'UNKNOWN'
+                p_strength = strongest_pattern.strength.value.upper() if hasattr(strongest_pattern, 'strength') and hasattr(strongest_pattern.strength, 'value') else 'UNKNOWN'
+                p_action = getattr(strongest_pattern, 'action', 'Check chart')
+                
+                message += f"""
+Key Pattern: **{p_name}** ({p_conf}%)
+Type: {p_type} | Strength: {p_strength}
+Action: {p_action}
+"""
+            except Exception:
+                message += "\nKey Pattern: Pattern detected (check chart)\n"
+    
+    message += "\n"
     
     # Recommendation Box
     message += f"""
@@ -318,12 +348,12 @@ Confidence: {format_number(conf, 0)}% | R:R: {format_number(rr, 2)}:1
     return message.strip()
 
 
-def format_watchlist(watchlist: List[Dict], show_details: bool = False) -> str:
+def format_watchlist(watchlist: List, show_details: bool = False) -> str:
     """
     Format watchlist for display
     
     Args:
-        watchlist: List of watchlist items (dict with symbol, added_at, etc.)
+        watchlist: List of watchlist items (Watchlist objects or dicts with symbol, added_at, etc.)
         show_details: Whether to show additional details
     
     Returns:
@@ -339,9 +369,18 @@ def format_watchlist(watchlist: List[Dict], show_details: bool = False) -> str:
 """
     
     for item in watchlist:
-        symbol = item['symbol']
-        added_at = item.get('added_at')
-        notes = item.get('notes')
+        # Handle both Watchlist objects and dictionaries
+        # Check if it's a dictionary by trying to access it as a dict
+        if isinstance(item, dict):
+            # Dictionary access
+            symbol = item['symbol']
+            added_at = item.get('added_at')
+            notes = item.get('notes')
+        else:
+            # Watchlist object (SQLAlchemy model) - use attribute access
+            symbol = item.symbol
+            added_at = getattr(item, 'added_at', None)
+            notes = getattr(item, 'notes', None)
         
         message += f"{EMOJI['chart']} **{symbol}**\n"
         
@@ -553,14 +592,8 @@ def format_warning(warning_message: str) -> str:
 
 def format_analysis_beginner(analysis: Dict[str, Any], horizon: str = '3months') -> str:
     """
-    Format analysis result in beginner-friendly format with clear guidance.
-    
-    Args:
-        analysis: Analysis dictionary from analysis_service
-        horizon: Investment horizon
-    
-    Returns:
-        Formatted beginner-friendly analysis string
+    Format analysis result in beginner-friendly format with complete decision breakdown.
+    Shows exactly WHY the recommendation was made.
     """
     symbol = analysis['symbol']
     price = analysis['current_price']
@@ -573,172 +606,511 @@ def format_analysis_beginner(analysis: Dict[str, Any], horizon: str = '3months')
     stop_data = analysis['stop_data']
     risk_reward = analysis['risk_reward']
     rr_valid = analysis['rr_valid']
+    reasoning = analysis.get('reasoning', [])
     
     # Safety score
     safety = analysis.get('safety_score', {})
     time_estimate = analysis.get('time_estimate', {})
     
-    # Recommendation emoji and text
-    if rec_type == 'BUY':
-        rec_emoji = "🟢"
-        action_text = "Good opportunity to invest"
-        timing_text = "Buy within this week"
-    elif rec_type == 'SELL':
-        rec_emoji = "🔴"
-        action_text = "Not recommended to buy"
-        timing_text = "Wait for better conditions"
-    elif rec_type == 'BLOCKED':
-        rec_emoji = "⛔"
-        action_text = "Avoid this stock for now"
-        timing_text = "Wait until conditions improve"
-    else:
-        rec_emoji = "🟡"
-        action_text = "Wait for clearer signals"
-        timing_text = "Check again in 1-2 weeks"
-    
-    # Calculate profit/loss (example with Rs 10,000)
+    # Calculate values
     example_capital = 10000
-    shares = int(example_capital / price)
+    shares = max(1, int(example_capital / price))
     target = target_data['recommended_target']
     stop = stop_data['recommended_stop']
     
-    potential_profit = shares * (target - price)
-    potential_loss = shares * (price - stop)
     profit_pct = ((target - price) / price) * 100
     loss_pct = ((price - stop) / price) * 100
+    potential_profit = shares * (target - price)
+    potential_loss = shares * (price - stop)
     
     # Safety rating
     safety_stars = safety.get('stars', 3)
-    safety_emoji = '⭐' * safety_stars
+    safety_emoji = '⭐' * safety_stars + '☆' * (5 - safety_stars)
     safety_rating = safety.get('rating', 'MODERATE')
     
-    message = f"""
-{'='*35}
-{EMOJI['chart']} *{symbol}*
-{'='*35}
+    # =========================================================================
+    # BUILD THE DECISION SCORECARD
+    # =========================================================================
+    
+    # Trend Analysis
+    trend_score = 0
+    trend_factors = []
+    
+    if indicators['price_vs_trend_ema'] == 'above':
+        trend_score += 1
+        trend_factors.append(("✅", "Price above long-term average", "Bullish"))
+    else:
+        trend_factors.append(("❌", "Price below long-term average", "Bearish"))
+    
+    if 'uptrend' in indicators['market_phase']:
+        trend_score += 1
+        trend_factors.append(("✅", f"Market in {indicators['market_phase'].replace('_', ' ')}", "Bullish"))
+    elif 'downtrend' in indicators['market_phase']:
+        trend_factors.append(("❌", f"Market in {indicators['market_phase'].replace('_', ' ')}", "Bearish"))
+    else:
+        trend_factors.append(("⚪", "Market moving sideways", "Neutral"))
+    
+    ema_alignment = indicators.get('ema_alignment', 'mixed')
+    if ema_alignment in ['strong_bullish', 'bullish']:
+        trend_score += 1
+        trend_factors.append(("✅", "All moving averages aligned UP", "Strong signal"))
+    elif ema_alignment in ['strong_bearish', 'bearish']:
+        trend_factors.append(("❌", "All moving averages aligned DOWN", "Weak signal"))
+    else:
+        trend_factors.append(("⚪", "Moving averages mixed", "No clear signal"))
+    
+    # Momentum Analysis
+    momentum_score = 0
+    momentum_factors = []
+    
+    rsi = indicators['rsi']
+    rsi_zone = indicators['rsi_zone']
+    if rsi_zone in ['oversold', 'extremely_oversold']:
+        momentum_score += 1
+        momentum_factors.append(("✅", f"RSI at {rsi:.0f} (Oversold)", "May bounce up soon"))
+    elif rsi_zone in ['overbought', 'extremely_overbought']:
+        momentum_factors.append(("❌", f"RSI at {rsi:.0f} (Overbought)", "May fall soon"))
+    else:
+        momentum_factors.append(("⚪", f"RSI at {rsi:.0f} (Neutral)", "No extreme"))
+    
+    macd_hist = indicators.get('macd_hist', 0)
+    if macd_hist > 0:
+        momentum_score += 1
+        momentum_factors.append(("✅", "MACD positive", "Upward momentum"))
+    else:
+        momentum_factors.append(("❌", "MACD negative", "Downward momentum"))
+    
+    adx = indicators['adx']
+    if adx >= 25:
+        momentum_score += 1
+        momentum_factors.append(("✅", f"ADX at {adx:.0f} (Strong trend)", "Trend is reliable"))
+    else:
+        momentum_factors.append(("⚠️", f"ADX at {adx:.0f} (Weak trend)", "Trend may reverse"))
+    
+    # Volume Analysis
+    volume_score = 0
+    volume_factors = []
+    
+    vol_ratio = indicators.get('volume_ratio', 1.0)
+    if vol_ratio >= 1.5:
+        volume_score += 1
+        volume_factors.append(("✅", f"Volume {vol_ratio:.1f}x average", "High interest"))
+    elif vol_ratio >= 0.8:
+        volume_factors.append(("⚪", f"Volume {vol_ratio:.1f}x average", "Normal activity"))
+    else:
+        volume_factors.append(("❌", f"Volume {vol_ratio:.1f}x average", "Low interest"))
+    
+    # Chart Pattern Analysis
+    pattern_score = 0
+    pattern_factors = []
+    
+    strongest_pattern = indicators.get('strongest_pattern')
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    candlestick_patterns = indicators.get('candlestick_patterns', [])
+    chart_patterns = indicators.get('chart_patterns', [])
+    
+    if strongest_pattern and hasattr(strongest_pattern, 'type'):
+        try:
+            pattern_type = strongest_pattern.type.value if hasattr(strongest_pattern.type, 'value') else str(strongest_pattern.type)
+            pattern_name = getattr(strongest_pattern, 'name', 'Unknown Pattern')
+            pattern_conf = getattr(strongest_pattern, 'confidence', 0)
+            pattern_action = getattr(strongest_pattern, 'action', 'No action')
+            
+            if pattern_type == 'bullish':
+                pattern_score += 2
+                pattern_factors.append(("✅", f"{pattern_name} ({pattern_conf}%)", pattern_action))
+            elif pattern_type == 'bearish':
+                pattern_factors.append(("❌", f"{pattern_name} ({pattern_conf}%)", pattern_action))
+            else:
+                pattern_factors.append(("⚪", f"{pattern_name} ({pattern_conf}%)", "Neutral pattern"))
+        except Exception:
+            pattern_factors.append(("⚪", "Pattern detected", "Check chart"))
+    
+    if pattern_bias == 'bullish':
+        pattern_score += 1
+    
+    # Risk Analysis
+    risk_score = 0
+    risk_factors = []
+    
+    # Get mode-specific R/R threshold
+    mode = analysis.get('mode', 'moderate')
+    rr_thresholds = {
+        'conservative': 3.0,
+        'moderate': 2.0,
+        'balanced': 2.0,
+        'aggressive': 1.5
+    }
+    min_rr = rr_thresholds.get(mode, 2.0)
+    
+    if rr_valid:
+        risk_score += 1
+        risk_factors.append(("✅", f"Risk/Reward {risk_reward:.1f}:1", f"Meets minimum {min_rr:.1f}:1 for {mode} mode"))
+    else:
+        risk_factors.append(("❌", f"Risk/Reward {risk_reward:.1f}:1", f"Below minimum {min_rr:.1f}:1 for {mode} mode"))
+    
+    # Check for blocks
+    if analysis.get('is_buy_blocked'):
+        risk_factors.append(("🚫", "Hard filter triggered", analysis.get('buy_block_reasons', ['Risk too high'])[0] if analysis.get('buy_block_reasons') else 'Risk too high'))
+    
+    # =========================================================================
+    # CALCULATE FINAL SCORES
+    # =========================================================================
+    
+    total_bullish = trend_score + momentum_score + volume_score + pattern_score + risk_score
+    max_score = 10
+    score_pct = (total_bullish / max_score) * 100
+    
+    # =========================================================================
+    # BUILD THE MESSAGE
+    # =========================================================================
+    
+    # Header with clear verdict
+    if rec_type == 'BUY':
+        verdict_box = f"""
+╔══════════════════════════════════╗
+║  🟢 *{symbol}* - *BUY*  
+║  
+║  ✅ Good opportunity to invest
+║  💪 Confidence: {confidence:.0f}%
+╚══════════════════════════════════╝"""
+    elif rec_type == 'HOLD':
+        verdict_box = f"""
+╔══════════════════════════════════╗
+║  🟡 *{symbol}* - *WAIT*  
+║  
+║  ⏳ Not the right time yet
+║  🔍 Confidence: {confidence:.0f}%
+╚══════════════════════════════════╝"""
+    else:
+        verdict_box = f"""
+╔══════════════════════════════════╗
+║  🔴 *{symbol}* - *AVOID*  
+║  
+║  ❌ Conditions are unfavorable
+║  ⚠️ Confidence: {confidence:.0f}%
+╚══════════════════════════════════╝"""
+    
+    message = verdict_box + f"""
 
-{rec_emoji} *{recommendation}*
-_{action_text}_
+💰 *Price:* Rs {format_number(price)}
+🛡️ *Safety:* {safety_emoji} ({safety_rating})
 
-━━━━━━━━━━━━━━━━━━━━
+"""
+    
+    # =========================================================================
+    # DECISION BREAKDOWN - WHY THIS RECOMMENDATION?
+    # =========================================================================
+    
+    message += """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 *WHY THIS RECOMMENDATION?*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💰 *Current Price:* {CURRENCY_SYMBOL}{format_number(price)}
+"""
+    
+    # Trend Section
+    message += f"*📈 TREND ANALYSIS* ({trend_score}/3 bullish)\n"
+    for emoji, factor, meaning in trend_factors:
+        message += f"   {emoji} {factor}\n      ↳ _{meaning}_\n"
+    message += "\n"
+    
+    # Momentum Section
+    message += f"*⚡ MOMENTUM* ({momentum_score}/3 bullish)\n"
+    for emoji, factor, meaning in momentum_factors:
+        message += f"   {emoji} {factor}\n      ↳ _{meaning}_\n"
+    message += "\n"
+    
+    # Volume Section
+    message += f"*📊 VOLUME* ({volume_score}/1 bullish)\n"
+    for emoji, factor, meaning in volume_factors:
+        message += f"   {emoji} {factor}\n      ↳ _{meaning}_\n"
+    message += "\n"
+    
+    # Pattern Section
+    if pattern_factors:
+        message += f"*🔮 CHART PATTERNS* ({pattern_score}/3 bullish)\n"
+        for emoji, factor, meaning in pattern_factors:
+            message += f"   {emoji} {factor}\n      ↳ _{meaning}_\n"
+        
+        # Add conflict warning if needed
+        if strongest_pattern and hasattr(strongest_pattern, 'type'):
+            try:
+                pattern_type = strongest_pattern.type.value if hasattr(strongest_pattern.type, 'value') else str(strongest_pattern.type)
+                pattern_bullish = pattern_type == 'bullish'
+            except Exception:
+                pattern_bullish = False
+            if pattern_bullish and rec_type in ['SELL', 'BLOCKED']:
+                message += "\n   ⚠️ *CONFLICT:* Pattern says BUY but other factors say AVOID\n"
+                message += "   _Wait for trend to confirm the pattern_\n"
+            elif not pattern_bullish and rec_type == 'BUY':
+                message += "\n   ⚠️ *CAUTION:* Pattern is bearish - use tight stop loss\n"
+        message += "\n"
+    
+    # Risk Section
+    message += f"*⚖️ RISK ASSESSMENT*\n"
+    for emoji, factor, meaning in risk_factors:
+        message += f"   {emoji} {factor}\n      ↳ _{meaning}_\n"
+    message += "\n"
+    
+    # =========================================================================
+    # OVERALL SCORE
+    # =========================================================================
+    
+    # Visual score bar
+    filled = int(score_pct / 10)
+    empty = 10 - filled
+    score_bar = "🟢" * filled + "⚫" * empty
+    
+    message += f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 *OVERALL SCORE*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{score_bar} {total_bullish}/{max_score}
+_Individual factors score (trend, momentum, volume, patterns, risk)_
 
-🛡️ *Safety Rating:* {safety_emoji}
-   {safety_rating}
+"""
+    
+    # Score label should respect the actual recommendation
+    # If blocked or AVOID recommendation, don't show "STRONG BUY CONDITIONS"
+    is_blocked = analysis.get('is_buy_blocked', False) or analysis.get('is_sell_blocked', False)
+    
+    if is_blocked:
+        # Hard filter blocked this trade
+        message += "🚫 *BLOCKED BY SAFETY FILTERS*\n"
+        message += "_Despite good scores, risk factors prevent entry_\n"
+    elif rec_type == 'BLOCKED':
+        message += "🚫 *BLOCKED BY SAFETY FILTERS*\n"
+        message += "_High-risk conditions detected_\n"
+    elif rec_type == 'BUY':
+        # For BUY recommendations, show confidence-based label
+        if score_pct >= 70:
+            message += "✅ *STRONG BUY CONDITIONS*\n"
+            message += "_Most indicators are bullish_\n"
+        elif score_pct >= 50:
+            message += "🟡 *MODERATE BUY CONDITIONS*\n"
+            message += "_Mixed signals, proceed with caution_\n"
+        else:
+            message += "⚠️ *WEAK BUY CONDITIONS*\n"
+            message += "_Few bullish signals, higher risk_\n"
+    elif rec_type == 'HOLD':
+        message += "⏸️ *NEUTRAL CONDITIONS*\n"
+        message += "_Not enough conviction to buy or sell_\n"
+    elif rec_type == 'SELL':
+        if score_pct <= 30:
+            message += "❌ *STRONG SELL CONDITIONS*\n"
+            message += "_Most indicators are bearish_\n"
+        else:
+            message += "⚠️ *SELL CONDITIONS*\n"
+            message += "_Bearish signals detected_\n"
+    else:
+        # Default AVOID case
+        if score_pct >= 70:
+            message += "⚠️ *CONFLICTING SIGNALS*\n"
+            message += "_Good scores but blocked by risk filters_\n"
+        elif score_pct >= 50:
+            message += "🟡 *MODERATE - Proceed with caution*\n"
+            message += "_Mixed conditions, wait for clarity_\n"
+        elif score_pct >= 30:
+            message += "⚠️ *WEAK - High risk*\n"
+            message += "_Mostly bearish signals_\n"
+        else:
+            message += "❌ *AVOID - Unfavorable conditions*\n"
+            message += "_Strong bearish indicators_\n"
+    
+    # =========================================================================
+    # ACTION PLAN
+    # =========================================================================
+    
+    message += """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 *YOUR ACTION PLAN*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━━━━━━━
-
-📋 *WHAT TO DO*
-━━━━━━━━━━━━━━━━━━━━
 """
     
     if rec_type == 'BUY':
-        message += f"""
-✅ *BUY NOW* at Rs {format_number(price)}
-   Set these price alerts:
+        message += f"""✅ *RECOMMENDED: BUY*
 
-🎯 *Sell for Profit:* Rs {format_number(target)} (+{profit_pct:.1f}%)
-🛡️ *Stop Loss:* Rs {format_number(stop)} (-{loss_pct:.1f}%)
+*Entry:* Rs {format_number(price)} (current price)
+*Target:* Rs {format_number(target)} (+{profit_pct:.1f}%)
+*Stop Loss:* Rs {format_number(stop)} (-{loss_pct:.1f}%)
+
+"""
+        # Show timeline based on selected horizon
+        selected_horizon = analysis.get('horizon', '3months')
+        horizon_name = target_data.get('horizon_targets', {}).get(selected_horizon, {}).get('horizon_name', '3 Months')
+        recommended_timeframe = target_data.get('recommended_timeframe', 90)
+        
+        message += f"*Investment Horizon:* {horizon_name} (~{recommended_timeframe} days)\n"
+        message += f"_Target based on your selected timeframe_\n\n"
+        
+        if time_estimate and time_estimate.get('estimated_date'):
+            from datetime import datetime
+            est_date = time_estimate.get('estimated_date')
+            if isinstance(est_date, datetime):
+                message += f"*Estimated Target Date:* {est_date.strftime('%d %b %Y')}\n\n"
+        
+        message += f"""*Example with Rs 10,000:*
+   Buy {shares} shares @ Rs {format_number(price)}
+   ✅ Profit if target hit: Rs {format_number(potential_profit)} (+{profit_pct:.1f}%)
+   ❌ Loss if stop hit: Rs {format_number(potential_loss)} (-{loss_pct:.1f}%)
 """
     elif rec_type == 'HOLD':
+        support = indicators.get('support', price * 0.95)
+        message += f"""⏳ *RECOMMENDED: WAIT*
+
+*Do not buy now.* Wait for:
+   • Price to drop to Rs {format_number(support)} (better entry)
+   • OR trend to strengthen
+
+*Check again in:* 1-2 weeks
+"""
+    else:
+        message += f"""❌ *RECOMMENDED: AVOID*
+
+*Do not buy this stock now.*
+
+*Why to avoid:*
+"""
+        # Show key reasons
+        if analysis.get('buy_block_reasons'):
+            for reason in analysis['buy_block_reasons'][:3]:
+                message += f"   • {reason}\n"
+        else:
+            if 'downtrend' in indicators['market_phase']:
+                message += "   • Stock is in a downtrend\n"
+            if trend_score == 0:
+                message += "   • All trend indicators are bearish\n"
+            if not rr_valid:
+                message += "   • Risk/reward ratio is unfavorable\n"
+        
         message += f"""
-⏳ *WAIT* - Don't buy yet
-   Look for price to drop to Rs {format_number(indicators.get('support', price * 0.95))}
-"""
-    else:
-        message += f"""
-❌ *AVOID* - Not a good time
-   Wait until trend improves
-"""
-    
-    # Time estimate
-    if time_estimate:
-        est_date = time_estimate.get('estimated_date')
-        if est_date:
-            from datetime import datetime
-            if isinstance(est_date, datetime):
-                message += f"""
-📅 *Expected Timeline:* ~{time_estimate.get('trading_days', '?')} trading days
-   Target by: {est_date.strftime('%d %b %Y')}
-"""
-    
-    # Profit/Loss example
-    message += f"""
-━━━━━━━━━━━━━━━━━━━━
+*When conditions might improve:*
+   • When trend turns upward
+   • When RSI shows oversold (below 30)
+   • When a bullish pattern confirms
 
-💵 *Example: Rs 10,000 Investment*
-━━━━━━━━━━━━━━━━━━━━
-   Buy: {shares} shares @ Rs {format_number(price)}
-   
-   ✅ If target reached:
-      Profit: Rs {format_number(potential_profit)} (+{profit_pct:.1f}%)
-   
-   ❌ If stop loss hits:
-      Loss: Rs {format_number(potential_loss)} (-{loss_pct:.1f}%)
-   
-   ⚖️ Risk/Reward: {format_number(risk_reward, 2)}:1
+*Check again in:* 2-3 weeks
 """
     
-    if rr_valid:
-        message += "   ✅ Good ratio\n"
-    else:
-        message += "   ⚠️ Below minimum\n"
+    # =========================================================================
+    # INVESTMENT HORIZONS - Show ALL opportunities
+    # =========================================================================
     
-    # Market conditions summary
-    phase = indicators['market_phase'].replace('_', ' ').title()
-    
-    if 'uptrend' in indicators['market_phase']:
-        trend_emoji = "📈"
-        trend_text = "Moving UP"
-    elif 'downtrend' in indicators['market_phase']:
-        trend_emoji = "📉"
-        trend_text = "Moving DOWN"
-    else:
-        trend_emoji = "↔️"
-        trend_text = "Moving SIDEWAYS"
-    
-    message += f"""
-━━━━━━━━━━━━━━━━━━━━
+    horizon_targets = target_data.get('horizon_targets', {})
+    if horizon_targets and rec_type == 'BUY':
+        message += """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 *TARGETS BY INVESTMENT HORIZON*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_Opportunities across different timeframes_
 
-{EMOJI['info']} *MARKET CONDITIONS*
-━━━━━━━━━━━━━━━━━━━━
-{trend_emoji} Trend: {trend_text}
-📊 Strength: {indicators['adx_strength'].replace('_', ' ').title()}
-📈 Momentum: {indicators['rsi_zone'].replace('_', ' ').title()}
+"""
+        # Sort horizons by timeframe (shortest to longest)
+        sorted_horizons = sorted(
+            horizon_targets.items(),
+            key=lambda x: x[1]['timeframe']
+        )
+        
+        for horizon_key, horizon_data in sorted_horizons:
+            emoji = horizon_data['emoji']
+            name = horizon_data['horizon_name']
+            target_price = horizon_data['target']
+            target_pct = horizon_data['target_pct']
+            days = horizon_data['timeframe']
+            is_recommended = horizon_data['is_recommended']
+            
+            recommended_tag = " ⭐ *RECOMMENDED*" if is_recommended else ""
+            
+            message += f"{emoji} *{name}* (~{days} days){recommended_tag}\n"
+            message += f"   Target: Rs {format_number(target_price)} (+{target_pct:.1f}%)\n"
+            
+            if is_recommended:
+                message += f"   _Your selected investment period_\n"
+            
+            message += "\n"
+        
+        message += "_All targets shown - pick your preferred timeline_\n\n"
+    
+    # =========================================================================
+    # PATTERN-BASED TARGET (Industry Standard Measured Move)
+    # =========================================================================
+    
+    if target_data.get('has_pattern_target') and rec_type == 'BUY':
+        pattern_name = target_data.get('pattern_name', 'Unknown')
+        pattern_target = target_data.get('pattern_target')
+        pattern_target_pct = target_data.get('pattern_target_pct', 0)
+        pattern_reliability = target_data.get('pattern_reliability', 0)
+        pattern_horizon = target_data.get('pattern_horizon')
+        pattern_invalidation = target_data.get('pattern_invalidation')
+        pattern_min_days = target_data.get('pattern_min_days', 0)
+        pattern_max_days = target_data.get('pattern_max_days', 0)
+        
+        reliability_pct = int((pattern_reliability or 0) * 100)
+        reliability_stars = '⭐' * min(5, max(1, reliability_pct // 20))
+        
+        message += """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 *PATTERN-BASED TARGET*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_Industry-standard measured move calculation_
 
-━━━━━━━━━━━━━━━━━━━━
 """
+        message += f"*Pattern:* {pattern_name}\n"
+        message += f"*Reliability:* {reliability_pct}% {reliability_stars}\n\n"
+        
+        if pattern_target:
+            message += f"📎 *Measured Move Target:* Rs {format_number(pattern_target)} (+{pattern_target_pct:.1f}%)\n"
+        
+        if pattern_invalidation:
+            message += f"🚫 *Pattern Invalid If:* Price drops below Rs {format_number(pattern_invalidation)}\n"
+        
+        if pattern_horizon:
+            from src.core.config import INVESTMENT_HORIZONS
+            horizon_info = INVESTMENT_HORIZONS.get(pattern_horizon, {})
+            display_name = horizon_info.get('display_name', pattern_horizon)
+            message += f"⏱️ *Expected Timeframe:* {display_name} ({pattern_min_days}-{pattern_max_days} days)\n"
+        
+        # Add pattern-horizon mismatch warning if exists
+        if target_data.get('pattern_horizon_warning'):
+            message += f"\n⚠️ *Notice:* {target_data['pattern_horizon_warning']}\n"
+        
+        message += "\n"
+        message += "_Pattern targets are based on classical technical analysis_\n"
+        message += "_Measured move = pattern height projected from breakout_\n\n"
     
-    # Checklist
-    checks_passed = 0
-    total_checks = 5
+    # =========================================================================
+    # KEY PRICE LEVELS
+    # =========================================================================
     
-    if indicators['price_vs_trend_ema'] == 'above':
-        checks_passed += 1
-    if 30 <= indicators['rsi'] <= 70:
-        checks_passed += 1
-    if indicators['adx'] >= 25:
-        checks_passed += 1
-    if indicators['volume_ratio'] >= 0.7:
-        checks_passed += 1
-    if risk_reward >= 2:
-        checks_passed += 1
+    support = indicators.get('support', price * 0.95)
+    resistance = indicators.get('resistance', price * 1.05)
     
     message += f"""
-✅ *CHECKLIST:* {checks_passed}/{total_checks} passed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 *KEY PRICE LEVELS*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Current: Rs {format_number(price)}
+         │
+🔺 Resistance: Rs {format_number(resistance)} (+{((resistance-price)/price)*100:.1f}%)
+         │  ↑ Price may struggle here
+         │
+🔻 Support: Rs {format_number(support)} ({((support-price)/price)*100:.1f}%)
+            ↓ Price may bounce here
+
 """
     
-    if checks_passed >= 4:
-        message += "   Good investment opportunity!\n"
-    elif checks_passed >= 3:
-        message += "   Moderate - proceed with caution\n"
-    else:
-        message += "   Not recommended at this time\n"
+    # =========================================================================
+    # FOOTER
+    # =========================================================================
     
-    message += f"""
-{'='*35}
-_Developed by Harsh Kandhway_
+    message += """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ *DISCLAIMER*
+This is educational analysis, not financial advice.
+Always do your own research. Past performance
+doesn't guarantee future results.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_Stock Analyzer Pro by Harsh Kandhway_
 """
     
     return message.strip()
