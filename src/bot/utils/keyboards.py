@@ -48,7 +48,10 @@ def create_analysis_action_keyboard(symbol: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("📊 View Chart", callback_data=f"chart:{symbol}"),
         ],
         [
+            InlineKeyboardButton("💰 Position Sizing", callback_data=f"position_sizing:{symbol}"),
             InlineKeyboardButton("🔄 Refresh Analysis", callback_data=f"analyze:{symbol}"),
+        ],
+        [
             InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
         ],
     ]

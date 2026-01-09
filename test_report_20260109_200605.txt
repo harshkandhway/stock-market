@@ -1,0 +1,77 @@
+COMPREHENSIVE STOCK TESTING REPORT
+================================================================================
+
+Generated: 2026-01-09 20:06:05
+
+SUMMARY
+--------------------------------------------------------------------------------
+Total Stocks: 10
+Successful: 10
+Errors: 0
+Critical Issues: 0
+Warnings: 1
+
+DETAILED RESULTS
+--------------------------------------------------------------------------------
+
+20MICRONS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.6%
+  Score: 5/10 (50.0%)
+  R:R: 3.38:1
+
+21STCENMGM.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.1%
+  Score: 5/10 (50.0%)
+  R:R: 3.39:1
+
+360ONE.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 50.2%
+  Score: 6/10 (60.0%)
+  R:R: 1.51:1
+
+3IINFOLTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.1%
+  Score: 1/10 (10.0%)
+  R:R: 1.86:1
+
+3MINDIA.NS:
+  Recommendation: HOLD
+  Confidence: 59.9%
+  Score: 4/10 (40.0%)
+  R:R: 2.07:1
+
+3PLAND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.7%
+  Score: 2/10 (20.0%)
+  R:R: 1.23:1
+
+5PAISA.NS:
+  Recommendation: HOLD
+  Confidence: 51.6%
+  Score: 3/10 (30.0%)
+  R:R: 0.54:1
+
+63MOONS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.1%
+  Score: 1/10 (10.0%)
+  R:R: 1.84:1
+
+A2ZINFRA.NS:
+  Recommendation: SELL
+  Confidence: 28.7%
+  Score: 0/10 (0.0%)
+  R:R: 0.60:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+AAATECH.NS:
+  Recommendation: HOLD
+  Confidence: 58.7%
+  Score: 5/10 (50.0%)
+  R:R: 1.07:1

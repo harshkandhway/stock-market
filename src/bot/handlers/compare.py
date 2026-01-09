@@ -11,7 +11,7 @@ from telegram.ext import ContextTypes
 
 from ..database.db import get_db_context, get_or_create_user, get_user_settings
 from ..services.analysis_service import analyze_multiple_stocks
-from ..utils.formatters import (
+from src.core.formatters import (
     format_comparison_table,
     format_error,
     format_warning,

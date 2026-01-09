@@ -67,7 +67,7 @@ ALERT_COOLDOWN_MINUTES = int(os.getenv('ALERT_COOLDOWN_MINUTES', '60'))  # 1 hou
 # =============================================================================
 
 CACHE_EXPIRY_MINUTES = int(os.getenv('CACHE_EXPIRY_MINUTES', '15'))
-ENABLE_ANALYSIS_CACHE = os.getenv('ENABLE_ANALYSIS_CACHE', 'true').lower() == 'true'
+ENABLE_ANALYSIS_CACHE = os.getenv('ENABLE_ANALYSIS_CACHE', 'false').lower() == 'true'
 
 # =============================================================================
 # LOGGING

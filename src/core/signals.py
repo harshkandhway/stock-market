@@ -375,7 +375,20 @@ def calculate_all_signals(indicators: Dict, mode: str = 'balanced') -> Dict:
     # Convert net score to confidence percentage
     # net_score ranges from -max_score to +max_score
     # Map to 0-100 where 50 is neutral
+    # Use more conservative mapping - require stronger signals for higher confidence
     confidence = 50 + (net_score / max_score) * 50
+    
+    # Apply penalty if most signals are bearish (more conservative)
+    bullish_count = sum(1 for _, direction in all_signals.values() if direction == 'bullish')
+    bearish_count = sum(1 for _, direction in all_signals.values() if direction == 'bearish')
+    total_signals = bullish_count + bearish_count + neutral_count
+    
+    if total_signals > 0:
+        bullish_ratio = bullish_count / total_signals
+        # If less than 40% of signals are bullish, reduce confidence
+        if bullish_ratio < 0.4 and confidence > 50:
+            confidence = 50 + (confidence - 50) * bullish_ratio * 1.5  # Penalty for low bullish ratio
+    
     confidence = max(0, min(100, confidence))  # Clamp to 0-100
     
     return {
@@ -406,10 +419,20 @@ def determine_recommendation(
     confidence: float,
     is_buy_blocked: bool,
     is_sell_blocked: bool,
-    mode: str = 'balanced'
+    mode: str = 'balanced',
+    rr_valid: bool = True,
+    overall_score_pct: float = 50.0
 ) -> Tuple[str, str]:
     """
-    Determine the recommendation based on confidence and filters
+    Determine the recommendation based on confidence, filters, risk/reward, and overall score
+    
+    Args:
+        confidence: Confidence percentage (0-100)
+        is_buy_blocked: Whether buy is blocked by hard filters
+        is_sell_blocked: Whether sell is blocked by hard filters
+        mode: Risk mode (conservative, balanced, aggressive)
+        rr_valid: Whether risk/reward ratio meets minimum requirement
+        overall_score_pct: Overall bullish score percentage (0-100)
     
     Returns:
         Tuple of (recommendation, recommendation_type)
@@ -424,6 +447,40 @@ def determine_recommendation(
     # Check if sell is blocked
     if confidence < 50 and is_sell_blocked:
         return 'AVOID - SELL BLOCKED', 'BLOCKED'
+    
+    # CRITICAL: If Risk/Reward is below minimum, downgrade any BUY to HOLD or AVOID
+    # EXCEPTION: If score and confidence are both very high, allow STRONG/BUY with warning
+    if not rr_valid and confidence >= thresholds['WEAK_BUY']:
+        # Risk/Reward below minimum - check if we can still recommend STRONG BUY or BUY
+        if overall_score_pct < 30:
+            return 'AVOID - RISK/REWARD TOO LOW', 'BLOCKED'
+        elif confidence >= thresholds['STRONG_BUY'] and overall_score_pct >= 75:
+            # Very high confidence and score - allow STRONG BUY even with slightly suboptimal R:R
+            # This handles cases where R:R is just slightly below threshold (e.g., 1.9:1 vs 2.0:1)
+            return 'STRONG BUY - R:R SLIGHTLY BELOW MINIMUM', 'BUY'
+        elif overall_score_pct >= 70 and confidence >= 70:
+            # High score and confidence - allow WEAK BUY with R:R warning
+            # This handles cases where R:R is just slightly below threshold (e.g., 1.9:1 vs 2.0:1)
+            # User can still make informed decision with strong technical signals
+            return 'WEAK BUY - R:R SLIGHTLY BELOW MINIMUM', 'BUY'
+        elif overall_score_pct >= 60 and confidence >= 65:
+            # Good score and confidence - still allow WEAK BUY but with stronger warning
+            return 'WEAK BUY - R:R BELOW MINIMUM (CAUTION)', 'BUY'
+        else:
+            return 'HOLD - RISK/REWARD BELOW MINIMUM', 'HOLD'
+    
+    # CRITICAL: If overall score is very low (<40%), downgrade BUY recommendations
+    if overall_score_pct < 40 and confidence >= thresholds['WEAK_BUY']:
+        # Very low technical score - patterns alone shouldn't drive BUY
+        if confidence >= thresholds['BUY']:
+            # Downgrade from BUY to WEAK BUY or HOLD
+            if overall_score_pct < 30:
+                return 'HOLD - WEAK TECHNICAL SIGNALS', 'HOLD'
+            else:
+                return 'WEAK BUY - CAUTION REQUIRED', 'BUY'
+        elif confidence >= thresholds['WEAK_BUY']:
+            # Downgrade WEAK BUY to HOLD if score is too low
+            return 'HOLD - INSUFFICIENT BULLISH SIGNALS', 'HOLD'
     
     # Determine recommendation based on confidence
     if confidence >= thresholds['STRONG_BUY']:

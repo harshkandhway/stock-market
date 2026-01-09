@@ -9,9 +9,9 @@ from telegram.ext import ContextTypes
 
 from src.bot.config import EMOJI, ERROR_MESSAGES
 from src.bot.services.analysis_service import analyze_stock
-from src.bot.utils.formatters import (
-    format_analysis_full, format_analysis_beginner,
-    format_error, chunk_message, format_quick_recommendation
+from src.core.formatters import (
+    format_analysis_comprehensive,
+    format_error, chunk_message
 )
 from src.bot.utils.keyboards import create_analysis_action_keyboard
 from src.bot.utils.validators import validate_stock_symbol, parse_command_args
@@ -47,8 +47,8 @@ def analyze_stock_with_settings(symbol: str, user_id: int, db) -> dict:
             timeframe = settings.timeframe or timeframe
             horizon = getattr(settings, 'investment_horizon', None) or horizon
         
-        # Perform analysis
-        analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon)
+        # Perform analysis (cache disabled by default to respect horizon changes)
+        analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon, use_cache=False)
         return analysis
         
     except ValueError as e:
@@ -103,12 +103,11 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
         
-        # Get user settings (mode, timeframe, horizon, beginner_mode)
+        # Get user settings (mode, timeframe, horizon)
         mode = 'balanced'
         timeframe = 'medium'
         horizon = '3months'
-        beginner_mode = True
-        
+
         try:
             with get_db_context() as db:
                 settings = get_user_settings(db, user_id)
@@ -116,16 +115,15 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     mode = settings.risk_mode
                     timeframe = settings.timeframe
                     horizon = getattr(settings, 'investment_horizon', '3months') or '3months'
-                    beginner_mode = getattr(settings, 'beginner_mode', True)
         except Exception as e:
             logger.warning(f"Could not fetch user settings: {e}")
-        
-        # Perform analysis
+
+        # Perform analysis (cache disabled by default to respect horizon changes)
         try:
-            analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon)
+            analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon, use_cache=False)
         except ValueError as e:
             await analyzing_msg.edit_text(
-                format_error(str(e), f"/analyze {symbol}"),
+                format_error(str(e), output_mode='bot', command=f"/analyze {symbol}"),
                 parse_mode='Markdown'
             )
             logger.error(f"Analysis failed for {symbol}: {e}")
@@ -134,19 +132,21 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await analyzing_msg.edit_text(
                 format_error(
                     "An unexpected error occurred during analysis. Please try again later.",
-                    f"/analyze {symbol}"
+                    output_mode='bot',
+                    command=f"/analyze {symbol}"
                 ),
                 parse_mode='Markdown'
             )
             logger.error(f"Unexpected error analyzing {symbol}: {e}", exc_info=True)
             return
-        
-        # Format analysis result based on user preference
+
+        # Format analysis result using comprehensive formatter
         try:
-            if beginner_mode:
-                formatted_result = format_analysis_beginner(analysis, horizon)
-            else:
-                formatted_result = format_analysis_full(analysis)
+            formatted_result = format_analysis_comprehensive(
+                analysis,
+                output_mode='bot',
+                horizon=horizon
+            )
         except Exception as e:
             logger.error(f"Error formatting analysis: {e}")
             formatted_result = f"{EMOJI['error']} Error formatting results. Please try again."
@@ -243,28 +243,53 @@ async def quick_analyze_command(update: Update, context: ContextTypes.DEFAULT_TY
         except Exception as e:
             logger.warning(f"Could not fetch user settings: {e}")
         
-        # Perform analysis
+        # Perform analysis (cache disabled by default to respect horizon changes)
         try:
-            analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon)
+            analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon, use_cache=False)
         except Exception as e:
             await analyzing_msg.edit_text(
-                format_error(str(e), f"/quick {symbol}"),
+                format_error(str(e), output_mode='bot', command=f"/quick {symbol}"),
                 parse_mode='Markdown'
             )
             return
-        
-        # Format quick summary
-        summary = format_quick_recommendation(analysis)
-        
+
+        # Format using comprehensive formatter
+        try:
+            formatted_result = format_analysis_comprehensive(
+                analysis,
+                output_mode='bot',
+                horizon=horizon
+            )
+        except Exception as e:
+            logger.error(f"Error formatting analysis: {e}")
+            formatted_result = f"{EMOJI['error']} Error formatting results. Please try again."
+
+        # Split message if too long
+        messages = chunk_message(formatted_result)
+
+        # Delete "analyzing" message
+        try:
+            await analyzing_msg.delete()
+        except Exception:
+            pass
+
         # Create keyboard
         keyboard = create_analysis_action_keyboard(symbol)
-        
-        # Send result
-        await analyzing_msg.edit_text(
-            summary,
-            reply_markup=keyboard,
-            parse_mode='Markdown'
-        )
+
+        # Send results
+        for i, msg in enumerate(messages):
+            if i == len(messages) - 1:
+                # Last message gets the keyboard
+                await update.message.reply_text(
+                    msg,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            else:
+                await update.message.reply_text(
+                    msg,
+                    parse_mode='Markdown'
+                )
         
         logger.info(f"User {user_id} quick analyzed {symbol}")
         

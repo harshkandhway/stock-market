@@ -84,7 +84,7 @@ def fetch_stock_data(symbol: str, period: str = '1y') -> pd.DataFrame:
         raise ValueError(f"Failed to fetch data for {symbol}: {str(e)}")
 
 
-def get_cached_analysis(symbol: str, mode: str, timeframe: str) -> Optional[Dict]:
+def get_cached_analysis(symbol: str, mode: str, timeframe: str, horizon: str = '3months') -> Optional[Dict]:
     """
     Get cached analysis if available and not expired
     
@@ -92,6 +92,7 @@ def get_cached_analysis(symbol: str, mode: str, timeframe: str) -> Optional[Dict
         symbol: Stock symbol
         mode: Risk mode
         timeframe: Timeframe
+        horizon: Investment horizon (for cache key validation)
     
     Returns:
         Cached analysis dict or None
@@ -109,7 +110,10 @@ def get_cached_analysis(symbol: str, mode: str, timeframe: str) -> Optional[Dict
             ).first()
             
             if cache and not cache.is_expired():
-                return cache.data
+                cached_data = cache.data
+                # Verify horizon matches (cache key doesn't include horizon, so we check the data)
+                if cached_data and cached_data.get('horizon') == horizon:
+                    return cached_data
             
             return None
             
@@ -163,7 +167,7 @@ def analyze_stock(
     mode: str = 'balanced',
     timeframe: str = 'medium',
     horizon: str = '3months',
-    use_cache: bool = True
+    use_cache: bool = False
 ) -> Dict[str, Any]:
     """
     Analyze a stock with technical indicators
@@ -193,11 +197,13 @@ def analyze_stock(
     if timeframe not in TIMEFRAME_CONFIGS:
         raise ValueError(f"Invalid timeframe: {timeframe}")
     
-    # Check cache first
-    if use_cache:
-        cached = get_cached_analysis(symbol, mode, timeframe)
+    # Check cache first (disabled by default)
+    if use_cache and ENABLE_ANALYSIS_CACHE:
+        cached = get_cached_analysis(symbol, mode, timeframe, horizon)
         if cached:
-            return cached
+            # Verify cached horizon matches requested horizon
+            if cached.get('horizon') == horizon:
+                return cached
     
     # Get configuration
     tf_config = TIMEFRAME_CONFIGS[timeframe]
@@ -226,11 +232,6 @@ def analyze_stock(
     signal_data = calculate_all_signals(indicators, mode)
     confidence = signal_data['confidence']
     confidence_level = get_confidence_level(confidence)
-    
-    # Determine recommendation
-    recommendation, recommendation_type = determine_recommendation(
-        confidence, is_buy_blocked, is_sell_blocked, mode
-    )
     
     # Get price and key indicators
     current_price = indicators['current_price']
@@ -263,6 +264,42 @@ def analyze_stock(
         target_data['recommended_target'],
         stop_data['recommended_stop'],
         mode
+    )
+    
+    # Calculate overall score percentage for recommendation logic
+    # This matches the formatter's scoring logic (max 10 points)
+    trend_signals = signal_data.get('trend_signals', {})
+    momentum_signals = signal_data.get('momentum_signals', {})
+    pattern_signals = signal_data.get('pattern_signals', {})
+    
+    # Trend score (max 3): price vs EMAs, EMA alignment, ADX
+    trend_bullish = sum(1 for _, d in trend_signals.values() if d == 'bullish')
+    trend_score = min(3, max(0, trend_bullish))
+    
+    # Momentum score (max 3): RSI, MACD, ADX
+    momentum_bullish = sum(1 for _, d in momentum_signals.values() if d == 'bullish')
+    momentum_score = min(3, max(0, momentum_bullish))
+    
+    # Volume score (max 1): volume confirmation (high volume = bullish)
+    vol_ratio = indicators.get('volume_ratio', 1.0)
+    volume_score = 1 if (vol_ratio >= 1.5) else 0
+    
+    # Pattern score (max 3): pattern type and bias
+    pattern_bullish = sum(1 for _, d in pattern_signals.values() if d == 'bullish')
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    pattern_score = min(3, max(0, pattern_bullish + (1 if pattern_bias == 'bullish' else 0)))
+    
+    # Risk score (max 1): R:R validity
+    risk_score = 1 if rr_valid else 0
+    
+    total_bullish = trend_score + momentum_score + volume_score + pattern_score + risk_score
+    overall_score_pct = (total_bullish / 10) * 100
+    
+    # Determine recommendation (now with risk/reward and overall score validation)
+    recommendation, recommendation_type = determine_recommendation(
+        confidence, is_buy_blocked, is_sell_blocked, mode,
+        rr_valid=rr_valid,
+        overall_score_pct=overall_score_pct
     )
     
     # Generate reasoning
@@ -336,8 +373,9 @@ def analyze_stock(
         'analyzed_at': datetime.utcnow().isoformat(),
     }
     
-    # Cache the result
-    save_analysis_cache(symbol, mode, timeframe, analysis)
+    # Cache the result (only if caching is enabled)
+    if use_cache and ENABLE_ANALYSIS_CACHE:
+        save_analysis_cache(symbol, mode, timeframe, analysis)
     
     return analysis
 

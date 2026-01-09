@@ -93,9 +93,16 @@ def backtest_strategy(
             signal_data = calculate_all_signals(indicators, mode)
             confidence = signal_data['confidence']
             
+            # Calculate risk/reward for recommendation logic
+            # Note: In backtest, we use default values - actual R:R validation happens in analysis
+            rr_valid = True  # Default for backtest
+            overall_score_pct = 50.0  # Default for backtest
+            
             # Determine recommendation
             recommendation, recommendation_type = determine_recommendation(
-                confidence, is_buy_blocked, is_sell_blocked, mode
+                confidence, is_buy_blocked, is_sell_blocked, mode,
+                rr_valid=rr_valid,
+                overall_score_pct=overall_score_pct
             )
             
             # Current position logic

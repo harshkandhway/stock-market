@@ -29,12 +29,16 @@ from ..database.db import (
     delete_alert
 )
 from ..services.analysis_service import analyze_stock, get_current_price
-from ..utils.formatters import (
-    format_analysis_summary,
+from src.core.formatters import (
+    format_analysis_comprehensive,
     format_success,
     format_error,
     format_watchlist,
-    format_alert
+    format_alert,
+    chunk_message,
+    format_comparison_table,
+    format_warning,
+    format_position_sizing
 )
 from ..utils.keyboards import (
     create_watchlist_menu_keyboard,
@@ -119,6 +123,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_chart(query, context, params)
         elif action == "portfolio_add":
             await handle_portfolio_add(query, context, params)
+        elif action == "position_sizing":
+            await handle_position_sizing(query, context, params)
         elif action == "watchlist_add_prompt":
             await handle_watchlist_add_prompt(query, context)
         elif action == "watchlist_remove_prompt":
@@ -550,30 +556,49 @@ async def handle_analyze_refresh(query, context, params: list) -> None:
             )
             
             if analysis and 'error' not in analysis:
-                from src.bot.utils.formatters import format_analysis_beginner, format_analysis_full
-                
-                # Use beginner or advanced format based on settings
-                beginner_mode = getattr(settings, 'beginner_mode', True)
+                # Get horizon from settings
                 horizon = getattr(settings, 'investment_horizon', '3months')
-                
-                if beginner_mode:
-                    message = format_analysis_beginner(analysis, horizon)
-                else:
-                    message = format_analysis_full(analysis)
-                
+
+                # Use comprehensive formatter
+                message = format_analysis_comprehensive(
+                    analysis,
+                    output_mode='bot',
+                    horizon=horizon
+                )
+
+                # Split message if too long
+                messages = chunk_message(message)
+
                 # Create action keyboard
                 from src.bot.utils.keyboards import create_analysis_action_keyboard
                 keyboard = create_analysis_action_keyboard(symbol)
-                
-                await query.edit_message_text(
-                    message,
-                    reply_markup=keyboard,
-                    parse_mode='Markdown'
-                )
+
+                # Send messages
+                if len(messages) == 1:
+                    await query.edit_message_text(
+                        messages[0],
+                        reply_markup=keyboard,
+                        parse_mode='Markdown'
+                    )
+                else:
+                    # For multiple messages, delete original and send new ones
+                    await query.message.delete()
+                    for i, msg in enumerate(messages):
+                        if i == len(messages) - 1:
+                            await query.message.reply_text(
+                                msg,
+                                reply_markup=keyboard,
+                                parse_mode='Markdown'
+                            )
+                        else:
+                            await query.message.reply_text(
+                                msg,
+                                parse_mode='Markdown'
+                            )
             else:
                 error_msg = analysis.get('error', 'Analysis failed') if analysis else 'Analysis failed'
                 await query.edit_message_text(
-                    format_error(f"Failed to analyze {symbol}: {error_msg}")
+                    format_error(f"Failed to analyze {symbol}: {error_msg}", output_mode='bot')
                 )
     
     except Exception as e:
@@ -601,18 +626,33 @@ async def handle_analyze_quick(query, context, params: list) -> None:
             settings = get_user_settings(db, user_id)
             
             # Perform analysis
+            horizon = getattr(settings, 'investment_horizon', '3months')
             result = analyze_stock(
                 symbol=symbol,
                 mode=settings.risk_mode,
-                timeframe=settings.timeframe
+                timeframe=settings.timeframe,
+                horizon=horizon,
+                use_cache=False
             )
-            
+
             if result['status'] == 'success':
-                message = format_analysis_summary(result['data'])
-                await query.edit_message_text(message, parse_mode='Markdown')
+                message = format_analysis_comprehensive(
+                    result['data'],
+                    output_mode='bot',
+                    horizon=horizon
+                )
+                messages = chunk_message(message)
+
+                # Send messages
+                if len(messages) == 1:
+                    await query.edit_message_text(messages[0], parse_mode='Markdown')
+                else:
+                    await query.message.delete()
+                    for msg in messages:
+                        await query.message.reply_text(msg, parse_mode='Markdown')
             else:
                 await query.edit_message_text(
-                    format_error(result.get('message', 'Analysis failed'))
+                    format_error(result.get('message', 'Analysis failed'), output_mode='bot')
                 )
     
     except Exception as e:
@@ -755,6 +795,65 @@ async def handle_portfolio_add(query, context, params: list) -> None:
     )
 
 
+async def handle_position_sizing(query, context, params: list) -> None:
+    """Handle position sizing button - shows detailed position sizing information."""
+    if not params:
+        await query.edit_message_text(format_error("Invalid symbol", output_mode='bot'))
+        return
+    
+    symbol = params[0]
+    user_id = query.from_user.id
+    
+    # Show loading message
+    await query.edit_message_text(f"💰 Calculating position sizing for {symbol}...")
+    
+    try:
+        from src.bot.handlers.analyze import analyze_stock_with_settings
+        
+        with get_db_context() as db:
+            user = get_or_create_user(db, user_id, query.from_user.username)
+            settings = get_user_settings(db, user_id)
+            
+            # Get user's capital from settings
+            capital = getattr(settings, 'default_capital', 100000)
+            
+            # Perform analysis to get current data
+            analysis = analyze_stock_with_settings(
+                symbol=symbol,
+                user_id=user_id,
+                db=db
+            )
+            
+            if analysis and 'error' not in analysis:
+                # Format position sizing details
+                message = format_position_sizing(
+                    analysis,
+                    capital=capital,
+                    output_mode='bot'
+                )
+                
+                # Create back button
+                from src.bot.utils.keyboards import create_analysis_action_keyboard
+                keyboard = create_analysis_action_keyboard(symbol)
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            else:
+                error_msg = analysis.get('error', 'Analysis failed') if analysis else 'Analysis failed'
+                await query.edit_message_text(
+                    format_error(f"Failed to analyze {symbol}: {error_msg}", output_mode='bot')
+                )
+    
+    except Exception as e:
+        logger.error(f"Error calculating position sizing: {e}", exc_info=True)
+        await query.edit_message_text(
+            format_error(f"Error calculating position sizing: {str(e)}", output_mode='bot')
+        )
+
+
 async def handle_watchlist_add_prompt(query, context) -> None:
     """Prompt user to add stock to watchlist."""
     await query.edit_message_text(
@@ -792,8 +891,7 @@ async def handle_watchlist_analyze(query, context) -> None:
     """Analyze all stocks in watchlist."""
     from src.bot.database.db import get_db_context, get_user_watchlist, get_user_settings
     from src.bot.services.analysis_service import analyze_multiple_stocks
-    from src.bot.utils.formatters import format_comparison_table, format_error, format_warning, chunk_message
-    
+
     user_id = query.from_user.id
     
     with get_db_context() as db:

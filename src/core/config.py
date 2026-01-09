@@ -337,9 +337,9 @@ RECOMMENDATION_THRESHOLDS = {
         'STRONG_SELL': 15,
     },
     'balanced': {
-        'STRONG_BUY': 80,
-        'BUY': 65,
-        'WEAK_BUY': 55,
+        'STRONG_BUY': 75,  # Lowered from 80 - more realistic for real markets
+        'BUY': 70,  # Increased from 65 - require higher confidence
+        'WEAK_BUY': 60,  # Increased from 55 - require higher confidence
         'HOLD_UPPER': 50,
         'HOLD_LOWER': 40,
         'WEAK_SELL': 35,

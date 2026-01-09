@@ -23,9 +23,9 @@ from ..database.db import (
     get_user_settings
 )
 from ..services.analysis_service import analyze_stock, analyze_multiple_stocks
-from ..utils.formatters import (
+from src.core.formatters import (
     format_watchlist,
-    format_analysis_summary,
+    format_analysis_comprehensive,
     format_comparison_table,
     format_success,
     format_error,
