@@ -82,9 +82,9 @@ class DailyBuyAlertsScheduler:
         """Run daily analysis of all stocks"""
         while self.is_running:
             try:
-                # Run analysis at 6:00 AM IST (before market opens)
+                # Run analysis at 4:15 AM IST (for testing - normally 6:00 AM before market opens)
                 now = datetime.now(pytz.timezone(DEFAULT_TIMEZONE))
-                target_time = now.replace(hour=6, minute=0, second=0, microsecond=0)
+                target_time = now.replace(hour=4, minute=15, second=0, microsecond=0)
                 
                 # If already past 6 AM today, schedule for tomorrow
                 if now > target_time:
