@@ -122,8 +122,27 @@ async def analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon, use_cache=False)
         except ValueError as e:
+            error_msg = str(e)
+            
+            # Provide more helpful error messages
+            if 'Insufficient data' in error_msg:
+                user_friendly_msg = (
+                    f"⚠️ *Insufficient Data for {symbol}*\n\n"
+                    f"This stock doesn't have enough historical data for analysis.\n\n"
+                    f"*Possible reasons:*\n"
+                    f"• Stock is newly listed (need at least 50 days of data)\n"
+                    f"• Trading is suspended or halted\n"
+                    f"• Symbol might be incorrect\n\n"
+                    f"*Try:*\n"
+                    f"• Verify the symbol is correct\n"
+                    f"• Check if the stock is actively traded\n"
+                    f"• Try analyzing a different stock"
+                )
+            else:
+                user_friendly_msg = error_msg
+            
             await analyzing_msg.edit_text(
-                format_error(str(e), output_mode='bot', command=f"/analyze {symbol}"),
+                format_error(user_friendly_msg, output_mode='bot', command=f"/analyze {symbol}"),
                 parse_mode='Markdown'
             )
             logger.error(f"Analysis failed for {symbol}: {e}")
@@ -246,11 +265,42 @@ async def quick_analyze_command(update: Update, context: ContextTypes.DEFAULT_TY
         # Perform analysis (cache disabled by default to respect horizon changes)
         try:
             analysis = analyze_stock(symbol, mode=mode, timeframe=timeframe, horizon=horizon, use_cache=False)
-        except Exception as e:
+        except ValueError as e:
+            error_msg = str(e)
+            
+            # Provide more helpful error messages
+            if 'Insufficient data' in error_msg:
+                user_friendly_msg = (
+                    f"⚠️ *Insufficient Data for {symbol}*\n\n"
+                    f"This stock doesn't have enough historical data for analysis.\n\n"
+                    f"*Possible reasons:*\n"
+                    f"• Stock is newly listed (need at least 50 days of data)\n"
+                    f"• Trading is suspended or halted\n"
+                    f"• Symbol might be incorrect\n\n"
+                    f"*Try:*\n"
+                    f"• Verify the symbol is correct\n"
+                    f"• Check if the stock is actively traded\n"
+                    f"• Try analyzing a different stock"
+                )
+            else:
+                user_friendly_msg = error_msg
+            
             await analyzing_msg.edit_text(
-                format_error(str(e), output_mode='bot', command=f"/quick {symbol}"),
+                format_error(user_friendly_msg, output_mode='bot', command=f"/quick {symbol}"),
                 parse_mode='Markdown'
             )
+            logger.error(f"Quick analysis failed for {symbol}: {e}")
+            return
+        except Exception as e:
+            await analyzing_msg.edit_text(
+                format_error(
+                    "An unexpected error occurred during analysis. Please try again later.",
+                    output_mode='bot',
+                    command=f"/quick {symbol}"
+                ),
+                parse_mode='Markdown'
+            )
+            logger.error(f"Unexpected error in quick analysis for {symbol}: {e}", exc_info=True)
             return
 
         # Format using comprehensive formatter

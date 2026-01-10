@@ -151,10 +151,6 @@ def analyze_stock(
     confidence = signal_data['confidence']
     confidence_level = get_confidence_level(confidence)
     
-    recommendation, recommendation_type = determine_recommendation(
-        confidence, is_buy_blocked, is_sell_blocked, mode
-    )
-    
     current_price = indicators['current_price']
     atr = indicators['atr']
     support = indicators['support']
@@ -167,6 +163,75 @@ def analyze_stock(
     target_data = calculate_targets(
         current_price, atr, resistance, support,
         fib_extensions, mode, direction
+    )
+    
+    # Calculate stop loss
+    stop_data = calculate_stoploss(
+        current_price, atr, support, resistance, mode, direction
+    )
+    
+    # Validate risk/reward
+    risk_reward, rr_valid, rr_explanation = validate_risk_reward(
+        current_price,
+        target_data['recommended_target'],
+        stop_data['recommended_stop'],
+        mode
+    )
+    
+    # Calculate overall score percentage
+    trend_signals = signal_data.get('trend_signals', {})
+    momentum_signals = signal_data.get('momentum_signals', {})
+    pattern_signals = signal_data.get('pattern_signals', {})
+    
+    trend_bullish = sum(1 for _, d in trend_signals.values() if d == 'bullish')
+    trend_score = min(3, max(0, trend_bullish))
+    
+    momentum_bullish = sum(1 for _, d in momentum_signals.values() if d == 'bullish')
+    momentum_score = min(3, max(0, momentum_bullish))
+    
+    vol_ratio = indicators.get('volume_ratio', 1.0)
+    volume_score = 1 if (vol_ratio >= 1.5) else 0
+    
+    pattern_bullish = sum(1 for _, d in pattern_signals.values() if d == 'bullish')
+    pattern_bias = indicators.get('pattern_bias', 'neutral')
+    pattern_score = min(3, max(0, pattern_bullish + (1 if pattern_bias == 'bullish' else 0)))
+    
+    risk_score = 1 if rr_valid else 0
+    
+    total_bullish = trend_score + momentum_score + volume_score + pattern_score + risk_score
+    overall_score_pct = (total_bullish / 10) * 100
+    
+    # Count bullish indicators for professional validation
+    all_signals = signal_data.get('signals', {})
+    bullish_indicators_count = sum(1 for _, direction in all_signals.values() if direction == 'bullish')
+    
+    # Get ADX for trend strength validation
+    adx = indicators.get('adx', 0.0)
+    
+    # Get pattern information for contradiction detection
+    strongest_pattern = indicators.get('strongest_pattern')
+    pattern_confidence = 0.0
+    pattern_type = None
+    if strongest_pattern:
+        pattern_confidence = getattr(strongest_pattern, 'confidence', 0.0) * 100  # Convert to percentage
+        if hasattr(strongest_pattern, 'type'):
+            pattern_type = getattr(strongest_pattern, 'type', None)
+        elif hasattr(strongest_pattern, 'p_type'):
+            pattern_type = getattr(strongest_pattern, 'p_type', None)
+    
+    # Get minimum R:R for the mode
+    min_rr = RISK_MODES[mode]['min_risk_reward']
+    
+    recommendation, recommendation_type = determine_recommendation(
+        confidence, is_buy_blocked, is_sell_blocked, mode,
+        rr_valid=rr_valid,
+        overall_score_pct=overall_score_pct,
+        risk_reward=risk_reward,
+        min_rr=min_rr,
+        adx=adx,
+        bullish_indicators_count=bullish_indicators_count,
+        pattern_confidence=pattern_confidence,
+        pattern_type=pattern_type
     )
     
     stop_data = calculate_stoploss(

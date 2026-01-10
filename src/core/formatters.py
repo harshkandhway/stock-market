@@ -503,7 +503,9 @@ def format_analysis_comprehensive(
     if pattern_bias == 'bullish':
         pattern_score += 1
 
-    # Risk Analysis (score out of 2)
+    # Risk Analysis (score out of 1 - matches analysis_service logic exactly)
+    # IMPORTANT: analysis_service only counts R:R validity (1 point), NOT volume
+    # Volume is already counted in volume_score (separate component)
     risk_score = 0
     risk_factors = []
 
@@ -521,10 +523,6 @@ def format_analysis_comprehensive(
             f"Below minimum {min_rr:.1f}:1 for {mode} mode"
         ))
 
-    # Volume for risk
-    if vol_ratio >= 1.0:
-        risk_score += 1
-
     # Check for blocks
     is_blocked = analysis.get('is_buy_blocked', False)
     if is_blocked:
@@ -535,10 +533,23 @@ def format_analysis_comprehensive(
             block_reason
         ))
 
-    # Calculate total score
-    total_bullish = trend_score + momentum_score + volume_score + pattern_score + risk_score
+    # CRITICAL FIX: Use overall_score_pct from analysis service (single source of truth)
+    # This ensures the displayed score matches the score used for recommendations
+    # Professional standard: Display must match decision logic
+    if 'overall_score_pct' in analysis:
+        # Use the score calculated by analysis_service (matches recommendation logic)
+        score_pct = analysis['overall_score_pct']
+        # Calculate total_bullish from score_pct for display (round to nearest integer)
+        total_bullish = int(round((score_pct / 100) * 10))
+        # Ensure it's within valid range
+        total_bullish = max(0, min(10, total_bullish))
+    else:
+        # Fallback: Calculate total score (for backward compatibility only)
+        # Note: This should rarely be used - analysis_service should always provide overall_score_pct
+        total_bullish = trend_score + momentum_score + volume_score + pattern_score + risk_score
+        score_pct = (total_bullish / 10) * 100
+    
     max_score = 10
-    score_pct = (total_bullish / max_score) * 100
 
     # =========================================================================
     # START BUILDING THE MESSAGE
@@ -737,7 +748,23 @@ _Individual factors score (trend, momentum, volume, patterns, risk)_
             message += "[BLOCKED] BLOCKED BY SAFETY FILTERS\n"
             message += "Despite good scores, risk factors prevent entry\n\n"
     elif rec_type == 'BUY':
-        if score_pct >= 70:
+        # Check actual recommendation string to match conditions message
+        recommendation_upper = recommendation.upper()
+        
+        if 'STRONG BUY' in recommendation_upper:
+            msg_text = "STRONG BUY CONDITIONS" if output_mode == 'cli' else "*STRONG BUY CONDITIONS*"
+            detail = "Most indicators are bullish" if output_mode == 'cli' else "_Most indicators are bullish_"
+            check_emoji = _get_emoji('check', output_mode)
+            message += f"{check_emoji} {msg_text}\n" if output_mode == 'bot' else f"{check_emoji} {msg_text}\n"
+            message += f"{detail}\n\n" if output_mode == 'bot' else f"{detail}\n\n"
+        elif 'WEAK BUY' in recommendation_upper:
+            msg_text = "WEAK BUY CONDITIONS"
+            detail = "Few bullish signals, higher risk"
+            warn_emoji = _get_emoji('warning', output_mode)
+            message += f"{warn_emoji} {msg_text}\n" if output_mode == 'bot' else f"{warn_emoji} {msg_text}\n"
+            message += f"_{detail}_\n\n" if output_mode == 'bot' else f"{detail}\n\n"
+        elif score_pct >= 70:
+            # Regular BUY with high score
             msg_text = "STRONG BUY CONDITIONS" if output_mode == 'cli' else "*STRONG BUY CONDITIONS*"
             detail = "Most indicators are bullish" if output_mode == 'cli' else "_Most indicators are bullish_"
             check_emoji = _get_emoji('check', output_mode)

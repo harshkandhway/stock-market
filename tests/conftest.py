@@ -3,9 +3,22 @@ Shared pytest fixtures for bot tests
 """
 
 import pytest
+import pytest_asyncio
+import asyncio
 from unittest.mock import Mock, AsyncMock, MagicMock
 from telegram import Update, CallbackQuery, User, Message, Chat
 from telegram.ext import ContextTypes
+
+# Configure pytest-asyncio event loop
+@pytest_asyncio.fixture(scope="function")
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    try:
+        yield loop
+    finally:
+        loop.close()
 
 
 @pytest.fixture
@@ -98,3 +111,37 @@ def mock_db_context(mock_db_session):
     
     return db_context
 
+
+@pytest.fixture(scope="function")
+def test_db():
+    """Create a test database with in-memory SQLite"""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+    from src.bot.database.models import Base
+    
+    # Create in-memory SQLite database
+    engine = create_engine(
+        'sqlite:///:memory:',
+        connect_args={'check_same_thread': False},
+        poolclass=StaticPool,
+        echo=False
+    )
+    
+    # Create all tables
+    Base.metadata.create_all(engine)
+    
+    # Create session factory
+    TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    # Create session
+    db = TestSessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+        Base.metadata.drop_all(engine)

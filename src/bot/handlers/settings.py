@@ -11,6 +11,7 @@ import logging
 from typing import List
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
+from telegram.error import BadRequest
 
 from ..database.db import (
     get_db_context,
@@ -21,13 +22,46 @@ from ..database.db import (
 from ..utils.formatters import format_success, format_error, format_warning
 from ..utils.keyboards import (
     create_settings_menu_keyboard, create_risk_mode_keyboard,
-    create_horizon_keyboard, create_report_style_keyboard,
-    create_capital_preset_keyboard
+    create_horizon_keyboard,
+    create_capital_preset_keyboard,
+    create_daily_buy_alerts_keyboard
 )
 from ..utils.validators import validate_mode, validate_timeframe, parse_command_args
-from ..config import RiskMode, Timeframe
+from ..config import RiskMode, Timeframe, DEFAULT_TIMEZONE
 
 logger = logging.getLogger(__name__)
+
+
+async def safe_edit_message(query, text: str, reply_markup=None, parse_mode='Markdown'):
+    """
+    Safely edit a message, handling BadRequest when content is unchanged.
+    
+    Args:
+        query: CallbackQuery object
+        text: Message text
+        reply_markup: Optional keyboard markup
+        parse_mode: Parse mode (default: 'Markdown')
+    """
+    try:
+        await query.edit_message_text(
+            text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode
+        )
+    except BadRequest as e:
+        # Message content is the same - this is fine, just acknowledge
+        if "not modified" in str(e).lower() or "exactly the same" in str(e).lower():
+            await query.answer()  # Just acknowledge the callback
+            logger.debug(f"Message not modified (same content) for user {query.from_user.id}")
+        else:
+            # Some other BadRequest error - log and re-raise
+            logger.warning(f"BadRequest when editing message: {e}")
+            await query.answer("⚠️ Could not update message. Please try again.")
+            raise
+    except Exception as e:
+        logger.error(f"Error editing message: {e}", exc_info=True)
+        await query.answer("⚠️ An error occurred. Please try again.")
+        raise
 
 # =============================================================================
 # INVESTMENT HORIZON CONFIGURATIONS WITH DETAILED GUIDES
@@ -372,51 +406,6 @@ If stop loss is 5% away, we recommend buying Rs 20,000 worth.
 # REPORT STYLE GUIDE
 # =============================================================================
 
-REPORT_STYLE_GUIDE = """
-*📊 CHOOSING YOUR REPORT STYLE*
-
-We offer two ways to view analysis results:
-
-━━━━━━━━━━━━━━━━━━━━
-
-*📱 BEGINNER-FRIENDLY* ⭐ Recommended
-
-What you'll see:
-• Clear BUY/HOLD/AVOID recommendations
-• Safety ratings (star system)
-• Simple profit/loss examples
-• Timeline estimates
-• Easy-to-understand checklist
-• No confusing technical jargon
-
-Best for:
-• New investors
-• Casual investors
-• Those who want quick decisions
-
-━━━━━━━━━━━━━━━━━━━━
-
-*📊 ADVANCED/TECHNICAL*
-
-What you'll see:
-• RSI, MACD, ADX values
-• Technical indicator details
-• Support/resistance levels
-• Fibonacci extensions
-• Volume analysis
-• Pattern recognition data
-
-Best for:
-• Experienced traders
-• Technical analysts
-• Those who understand indicators
-
-━━━━━━━━━━━━━━━━━━━━
-
-*Tip:* Start with Beginner-Friendly. You can always switch later!
-"""
-
-
 # =============================================================================
 # COMMAND HANDLERS
 # =============================================================================
@@ -441,8 +430,6 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         mode_key = settings.risk_mode or 'balanced'
         mode = RISK_MODE_INFO.get(mode_key, RISK_MODE_INFO['balanced'])
         
-        beginner_mode = getattr(settings, 'beginner_mode', True)
-        
         # Format settings message with quick overview
         message = f"""
 *⚙️ YOUR SETTINGS*
@@ -457,16 +444,14 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 *💰 Capital:* Rs {settings.default_capital or 100000:,.0f}
    For position sizing calculations
 
-*📊 Report Style:* {'📱 Beginner-Friendly' if beginner_mode else '📊 Advanced'}
-   {'Simple & clear' if beginner_mode else 'Technical details'}
-
 ━━━━━━━━━━━━━━━━━━━━
 
 *Tap any button below to customize:*
 _(Each option has a helpful guide)_
 """
         
-        keyboard = create_settings_menu_keyboard()
+        daily_buy_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
+        keyboard = create_settings_menu_keyboard(daily_buy_enabled)
         
         await update.message.reply_text(
             message,
@@ -690,18 +675,16 @@ async def confirm_settings_reset(update: Update, context: ContextTypes.DEFAULT_T
             risk_mode='balanced',
             timeframe='medium',
             investment_horizon='3months',
-            default_capital=100000.0,
-            beginner_mode=True
+            default_capital=100000.0
         )
         
-        await query.edit_message_text(
+        await safe_edit_message(
+            query,
             "✅ *Settings reset to defaults!*\n\n"
             "• Investment Period: 3 Months\n"
             "• Risk Mode: Balanced\n"
-            "• Capital: Rs 1,00,000\n"
-            "• Report Style: Beginner-Friendly\n\n"
-            "Use /settings to customize.",
-            parse_mode='Markdown'
+            "• Capital: Rs 1,00,000\n\n"
+            "Use /settings to customize."
         )
         logger.info(f"User {user_id} reset settings to defaults")
     
@@ -713,9 +696,22 @@ async def confirm_settings_reset(update: Update, context: ContextTypes.DEFAULT_T
 async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle settings-related callback queries from inline buttons."""
     query = update.callback_query
+    user_id = query.from_user.id
+    
+    # Check authorization (if admin IDs are configured, only allow admins)
+    # If TELEGRAM_ADMIN_IDS is empty, allow everyone (public bot)
+    from ..config import TELEGRAM_ADMIN_IDS
+    if TELEGRAM_ADMIN_IDS:  # Only check if admin IDs are configured
+        if user_id not in TELEGRAM_ADMIN_IDS:
+            await query.answer(
+                "⛔ You are not authorized to use this bot.",
+                show_alert=True
+            )
+            logger.warning(f"Unauthorized settings callback attempt by user {user_id}: {query.data}")
+            return
+    
     await query.answer()
     
-    user_id = query.from_user.id
     data = query.data
     
     with get_db_context() as db:
@@ -729,7 +725,6 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
             horizon = HORIZON_INFO.get(horizon_key, HORIZON_INFO['3months'])
             mode_key = settings.risk_mode or 'balanced'
             mode = RISK_MODE_INFO.get(mode_key, RISK_MODE_INFO['balanced'])
-            beginner_mode = getattr(settings, 'beginner_mode', True)
             
             message = f"""
 *⚙️ YOUR SETTINGS*
@@ -743,14 +738,149 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
 
 *💰 Capital:* Rs {settings.default_capital or 100000:,.0f}
 
-*📊 Report Style:* {'📱 Beginner-Friendly' if beginner_mode else '📊 Advanced'}
-
 ━━━━━━━━━━━━━━━━━━━━
 
 *Tap any button below to customize:*
 """
-            keyboard = create_settings_menu_keyboard()
-            await query.edit_message_text(message, reply_markup=keyboard, parse_mode='Markdown')
+            daily_buy_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
+            keyboard = create_settings_menu_keyboard(daily_buy_enabled)
+            await safe_edit_message(query, message, reply_markup=keyboard)
+        
+        # =====================================================================
+        # DAILY BUY ALERTS SUBSCRIPTION
+        # =====================================================================
+        elif data == "settings_daily_buy_alerts":
+            is_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
+            alert_time = getattr(settings, 'daily_buy_alert_time', '09:00') or '09:00'
+            
+            status_text = "✅ Enabled" if is_enabled else "❌ Disabled"
+            message = f"""
+*🔔 DAILY BUY ALERTS*
+━━━━━━━━━━━━━━━━━━━━
+
+*Status:* {status_text}
+*Alert Time:* {alert_time} (your timezone)
+
+*What you'll receive:*
+• Daily analysis of all stocks (4000+)
+• Only BUY signals filtered out
+• Complete analysis report for each BUY
+• Delivered at your preferred time
+
+*How it works:*
+1. We analyze all stocks daily
+2. Filter only BUY signals
+3. Save to database
+4. Send you formatted reports at your time
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Tap buttons below to manage:*
+"""
+            keyboard = create_daily_buy_alerts_keyboard(is_enabled)
+            await safe_edit_message(query, message, reply_markup=keyboard)
+        
+        elif data == "daily_buy_alerts_toggle":
+            is_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
+            new_status = not is_enabled
+            
+            update_user_settings(db, user_id, daily_buy_alerts_enabled=new_status)
+            
+            status_text = "enabled" if new_status else "disabled"
+            emoji = "✅" if new_status else "❌"
+            
+            message = f"""
+{emoji} *Daily BUY Alerts {status_text.upper()}!*
+
+{"You'll now receive daily BUY signals at your preferred time." if new_status else "Daily BUY alerts have been disabled."}
+
+{"Use the buttons below to set your preferred alert time." if new_status else "Use /settings to enable again anytime."}
+"""
+            keyboard = create_daily_buy_alerts_keyboard(new_status)
+            await safe_edit_message(query, message, reply_markup=keyboard)
+            logger.info(f"User {user_id} {'enabled' if new_status else 'disabled'} daily BUY alerts")
+        
+        elif data.startswith("daily_buy_alert_time:"):
+            time_str = data.split(":")[1]
+            
+            if time_str == "custom":
+                context.user_data['awaiting_alert_time_input'] = True
+                user_timezone = getattr(settings, 'timezone', None) or DEFAULT_TIMEZONE
+                await safe_edit_message(
+                    query,
+                    f"*🕐 SET CUSTOM ALERT TIME*\n\n"
+                    f"Enter your preferred time in HH:MM format:\n\n"
+                    f"Examples:\n"
+                    f"• `09:00` for 9:00 AM\n"
+                    f"• `14:30` for 2:30 PM\n"
+                    f"• `18:00` for 6:00 PM\n\n"
+                    f"Time is in your timezone: {user_timezone}\n\n"
+                    f"_Just type the time and send (HH:MM format)_",
+                    parse_mode='Markdown'
+                )
+            else:
+                # Validate time format
+                try:
+                    hour, minute = map(int, time_str.split(':'))
+                    if 0 <= hour <= 23 and 0 <= minute <= 59:
+                        update_user_settings(db, user_id, daily_buy_alert_time=time_str)
+                        await safe_edit_message(
+                            query,
+                            f"✅ *Alert time set to {time_str}*\n\n"
+                            f"You'll receive daily BUY alerts at {time_str} ({settings.timezone}).\n\n"
+                            f"Use /settings to make more changes."
+                        )
+                        logger.info(f"User {user_id} set daily BUY alert time to {time_str}")
+                    else:
+                        await query.answer("Invalid time format. Use HH:MM (e.g., 09:00)", show_alert=True)
+                except ValueError:
+                    await query.answer("Invalid time format. Use HH:MM (e.g., 09:00)", show_alert=True)
+        
+        elif data == "daily_buy_alerts_info":
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("◀️ Back", callback_data="settings_daily_buy_alerts")]
+            ])
+            
+            await safe_edit_message(
+                query,
+                """
+*ℹ️ ABOUT DAILY BUY ALERTS*
+━━━━━━━━━━━━━━━━━━━━
+
+*What are Daily BUY Alerts?*
+Every day, we analyze all 4000+ stocks from our database and filter out only those showing BUY signals. You'll receive a comprehensive analysis report for each BUY opportunity.
+
+*What you'll get:*
+✅ Complete technical analysis
+✅ Risk/reward ratios
+✅ Entry, target, and stop loss prices
+✅ Confidence scores
+✅ Safety ratings
+✅ Position sizing guidance
+
+*When do alerts run?*
+• Analysis runs once daily (early morning)
+• Alerts sent at your preferred time
+• Only active BUY signals included
+• No spam - only quality opportunities
+
+*How many alerts?*
+The number varies based on market conditions. Typically 5-50 BUY signals per day from 4000+ stocks.
+
+*Best practices:*
+• Review alerts when you receive them
+• Don't buy everything - be selective
+• Use your risk management settings
+• Combine with your own research
+
+*Privacy:*
+Your subscription is private. We never share your data.
+
+━━━━━━━━━━━━━━━━━━━━
+""",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
         
         # =====================================================================
         # INVESTMENT HORIZON SELECTION
@@ -778,7 +908,7 @@ This affects:
 *Tap an option to see detailed guide:*
 """
             keyboard = create_horizon_keyboard(current)
-            await query.edit_message_text(message, reply_markup=keyboard, parse_mode='Markdown')
+            await safe_edit_message(query, message, reply_markup=keyboard)
         
         elif data.startswith("settings_horizon:"):
             horizon = data.split(":")[1]
@@ -796,10 +926,10 @@ This affects:
                     [InlineKeyboardButton("◀️ Back to Options", callback_data="settings_horizon")]
                 ])
                 
-                await query.edit_message_text(
+                await safe_edit_message(
+                    query,
                     info['guide'],
-                    reply_markup=keyboard,
-                    parse_mode='Markdown'
+                    reply_markup=keyboard
                 )
             
             elif horizon.startswith("select_"):
@@ -809,13 +939,13 @@ This affects:
                     update_user_settings(db, user_id, investment_horizon=horizon_key)
                     info = HORIZON_INFO[horizon_key]
                     
-                    await query.edit_message_text(
+                    await safe_edit_message(
+                        query,
                         f"✅ *Investment period set to {info['display']}!*\n\n"
                         f"{info['emoji']} *{info['name']}*\n"
                         f"Risk Level: {info['risk_emoji']} {info['risk']}\n\n"
                         f"_{info['description']}_\n\n"
-                        f"Use /settings to make more changes.",
-                        parse_mode='Markdown'
+                        f"Use /settings to make more changes."
                     )
                     logger.info(f"User {user_id} changed horizon to {horizon_key}")
             
@@ -824,13 +954,13 @@ This affects:
                 update_user_settings(db, user_id, investment_horizon=horizon)
                 info = HORIZON_INFO[horizon]
                 
-                await query.edit_message_text(
+                await safe_edit_message(
+                    query,
                     f"✅ *Investment period set to {info['display']}!*\n\n"
                     f"{info['emoji']} *{info['name']}*\n"
                     f"Risk Level: {info['risk_emoji']} {info['risk']}\n\n"
                     f"_{info['description']}_\n\n"
-                    f"Use /settings to make more changes.",
-                    parse_mode='Markdown'
+                    f"Use /settings to make more changes."
                 )
                 logger.info(f"User {user_id} changed horizon to {horizon}")
         
@@ -857,7 +987,7 @@ This affects:
 *Tap an option to see detailed guide:*
 """
             keyboard = create_risk_mode_keyboard(current)
-            await query.edit_message_text(message, reply_markup=keyboard, parse_mode='Markdown')
+            await safe_edit_message(query, message, reply_markup=keyboard)
         
         elif data.startswith("settings_risk_mode:"):
             mode = data.split(":")[1]
@@ -875,10 +1005,10 @@ This affects:
                     [InlineKeyboardButton("◀️ Back to Options", callback_data="settings_risk_mode")]
                 ])
                 
-                await query.edit_message_text(
+                await safe_edit_message(
+                    query,
                     info['guide'],
-                    reply_markup=keyboard,
-                    parse_mode='Markdown'
+                    reply_markup=keyboard
                 )
             
             elif mode.startswith("select_"):
@@ -888,11 +1018,11 @@ This affects:
                     update_user_settings(db, user_id, risk_mode=mode_key)
                     info = RISK_MODE_INFO[mode_key]
                     
-                    await query.edit_message_text(
+                    await safe_edit_message(
+                        query,
                         f"✅ *Risk mode set to {info['name']}!*\n\n"
                         f"{info['emoji']} {info['description']}\n\n"
-                        f"Use /settings to make more changes.",
-                        parse_mode='Markdown'
+                        f"Use /settings to make more changes."
                     )
                     logger.info(f"User {user_id} changed risk mode to {mode_key}")
             
@@ -901,11 +1031,11 @@ This affects:
                 update_user_settings(db, user_id, risk_mode=mode)
                 info = RISK_MODE_INFO[mode]
                 
-                await query.edit_message_text(
+                await safe_edit_message(
+                    query,
                     f"✅ *Risk mode set to {info['name']}!*\n\n"
                     f"{info['emoji']} {info['description']}\n\n"
-                    f"Use /settings to make more changes.",
-                    parse_mode='Markdown'
+                    f"Use /settings to make more changes."
                 )
                 logger.info(f"User {user_id} changed risk mode to {mode}")
         
@@ -915,10 +1045,10 @@ This affects:
         elif data == "settings_capital":
             keyboard = create_capital_preset_keyboard()
             
-            await query.edit_message_text(
+            await safe_edit_message(
+                query,
                 CAPITAL_GUIDE,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
+                reply_markup=keyboard
             )
         
         elif data.startswith("settings_capital:"):
@@ -927,7 +1057,8 @@ This affects:
             if value == "custom":
                 context.user_data['awaiting_capital_input'] = True
                 
-                await query.edit_message_text(
+                await safe_edit_message(
+                    query,
                     "*💰 ENTER CUSTOM AMOUNT*\n\n"
                     "Type your investment capital amount:\n\n"
                     "Examples:\n"
@@ -944,7 +1075,8 @@ This affects:
                     [InlineKeyboardButton("◀️ Back to Presets", callback_data="settings_capital")]
                 ])
                 
-                await query.edit_message_text(
+                await safe_edit_message(
+                    query,
                     """
 *💰 CAPITAL GUIDE - WHY IT MATTERS*
 ━━━━━━━━━━━━━━━━━━━━
@@ -981,69 +1113,39 @@ Even if you have 10 losing trades in a row (unlikely), you'd only lose 10-20% of
                     capital = float(value)
                     update_user_settings(db, user_id, default_capital=capital)
                     
-                    await query.edit_message_text(
+                    await safe_edit_message(
+                        query,
                         f"✅ *Capital set to Rs {capital:,.0f}*\n\n"
                         f"Position sizes will now be calculated based on this amount.\n\n"
                         f"*Quick math:*\n"
                         f"• 1% risk = Rs {capital * 0.01:,.0f} max loss per trade\n"
                         f"• 2% risk = Rs {capital * 0.02:,.0f} max loss per trade\n\n"
-                        f"Use /settings to make more changes.",
-                        parse_mode='Markdown'
+                        f"Use /settings to make more changes."
                     )
                     logger.info(f"User {user_id} changed capital to {capital}")
                 except ValueError:
                     pass
         
         # =====================================================================
-        # REPORT STYLE SELECTION
+        # LEGACY REPORT STYLE CALLBACKS (Deprecated - handled gracefully)
         # =====================================================================
-        elif data == "settings_report_style":
-            beginner_mode = getattr(settings, 'beginner_mode', True)
-            keyboard = create_report_style_keyboard(beginner_mode)
-            
-            await query.edit_message_text(
-                REPORT_STYLE_GUIDE,
-                reply_markup=keyboard,
+        elif data == "settings_report_style" or data.startswith("settings_report_style:"):
+            # Report style is now unified - all users get the same comprehensive format
+            await safe_edit_message(
+                query,
+                "ℹ️ *Report Style Update*\n\n"
+                "We now use a unified comprehensive analysis format for all users.\n"
+                "This format includes all the information you need:\n\n"
+                "• Clear BUY/HOLD/AVOID recommendations\n"
+                "• Technical indicators (RSI, MACD, ADX)\n"
+                "• Safety ratings and risk assessment\n"
+                "• Target prices and stop losses\n"
+                "• Investment guidance\n\n"
+                "All analysis now includes everything!\n\n"
+                "Use /settings to view your other settings.",
                 parse_mode='Markdown'
             )
-        
-        elif data.startswith("settings_report_style:"):
-            style = data.split(":")[1]
-            beginner_mode = (style == "beginner")
-            update_user_settings(db, user_id, beginner_mode=beginner_mode)
-            
-            if beginner_mode:
-                message = """
-✅ *Report style set to BEGINNER-FRIENDLY*
-
-Your analysis reports will now show:
-• Clear BUY/HOLD/AVOID recommendations
-• Safety ratings (star system)
-• Simple profit/loss examples
-• Easy-to-understand explanations
-• No confusing technical jargon
-
-Perfect for making confident investment decisions!
-"""
-            else:
-                message = """
-✅ *Report style set to ADVANCED*
-
-Your analysis reports will now show:
-• Technical indicator values (RSI, MACD, ADX)
-• Support/resistance levels
-• Fibonacci extensions
-• Volume analysis
-• Pattern recognition data
-
-Great for detailed technical analysis!
-"""
-            
-            await query.edit_message_text(
-                message + "\n\nUse /settings to make more changes.",
-                parse_mode='Markdown'
-            )
-            logger.info(f"User {user_id} changed report style to {'beginner' if beginner_mode else 'advanced'}")
+            logger.info(f"User {user_id} accessed deprecated report style setting")
         
         # =====================================================================
         # VIEW ALL SETTINGS
@@ -1053,7 +1155,6 @@ Great for detailed technical analysis!
             horizon = HORIZON_INFO.get(horizon_key, HORIZON_INFO['3months'])
             mode_key = settings.risk_mode or 'balanced'
             mode = RISK_MODE_INFO.get(mode_key, RISK_MODE_INFO['balanced'])
-            beginner_mode = getattr(settings, 'beginner_mode', True)
             
             message = f"""
 *📋 ALL YOUR SETTINGS*
@@ -1075,9 +1176,6 @@ Great for detailed technical analysis!
    Rs {(settings.default_capital or 100000):,.0f}
    (1% risk = Rs {(settings.default_capital or 100000) * 0.01:,.0f} per trade)
 
-*📱 REPORT STYLE*
-   {'Beginner-Friendly' if beginner_mode else 'Advanced/Technical'}
-
 *🔔 NOTIFICATIONS*
    {'Enabled' if settings.notifications_enabled else 'Disabled'}
 
@@ -1087,8 +1185,9 @@ Great for detailed technical analysis!
 ━━━━━━━━━━━━━━━━━━━━
 """
             
-            keyboard = create_settings_menu_keyboard()
-            await query.edit_message_text(message, reply_markup=keyboard, parse_mode='Markdown')
+            daily_buy_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
+            keyboard = create_settings_menu_keyboard(daily_buy_enabled)
+            await safe_edit_message(query, message, reply_markup=keyboard)
         
         # =====================================================================
         # RESET CONFIRMATION
@@ -1100,28 +1199,70 @@ Great for detailed technical analysis!
                 risk_mode='balanced',
                 timeframe='medium',
                 investment_horizon='3months',
-                default_capital=100000.0,
-                beginner_mode=True
+                default_capital=100000.0
             )
             
-            await query.edit_message_text(
+            await safe_edit_message(
+                query,
                 "✅ *Settings reset to defaults!*\n\n"
                 "• Investment Period: 3 Months\n"
                 "• Risk Mode: Balanced\n"
-                "• Capital: Rs 1,00,000\n"
-                "• Report Style: Beginner-Friendly\n\n"
-                "Use /settings to customize.",
-                parse_mode='Markdown'
+                "• Capital: Rs 1,00,000\n\n"
+                "Use /settings to customize."
             )
             logger.info(f"User {user_id} reset settings")
         
         elif data == "cancel_reset:settings":
-            await query.edit_message_text(
+            await safe_edit_message(
+                query,
                 "❌ *Reset cancelled*\n\n"
                 "Your settings remain unchanged.\n"
-                "Use /settings to view or change settings.",
-                parse_mode='Markdown'
+                "Use /settings to view or change settings."
             )
+
+
+async def handle_alert_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle custom alert time input from user."""
+    if not context.user_data.get('awaiting_alert_time_input'):
+        return
+    
+    user_id = update.effective_user.id
+    text = update.message.text.strip()
+    
+    # Validate time format HH:MM
+    try:
+        hour, minute = map(int, text.split(':'))
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise ValueError("Invalid hour or minute")
+        
+        time_str = f"{hour:02d}:{minute:02d}"
+        
+        with get_db_context() as db:
+            settings = get_user_settings(db, user_id)
+            user_timezone = getattr(settings, 'timezone', 'Asia/Kolkata') or 'Asia/Kolkata'
+            update_user_settings(db, user_id, daily_buy_alert_time=time_str)
+        
+        context.user_data.pop('awaiting_alert_time_input', None)
+        
+        await update.message.reply_text(
+            f"✅ *Alert time set to {time_str}*\n\n"
+            f"You'll receive daily BUY alerts at {time_str} ({user_timezone}).\n\n"
+            f"Use /settings to make more changes.",
+            parse_mode='Markdown'
+        )
+        logger.info(f"User {user_id} set daily BUY alert time to {time_str}")
+        
+    except (ValueError, AttributeError):
+        await update.message.reply_text(
+            "⚠️ *Invalid time format*\n\n"
+            "Please enter time in HH:MM format:\n\n"
+            "Examples:\n"
+            "• `09:00` for 9:00 AM\n"
+            "• `14:30` for 2:30 PM\n"
+            "• `18:00` for 6:00 PM\n\n"
+            "_Hour: 00-23, Minute: 00-59_",
+            parse_mode='Markdown'
+        )
 
 
 async def handle_capital_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

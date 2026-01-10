@@ -140,6 +140,12 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         await handle_capital_input(update, context)
         return
     
+    # Handle custom alert time input if awaiting
+    if context.user_data.get('awaiting_alert_time_input'):
+        from src.bot.handlers.settings import handle_alert_time_input
+        await handle_alert_time_input(update, context)
+        return
+    
     # Route main menu button clicks to commands
     menu_routes = {
         '📊 Analyze Stock': '/analyze',
@@ -473,6 +479,16 @@ async def post_init(application: Application):
             f"{ALERT_CHECK_INTERVAL_MINUTES} minute(s)"
         )
         logger.info("Scheduled reports service started. Checking every hour.")
+        
+        # Start daily BUY alerts scheduler
+        try:
+            logger.info("Starting daily BUY alerts scheduler...")
+            from src.bot.services.scheduler_service import start_scheduler
+            await start_scheduler(application)
+            logger.info("Daily BUY alerts scheduler started successfully")
+        except Exception as e:
+            logger.error(f"Failed to start daily BUY alerts scheduler: {e}", exc_info=True)
+            logger.warning("Bot will run without daily BUY alerts")
     except Exception as e:
         logger.error(f"Failed to start alert service: {e}", exc_info=True)
         logger.warning("Bot will run without alert notifications")

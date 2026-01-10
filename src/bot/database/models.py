@@ -56,7 +56,10 @@ class UserSettings(Base):
     default_capital = Column(Float, default=100000.0)
     timezone = Column(String(50), default='Asia/Kolkata')
     notifications_enabled = Column(Boolean, default=True)
-    beginner_mode = Column(Boolean, default=True)  # Show simplified reports
+    # Daily BUY alerts subscription
+    daily_buy_alerts_enabled = Column(Boolean, default=False, index=True)
+    daily_buy_alert_time = Column(String(10), default='09:00')  # HH:MM format in user's timezone
+    last_daily_alert_sent = Column(DateTime, nullable=True)  # Track when alert was last sent successfully
     
     # Relationship
     user = relationship("User", back_populates="settings")
@@ -279,6 +282,80 @@ class UserActivity(Base):
     
     def __repr__(self):
         return f"<Activity user_id={self.user_id} command={self.command}>"
+
+
+class DailyBuySignal(Base):
+    """Daily BUY signal model - stores BUY signals from daily analysis"""
+    __tablename__ = 'daily_buy_signals'
+    
+    id = Column(Integer, primary_key=True)
+    symbol = Column(String(50), nullable=False, index=True)
+    analysis_date = Column(DateTime, nullable=False, index=True)  # Date when analysis was done
+    recommendation = Column(String(100), nullable=False)
+    recommendation_type = Column(String(20), nullable=False)  # BUY, STRONG BUY, WEAK BUY
+    confidence = Column(Float, nullable=False)
+    overall_score_pct = Column(Float, nullable=False)
+    risk_reward = Column(Float, nullable=False)
+    current_price = Column(Float, nullable=False)
+    target = Column(Float)
+    stop_loss = Column(Float)
+    analysis_data = Column(Text)  # JSON string with full analysis
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    # Ensure unique signal per symbol per day
+    __table_args__ = (
+        UniqueConstraint('symbol', 'analysis_date', name='uix_symbol_date'),
+        Index('ix_daily_buy_date', 'analysis_date'),
+        Index('ix_daily_buy_type', 'recommendation_type'),
+    )
+    
+    @hybrid_property
+    def data(self):
+        """Get analysis data as dict"""
+        if self.analysis_data:
+            try:
+                return json.loads(self.analysis_data)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+    
+    @data.setter
+    def data(self, value):
+        """Set analysis data from dict"""
+        if value:
+            self.analysis_data = json.dumps(value, default=str)
+        else:
+            self.analysis_data = None
+    
+    def __repr__(self):
+        return f"<DailyBuySignal symbol={self.symbol} date={self.analysis_date} type={self.recommendation_type}>"
+
+
+class PendingAlert(Base):
+    """Pending alert model - tracks failed alerts that need retry"""
+    __tablename__ = 'pending_alerts'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    telegram_id = Column(Integer, nullable=False, index=True)
+    target_time = Column(DateTime, nullable=False)  # When alert should have been sent
+    retry_count = Column(Integer, default=0)  # Number of retry attempts
+    error_message = Column(Text)  # Last error message
+    created_at = Column(DateTime, default=datetime.now, index=True)
+    last_retry_at = Column(DateTime, nullable=True)  # When last retry was attempted
+    
+    # Ensure one pending alert per user
+    __table_args__ = (
+        UniqueConstraint('user_id', name='uix_pending_alert_user'),
+        Index('ix_pending_alert_user', 'user_id'),
+        Index('ix_pending_alert_created', 'created_at'),
+    )
+    
+    # Relationship
+    user = relationship("User", backref="pending_alerts")
+    
+    def __repr__(self):
+        return f"<PendingAlert user_id={self.user_id} telegram_id={self.telegram_id} retry_count={self.retry_count}>"
 
 
 # =============================================================================

@@ -28,6 +28,27 @@ def create_main_menu_keyboard() -> ReplyKeyboardMarkup:
     )
 
 
+def create_full_report_keyboard(symbol: str) -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard with button to get full report
+    
+    Args:
+        symbol: Stock symbol
+    
+    Returns:
+        InlineKeyboardMarkup with "Get Full Report" button
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "📊 Get Full Report",
+                callback_data=f"analyze_full:{symbol}"
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
 def create_analysis_action_keyboard(symbol: str) -> InlineKeyboardMarkup:
     """
     Create inline keyboard for actions after analysis
@@ -161,12 +182,12 @@ def create_alert_type_keyboard(symbol: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def create_alert_list_keyboard(alerts: List[dict]) -> InlineKeyboardMarkup:
+def create_alert_list_keyboard(alerts: List) -> InlineKeyboardMarkup:
     """
     Create inline keyboard for alert list with actions
     
     Args:
-        alerts: List of alert dictionaries
+        alerts: List of alert dictionaries or Alert model objects
     
     Returns:
         InlineKeyboardMarkup with alert management buttons
@@ -175,10 +196,19 @@ def create_alert_list_keyboard(alerts: List[dict]) -> InlineKeyboardMarkup:
     
     # Add buttons for each alert (max 5)
     for alert in alerts[:5]:
-        alert_id = alert['id']
-        symbol = alert['symbol']
-        alert_type = alert['alert_type']
-        is_active = alert['is_active']
+        # Handle both Alert model objects and dictionaries
+        if hasattr(alert, 'id'):
+            # Alert model object
+            alert_id = alert.id
+            symbol = alert.symbol
+            alert_type = alert.alert_type
+            is_active = alert.is_active
+        else:
+            # Dictionary
+            alert_id = alert['id']
+            symbol = alert['symbol']
+            alert_type = alert['alert_type']
+            is_active = alert['is_active']
         
         status = "✅" if is_active else "⏸️"
         label = f"{status} {symbol} - {alert_type}"
@@ -273,13 +303,17 @@ def create_portfolio_item_keyboard(symbol: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def create_settings_menu_keyboard() -> InlineKeyboardMarkup:
+def create_settings_menu_keyboard(daily_buy_alerts_enabled: bool = False) -> InlineKeyboardMarkup:
     """
     Create inline keyboard for settings menu with clear labels.
+    
+    Args:
+        daily_buy_alerts_enabled: Whether daily BUY alerts are enabled
     
     Returns:
         InlineKeyboardMarkup with settings options
     """
+    alert_status = "✅ Enabled" if daily_buy_alerts_enabled else "❌ Disabled"
     keyboard = [
         [
             InlineKeyboardButton(
@@ -301,8 +335,8 @@ def create_settings_menu_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                "📊 Report Style (Simple/Advanced)", 
-                callback_data="settings_report_style"
+                f"🔔 Daily BUY Alerts ({alert_status})", 
+                callback_data="settings_daily_buy_alerts"
             ),
         ],
         [
@@ -425,49 +459,6 @@ def create_horizon_keyboard(current_horizon: str) -> InlineKeyboardMarkup:
     keyboard.append([
         InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
     ])
-    
-    return InlineKeyboardMarkup(keyboard)
-
-
-def create_report_style_keyboard(beginner_mode: bool) -> InlineKeyboardMarkup:
-    """
-    Create inline keyboard for report style selection with clear descriptions.
-    
-    Args:
-        beginner_mode: Whether beginner mode is enabled
-    
-    Returns:
-        InlineKeyboardMarkup with report style options
-    """
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                f"{'✅ ' if beginner_mode else ''}📱 Beginner-Friendly ⭐",
-                callback_data="settings_report_style:beginner"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                "   Simple • Clear • No Jargon",
-                callback_data="noop"  # Info text, no action
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                f"{'✅ ' if not beginner_mode else ''}📊 Advanced/Technical",
-                callback_data="settings_report_style:advanced"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                "   RSI • MACD • Support/Resistance",
-                callback_data="noop"  # Info text, no action
-            )
-        ],
-        [
-            InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
-        ],
-    ]
     
     return InlineKeyboardMarkup(keyboard)
 
@@ -620,6 +611,53 @@ def create_pagination_keyboard(
     # Back button
     keyboard.append([
         InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
+    ])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_daily_buy_alerts_keyboard(is_enabled: bool) -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for daily BUY alerts subscription
+    
+    Args:
+        is_enabled: Whether alerts are currently enabled
+    
+    Returns:
+        InlineKeyboardMarkup with subscription options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "✅ Enable Daily BUY Alerts" if not is_enabled else "❌ Disable Daily BUY Alerts",
+                callback_data="daily_buy_alerts_toggle"
+            ),
+        ],
+    ]
+    
+    if is_enabled:
+        # Time selection buttons (common times)
+        keyboard.append([
+            InlineKeyboardButton("🕘 09:00", callback_data="daily_buy_alert_time:09:00"),
+            InlineKeyboardButton("🕙 10:00", callback_data="daily_buy_alert_time:10:00"),
+        ])
+        keyboard.append([
+            InlineKeyboardButton("🕚 11:00", callback_data="daily_buy_alert_time:11:00"),
+            InlineKeyboardButton("🕛 12:00", callback_data="daily_buy_alert_time:12:00"),
+        ])
+        keyboard.append([
+            InlineKeyboardButton("🕐 13:00", callback_data="daily_buy_alert_time:13:00"),
+            InlineKeyboardButton("🕑 14:00", callback_data="daily_buy_alert_time:14:00"),
+        ])
+        keyboard.append([
+            InlineKeyboardButton("✏️ Custom Time", callback_data="daily_buy_alert_time:custom"),
+        ])
+    
+    keyboard.append([
+        InlineKeyboardButton("ℹ️ About Daily BUY Alerts", callback_data="daily_buy_alerts_info"),
+    ])
+    keyboard.append([
+        InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
     ])
     
     return InlineKeyboardMarkup(keyboard)

@@ -83,11 +83,10 @@ class TestBotIntegration:
              patch('src.bot.handlers.analyze.get_or_create_user'), \
              patch('src.bot.handlers.analyze.get_user_settings') as mock_settings, \
              patch('src.bot.handlers.analyze.analyze_stock_with_settings') as mock_analyze, \
-             patch('src.bot.handlers.analyze.format_analysis_beginner') as mock_format:
+             patch('src.core.formatters.format_analysis_comprehensive') as mock_format:
             
             mock_db.return_value.__enter__.return_value = Mock()
             mock_settings_obj = Mock()
-            mock_settings_obj.beginner_mode = True
             mock_settings_obj.investment_horizon = '3months'
             mock_settings.return_value = mock_settings_obj
             
@@ -271,11 +270,10 @@ class TestAnalysisServiceIntegration:
              patch('src.bot.handlers.analyze.get_or_create_user'), \
              patch('src.bot.handlers.analyze.get_user_settings') as mock_settings, \
              patch('src.bot.handlers.analyze.analyze_stock_with_settings') as mock_analyze, \
-             patch('src.bot.handlers.analyze.format_analysis_beginner') as mock_format:
+             patch('src.core.formatters.format_analysis_comprehensive') as mock_format:
             
             mock_db.return_value.__enter__.return_value = Mock()
             mock_settings_obj = Mock()
-            mock_settings_obj.beginner_mode = True
             mock_settings_obj.investment_horizon = '3months'
             mock_settings.return_value = mock_settings_obj
             

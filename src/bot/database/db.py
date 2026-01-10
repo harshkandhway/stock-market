@@ -14,8 +14,9 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
-from src.bot.database.models import Base, User, UserSettings
+from src.bot.database.models import Base, User, UserSettings, DailyBuySignal
 from src.bot.config import DATABASE_URL
+from datetime import datetime
 
 
 def safe_print(message: str):
@@ -132,14 +133,41 @@ def migrate_database():
                     conn.commit()
                     safe_print("✅ Added investment_horizon column")
             
-            # Add beginner_mode column if it doesn't exist
-            if 'beginner_mode' not in columns:
+            # Add daily_buy_alerts_enabled column if it doesn't exist
+            if 'daily_buy_alerts_enabled' not in columns:
                 with engine.connect() as conn:
                     conn.execute(text(
-                        "ALTER TABLE user_settings ADD COLUMN beginner_mode BOOLEAN DEFAULT 1"
+                        "ALTER TABLE user_settings ADD COLUMN daily_buy_alerts_enabled BOOLEAN DEFAULT 0"
                     ))
                     conn.commit()
-                    safe_print("✅ Added beginner_mode column")
+                    safe_print("✅ Added daily_buy_alerts_enabled column")
+            
+            # Add daily_buy_alert_time column if it doesn't exist
+            if 'daily_buy_alert_time' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN daily_buy_alert_time VARCHAR(10) DEFAULT '09:00'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added daily_buy_alert_time column")
+            
+            # Add last_daily_alert_sent column if it doesn't exist (for tracking alert status)
+            if 'last_daily_alert_sent' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN last_daily_alert_sent DATETIME"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added last_daily_alert_sent column")
+            
+            # Remove beginner_mode column if it exists (deprecated - using unified formatter)
+            if 'beginner_mode' in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings DROP COLUMN beginner_mode"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Removed deprecated beginner_mode column")
     
     except Exception as e:
         safe_print(f"⚠️ Migration warning: {e}")
@@ -430,7 +458,7 @@ def create_alert(
         alert_type=alert_type,
         condition_type=condition_type,
         threshold_value=threshold_value,
-        condition_data=json.dumps(condition_data) if condition_data else None
+        condition_params=json.dumps(condition_data) if condition_data else None
     )
     
     db.add(alert)
@@ -884,6 +912,160 @@ def get_all_active_scheduled_reports(db: Session) -> List:
     
     return db.query(ScheduledReport).filter(
         ScheduledReport.is_active == True
+    ).all()
+
+
+def get_subscribed_users_for_daily_buy_alerts(db: Session) -> List[User]:
+    """
+    Get all users subscribed to daily BUY alerts
+    
+    Args:
+        db: Database session
+    
+    Returns:
+        List of User objects with daily_buy_alerts_enabled = True
+    """
+    return db.query(User).join(UserSettings).filter(
+        UserSettings.daily_buy_alerts_enabled == True
+    ).all()
+
+
+def get_pending_alerts(db: Session) -> List:
+    """
+    Get all pending alerts that need retry
+    
+    Args:
+        db: Database session
+    
+    Returns:
+        List of PendingAlert objects
+    """
+    from src.bot.database.models import PendingAlert
+    return db.query(PendingAlert).all()
+
+
+def get_pending_alert_by_user_id(db: Session, user_id: int):
+    """
+    Get pending alert for a specific user
+    
+    Args:
+        db: Database session
+        user_id: User ID
+    
+    Returns:
+        PendingAlert object or None
+    """
+    from src.bot.database.models import PendingAlert
+    return db.query(PendingAlert).filter(PendingAlert.user_id == user_id).first()
+
+
+def create_pending_alert(
+    db: Session,
+    user_id: int,
+    telegram_id: int,
+    target_time: datetime,
+    error_message: str = None
+):
+    """
+    Create or update a pending alert
+    
+    Args:
+        db: Database session
+        user_id: User ID
+        telegram_id: Telegram user ID
+        target_time: When alert should have been sent
+        error_message: Error message (optional)
+    
+    Returns:
+        PendingAlert object
+    """
+    from src.bot.database.models import PendingAlert
+    
+    # Check if pending alert already exists
+    pending = db.query(PendingAlert).filter(PendingAlert.user_id == user_id).first()
+    
+    if pending:
+        # Update existing
+        pending.telegram_id = telegram_id
+        pending.target_time = target_time
+        pending.error_message = error_message
+        pending.last_retry_at = datetime.now()
+    else:
+        # Create new
+        pending = PendingAlert(
+            user_id=user_id,
+            telegram_id=telegram_id,
+            target_time=target_time,
+            error_message=error_message,
+            retry_count=0
+        )
+        db.add(pending)
+    
+    db.commit()
+    db.refresh(pending)
+    return pending
+
+
+def delete_pending_alert(db: Session, user_id: int) -> bool:
+    """
+    Delete a pending alert (when successfully sent)
+    
+    Args:
+        db: Database session
+        user_id: User ID
+    
+    Returns:
+        True if deleted, False if not found
+    """
+    from src.bot.database.models import PendingAlert
+    
+    pending = db.query(PendingAlert).filter(PendingAlert.user_id == user_id).first()
+    if pending:
+        db.delete(pending)
+        db.commit()
+        return True
+    return False
+
+
+def increment_pending_alert_retry(db: Session, user_id: int) -> Optional[int]:
+    """
+    Increment retry count for a pending alert
+    
+    Args:
+        db: Database session
+        user_id: User ID
+    
+    Returns:
+        New retry count or None if not found
+    """
+    from src.bot.database.models import PendingAlert
+    
+    pending = db.query(PendingAlert).filter(PendingAlert.user_id == user_id).first()
+    if pending:
+        pending.retry_count += 1
+        pending.last_retry_at = datetime.now()
+        db.commit()
+        db.refresh(pending)
+        return pending.retry_count
+    return None
+
+
+def get_today_buy_signals(db: Session) -> List:
+    """
+    Get today's BUY signals from database
+    
+    Args:
+        db: Database session
+    
+    Returns:
+        List of DailyBuySignal objects from today
+    """
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return db.query(DailyBuySignal).filter(
+        DailyBuySignal.analysis_date >= today
+    ).order_by(
+        DailyBuySignal.confidence.desc(),
+        DailyBuySignal.overall_score_pct.desc()
     ).all()
 
 

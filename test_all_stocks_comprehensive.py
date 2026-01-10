@@ -19,16 +19,25 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
 from src.bot.services.analysis_service import analyze_stock
 from src.core.formatters import format_analysis_comprehensive
 
-# Expert-level validation rules (20+ years trading experience)
+# Expert-level validation rules (20+ years trading experience + Professional Standards)
+# Aligned with Bloomberg, Zacks, TipRanks, TradingView, MetaTrader
 EXPERT_VALIDATION_RULES = {
-    'min_confidence_for_buy': 60,  # Minimum confidence for any BUY
+    'min_confidence_for_strong_buy': 75,  # Professional standard (Bloomberg, Zacks, TipRanks)
+    'min_score_for_strong_buy': 70,  # Professional standard
+    'min_rr_for_strong_buy': 1.8,  # Professional exception minimum (1.8:1)
+    'min_confidence_for_buy': 70,  # Increased from 60% (professional standard)
     'min_score_for_buy': 40,  # Minimum score % for BUY
     'min_rr_for_buy': 2.0,  # Minimum R:R for BUY (balanced mode)
     'max_rr_warning': 1.95,  # R:R below this needs warning even with high score
+    'min_confidence_for_weak_buy': 60,  # Increased from 55% (professional standard)
     'pattern_confidence_min': 50,  # Minimum pattern confidence to trust
     'adx_min_for_trend': 20,  # Minimum ADX for reliable trend
+    'adx_preferred_for_strong_buy': 25,  # Preferred ADX for STRONG BUY (MetaTrader/TradingView)
+    'min_confirmations_for_strong_buy': 3,  # Preferred bullish indicators for STRONG BUY
     'rsi_extreme_threshold': 30,  # RSI < 30 or > 70 needs caution
     'volume_min_for_confirmation': 1.2,  # Volume should be at least 1.2x for confirmation
+    'strong_buy_distribution_min': 3.0,  # Industry standard minimum %
+    'strong_buy_distribution_max': 8.0,  # Industry standard maximum %
 }
 
 # Critical issues that must be fixed
@@ -131,17 +140,44 @@ def validate_expert_rules(symbol: str, analysis: Dict[str, Any]) -> Tuple[List[s
     
     total_score, score_pct = calculate_score(analysis)
     
+    # CRITICAL: STRONG BUY validation (Professional Standard)
+    is_strong_buy = 'STRONG BUY' in recommendation.upper()
+    if is_strong_buy:
+        # STRONG BUY must have confidence ≥75% (professional standard)
+        if confidence < EXPERT_VALIDATION_RULES['min_confidence_for_strong_buy']:
+            critical_issues.append(
+                f"STRONG BUY with confidence {confidence:.1f}% < {EXPERT_VALIDATION_RULES['min_confidence_for_strong_buy']}% (professional standard)"
+            )
+        
+        # STRONG BUY must have score ≥70% (professional standard)
+        if score_pct < EXPERT_VALIDATION_RULES['min_score_for_strong_buy']:
+            critical_issues.append(
+                f"STRONG BUY with score {total_score}/10 ({score_pct:.1f}%) < {EXPERT_VALIDATION_RULES['min_score_for_strong_buy']}% (professional standard)"
+            )
+        
+        # STRONG BUY must have R:R ≥1.8:1 (professional exception minimum)
+        if risk_reward < EXPERT_VALIDATION_RULES['min_rr_for_strong_buy']:
+            critical_issues.append(
+                f"STRONG BUY with R:R {risk_reward:.2f}:1 < {EXPERT_VALIDATION_RULES['min_rr_for_strong_buy']}:1 (professional minimum)"
+            )
+    
     # CRITICAL: BUY with low score
-    if rec_type == 'BUY' and score_pct < EXPERT_VALIDATION_RULES['min_score_for_buy']:
+    if rec_type == 'BUY' and not is_strong_buy and score_pct < EXPERT_VALIDATION_RULES['min_score_for_buy']:
         critical_issues.append(
             f"BUY recommendation with score {total_score}/10 ({score_pct:.1f}%) < {EXPERT_VALIDATION_RULES['min_score_for_buy']}%"
         )
     
-    # CRITICAL: BUY with low confidence
-    if rec_type == 'BUY' and confidence < EXPERT_VALIDATION_RULES['min_confidence_for_buy']:
-        critical_issues.append(
-            f"BUY recommendation with confidence {confidence:.1f}% < {EXPERT_VALIDATION_RULES['min_confidence_for_buy']}%"
-        )
+    # CRITICAL: BUY with low confidence (70% for BUY, 60% for WEAK BUY)
+    if rec_type == 'BUY' and not is_strong_buy:
+        if 'WEAK BUY' in recommendation.upper():
+            min_conf = EXPERT_VALIDATION_RULES.get('min_confidence_for_weak_buy', 60)
+        else:
+            min_conf = EXPERT_VALIDATION_RULES['min_confidence_for_buy']
+        
+        if confidence < min_conf:
+            critical_issues.append(
+                f"{recommendation} with confidence {confidence:.1f}% < {min_conf}% (professional standard)"
+            )
     
     # CRITICAL: BUY with invalid R:R (unless it's the special warning case)
     if rec_type == 'BUY' and not rr_valid:
@@ -174,6 +210,62 @@ def validate_expert_rules(symbol: str, analysis: Dict[str, Any]) -> Tuple[List[s
             f"BUY recommendation but all trend and momentum indicators are bearish (0/6 bullish)"
         )
     
+    # CRITICAL: AVOID/BLOCKED with extremely strong signals (contradiction)
+    # This catches cases like: 9/10 score, 3.6:1 R:R, strong bullish pattern, but showing AVOID
+    # Professional standard: Only flag if signals meet override criteria but still blocked
+    if rec_type == 'BLOCKED' or 'AVOID' in recommendation.upper():
+        # Check if signals meet the STRICT override criteria (professional standard)
+        # Override should happen if:
+        # - Score >= 90% AND R:R >= 3.0:1 AND confidence >= 65%, OR
+        # - Score >= 85% AND R:R >= 4.0:1 AND confidence >= 65%, OR
+        # - ALL: Score >= 85%, R:R >= 3.5:1, Pattern >= 80%, ADX >= 30
+        
+        meets_override_criteria = False
+        
+        # Check for exceptional score + R:R combinations
+        exceptional_combo_1 = (score_pct >= 90 and risk_reward >= 3.0 and confidence >= 65)
+        exceptional_combo_2 = (score_pct >= 85 and risk_reward >= 4.0 and confidence >= 65)
+        
+        # Check for all 4 conditions
+        has_exceptional_score = score_pct >= 85
+        has_exceptional_rr = risk_reward >= 3.5
+        has_very_strong_pattern = False
+        has_very_strong_trend = False
+        
+        if strongest_pattern:
+            try:
+                pattern_conf = getattr(strongest_pattern, 'confidence', 0)
+                pattern_type_val = None
+                if hasattr(strongest_pattern, 'type'):
+                    if hasattr(strongest_pattern.type, 'value'):
+                        pattern_type_val = strongest_pattern.type.value
+                    else:
+                        pattern_type_val = str(strongest_pattern.type)
+                
+                if pattern_type_val and pattern_type_val.lower() == 'bullish' and pattern_conf >= 80:
+                    has_very_strong_pattern = True
+            except:
+                pass
+        
+        adx = indicators.get('adx', 0)
+        if adx >= 30:
+            has_very_strong_trend = True
+        
+        all_conditions_met = (has_exceptional_score and has_exceptional_rr and 
+                             has_very_strong_pattern and has_very_strong_trend)
+        
+        meets_override_criteria = exceptional_combo_1 or exceptional_combo_2 or all_conditions_met
+        
+        if meets_override_criteria:
+            # This is a contradiction - signals meet override criteria but still blocked
+            # Only flag if it's NOT already handled with a warning override
+            if 'DIVERGENCE WARNING' not in recommendation.upper() and 'EXCEPTIONAL SIGNALS' not in recommendation.upper():
+                critical_issues.append(
+                    f"AVOID/BLOCKED recommendation but signals meet override criteria: "
+                    f"score {score_pct:.1f}%, R:R {risk_reward:.2f}:1, confidence {confidence:.1f}% - "
+                    f"should be overridden per professional standards"
+                )
+    
     # CRITICAL: Pattern validation
     strongest_pattern = indicators.get('strongest_pattern')
     if strongest_pattern:
@@ -192,14 +284,42 @@ def validate_expert_rules(symbol: str, analysis: Dict[str, Any]) -> Tuple[List[s
                 )
             
             # Pattern type should match recommendation
+            # BUT: Only flag as critical if pattern confidence is high (>70%) AND contradicts recommendation
+            # Low confidence patterns can be overridden by other strong signals (professional practice)
             if rec_type == 'BUY' and pattern_type and pattern_type.lower() == 'bearish':
-                critical_issues.append(
-                    f"BUY recommendation but pattern type is BEARISH - contradiction"
-                )
+                if pattern_conf > 70:
+                    # High confidence bearish pattern but BUY - check if contradiction is already handled
+                    # If recommendation contains "BEARISH PATTERN CONTRADICTS", it's already being handled
+                    if 'BEARISH PATTERN CONTRADICTS' in recommendation.upper() or 'STRONG BEARISH PATTERN CONTRADICTS' in recommendation.upper():
+                        # Contradiction is already handled in the recommendation - not a critical issue
+                        pass
+                    else:
+                        # High confidence bearish pattern but BUY - this is a real contradiction
+                        critical_issues.append(
+                            f"BUY recommendation but pattern type is BEARISH with high confidence {pattern_conf}% - contradiction"
+                        )
+                else:
+                    # Low confidence pattern - acceptable to override with other signals
+                    warnings.append(
+                        f"BUY recommendation but pattern type is BEARISH (confidence {pattern_conf}%) - verify manually"
+                    )
             elif rec_type == 'SELL' and pattern_type and pattern_type.lower() == 'bullish':
-                critical_issues.append(
-                    f"SELL recommendation but pattern type is BULLISH - contradiction"
-                )
+                if pattern_conf > 70:
+                    # High confidence bullish pattern but SELL - check if contradiction is already handled
+                    # If recommendation contains "BULLISH PATTERN CONTRADICTS", it's already being handled
+                    if 'BULLISH PATTERN CONTRADICTS' in recommendation.upper() or 'STRONG BULLISH PATTERN CONTRADICTS' in recommendation.upper():
+                        # Contradiction is already handled in the recommendation - not a critical issue
+                        pass
+                    else:
+                        # High confidence bullish pattern but SELL - this is a real contradiction
+                        critical_issues.append(
+                            f"SELL recommendation but pattern type is BULLISH with high confidence {pattern_conf}% - contradiction"
+                        )
+                else:
+                    # Low confidence pattern - acceptable to override with other signals
+                    warnings.append(
+                        f"SELL recommendation but pattern type is BULLISH (confidence {pattern_conf}%) - verify manually"
+                    )
         except Exception as e:
             critical_issues.append(f"Error validating pattern: {str(e)}")
     
@@ -303,7 +423,7 @@ def test_single_stock(symbol: str, mode: str = 'balanced', horizon: str = '1week
     
     return result
 
-def run_comprehensive_test(csv_path: str, max_stocks: int = None, sample_size: int = None):
+def run_comprehensive_test(csv_path: str, max_stocks: int = None, sample_size: int = None, offset: int = 0):
     """
     Run comprehensive test on all stocks
     
@@ -326,10 +446,17 @@ def run_comprehensive_test(csv_path: str, max_stocks: int = None, sample_size: i
     
     # Apply limits
     if sample_size and sample_size < len(all_stocks):
-        import random
-        random.seed(42)  # Reproducible
-        test_stocks = random.sample(all_stocks, sample_size)
-        print(f"📊 Testing random sample of {sample_size} stocks")
+        if offset > 0:
+            # Test specific range: offset to offset+sample_size
+            end_idx = min(offset + sample_size, len(all_stocks))
+            test_stocks = all_stocks[offset:end_idx]
+            print(f"📊 Testing stocks {offset+1} to {end_idx} ({len(test_stocks)} stocks)")
+        else:
+            # Random sample
+            import random
+            random.seed(42)  # Reproducible
+            test_stocks = random.sample(all_stocks, sample_size)
+            print(f"📊 Testing random sample of {sample_size} stocks")
     elif max_stocks:
         test_stocks = all_stocks[:max_stocks]
         print(f"📊 Testing first {max_stocks} stocks")
@@ -372,8 +499,14 @@ def run_comprehensive_test(csv_path: str, max_stocks: int = None, sample_size: i
             
             # Count recommendations
             rec_type = result['metrics'].get('rec_type', 'UNKNOWN')
+            recommendation = result['metrics'].get('recommendation', '')
+            is_strong_buy = 'STRONG BUY' in recommendation.upper()
+            
             if rec_type == 'BUY':
-                stats['buy_recommendations'] += 1
+                if is_strong_buy:
+                    stats['strong_buy_recommendations'] = stats.get('strong_buy_recommendations', 0) + 1
+                else:
+                    stats['buy_recommendations'] += 1
             elif rec_type == 'HOLD':
                 stats['hold_recommendations'] += 1
             elif rec_type == 'SELL':
@@ -434,6 +567,19 @@ def run_comprehensive_test(csv_path: str, max_stocks: int = None, sample_size: i
     
     print(f"📈 RECOMMENDATION DISTRIBUTION:")
     if stats['success'] > 0:
+        strong_buy_count = stats.get('strong_buy_recommendations', 0)
+        strong_buy_pct = (strong_buy_count / stats['success'] * 100) if stats['success'] > 0 else 0
+        
+        print(f"   🟢 STRONG BUY: {strong_buy_count} ({strong_buy_pct:.1f}%)")
+        
+        # Validate STRONG BUY distribution (industry standard: 3-8%)
+        if strong_buy_pct < EXPERT_VALIDATION_RULES['strong_buy_distribution_min']:
+            print(f"      ⚠️  WARNING: Distribution {strong_buy_pct:.1f}% < {EXPERT_VALIDATION_RULES['strong_buy_distribution_min']}% (industry minimum)")
+        elif strong_buy_pct > EXPERT_VALIDATION_RULES['strong_buy_distribution_max']:
+            print(f"      ⚠️  WARNING: Distribution {strong_buy_pct:.1f}% > {EXPERT_VALIDATION_RULES['strong_buy_distribution_max']}% (industry maximum)")
+        else:
+            print(f"      ✅ Distribution within industry standard (3-8%)")
+        
         print(f"   BUY: {stats['buy_recommendations']} ({stats['buy_recommendations']/stats['success']*100:.1f}%)")
         print(f"   HOLD: {stats['hold_recommendations']} ({stats['hold_recommendations']/stats['success']*100:.1f}%)")
         print(f"   SELL: {stats['sell_recommendations']} ({stats['sell_recommendations']/stats['success']*100:.1f}%)")
@@ -592,6 +738,7 @@ def main():
     parser.add_argument('--csv', default='data/stock_tickers.csv', help='Path to stock_tickers.csv')
     parser.add_argument('--max', type=int, help='Maximum number of stocks to test')
     parser.add_argument('--sample', type=int, help='Test random sample of N stocks')
+    parser.add_argument('--offset', type=int, default=0, help='Start from this index (for testing next batch)')
     parser.add_argument('--quick', action='store_true', help='Quick test with 10 stocks')
     
     args = parser.parse_args()

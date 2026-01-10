@@ -20,7 +20,7 @@ from ..database.db import (
     update_alert_last_checked
 )
 from ..database.models import Alert
-from .analysis_service import get_current_price, analyze_stock, get_cached_analysis
+from .analysis_service import get_current_price, analyze_stock
 from ..utils.formatters import format_success, format_warning
 from ..config import ALERT_CHECK_INTERVAL_MINUTES
 
@@ -66,7 +66,8 @@ class AlertService:
                 # Note: get_user_alerts only gets alerts for specific user
                 # We need to get all active alerts across all users
                 from ..database.models import Alert
-                alerts = db.query(Alert).filter(Alert.is_active == True).all()
+                from sqlalchemy.orm import joinedload
+                alerts = db.query(Alert).options(joinedload(Alert.user)).filter(Alert.is_active == True).all()
                 
                 logger.info(f"Checking {len(alerts)} active alerts")
                 
@@ -85,9 +86,10 @@ class AlertService:
                             update_alert_status(db, alert.id, is_active=False)
                             stats['triggered'] += 1
                             
+                            telegram_id = alert.user.telegram_id if alert.user else 'unknown'
                             logger.info(
                                 f"Alert triggered: ID={alert.id}, "
-                                f"User={alert.user_id}, Symbol={alert.symbol}"
+                                f"User={telegram_id}, Symbol={alert.symbol}"
                             )
                         else:
                             # Update last checked time
@@ -143,7 +145,7 @@ class AlertService:
         try:
             current_price = get_current_price(alert.symbol)
             
-            condition = alert.condition
+            condition = alert.params
             operator = condition.get('operator')
             target_value = condition.get('value')
             
@@ -166,24 +168,17 @@ class AlertService:
     async def _check_rsi_alert(self, alert: Alert) -> bool:
         """Check RSI alert condition."""
         try:
-            # Get analysis (use cache if available)
-            with get_db_context() as db:
-                cached = get_cached_analysis(db, alert.symbol, alert.user_id)
-                
-                if cached:
-                    analysis_data = cached
-                else:
-                    # Perform fresh analysis
-                    result = analyze_stock(alert.symbol)
-                    if result['status'] != 'success':
-                        return False
-                    analysis_data = result['data']
+            # Perform analysis to get RSI
+            result = analyze_stock(alert.symbol)
+            if result['status'] != 'success':
+                return False
+            analysis_data = result['data']
             
             rsi = analysis_data.get('indicators', {}).get('rsi')
             if rsi is None:
                 return False
             
-            condition = alert.condition
+            condition = alert.params
             operator = condition.get('operator')
             target_value = condition.get('value')
             
@@ -210,21 +205,32 @@ class AlertService:
             current_recommendation = result['data']['recommendation']
             
             # Get last known recommendation from alert data
-            last_recommendation = alert.condition.get('last_recommendation')
+            params = alert.params
+            last_recommendation = params.get('last_recommendation')
             
             if last_recommendation is None:
                 # First check - store current recommendation
                 with get_db_context() as db:
-                    alert.condition['last_recommendation'] = current_recommendation
-                    db.commit()
+                    # Reload alert in this session
+                    db_alert = db.query(Alert).filter(Alert.id == alert.id).first()
+                    if db_alert:
+                        updated_params = db_alert.params.copy()
+                        updated_params['last_recommendation'] = current_recommendation
+                        db_alert.params = updated_params
+                        db.commit()
                 return False
             
             # Check if recommendation changed
             if current_recommendation != last_recommendation:
                 # Update last recommendation
                 with get_db_context() as db:
-                    alert.condition['last_recommendation'] = current_recommendation
-                    db.commit()
+                    # Reload alert in this session
+                    db_alert = db.query(Alert).filter(Alert.id == alert.id).first()
+                    if db_alert:
+                        updated_params = db_alert.params.copy()
+                        updated_params['last_recommendation'] = current_recommendation
+                        db_alert.params = updated_params
+                        db.commit()
                 return True
             
             return False
@@ -257,13 +263,19 @@ class AlertService:
                 )
             
             # Send notification
+            # alert.user_id is the database foreign key, we need telegram_id
+            telegram_id = alert.user.telegram_id if alert.user else None
+            if not telegram_id:
+                logger.error(f"Could not get telegram_id for alert {alert.id}")
+                return
+            
             await self.bot.send_message(
-                chat_id=alert.user_id,
+                chat_id=telegram_id,
                 text=message,
                 parse_mode='Markdown'
             )
             
-            logger.info(f"Sent alert notification to user {alert.user_id}")
+            logger.info(f"Sent alert notification to user {telegram_id}")
         
         except TelegramError as e:
             logger.error(f"Error sending alert notification: {e}", exc_info=True)
@@ -275,7 +287,7 @@ class AlertService:
         """Format price alert notification."""
         try:
             current_price = get_current_price(alert.symbol)
-            target_price = alert.condition.get('value')
+            target_price = alert.params.get('value')
             
             message = (
                 f"🔔 *Price Alert Triggered!*\n\n"
@@ -303,8 +315,8 @@ class AlertService:
             else:
                 rsi_str = "N/A"
             
-            target_value = alert.condition.get('value')
-            operator = alert.condition.get('operator')
+            target_value = alert.params.get('value')
+            operator = alert.params.get('operator')
             
             condition_str = "overbought (>70)" if operator == '>' else "oversold (<30)"
             

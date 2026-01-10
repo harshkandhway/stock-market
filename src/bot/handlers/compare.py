@@ -18,6 +18,7 @@ from src.core.formatters import (
     chunk_message
 )
 from ..utils.validators import validate_stock_symbol, parse_command_args
+from ..utils.keyboards import create_comparison_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ async def compare_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     username = update.effective_user.username
     
     # Parse arguments
-    args = parse_command_args(update.message.text)
+    args = parse_command_args(update.message.text, command='compare')
     
     if not args:
         await update.message.reply_text(
@@ -123,9 +124,9 @@ async def compare_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 timeframe=settings.timeframe
             )
             
-            # Filter successful results
-            successful_results = [r for r in results if r['status'] == 'success']
-            failed_results = [r for r in results if r['status'] != 'success']
+            # Filter successful results (successful ones don't have 'error' key)
+            successful_results = [r for r in results if 'error' not in r]
+            failed_results = [r for r in results if 'error' in r]
             
             if not successful_results:
                 await progress_msg.edit_text(
@@ -151,7 +152,7 @@ async def compare_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 return
             
             # Format comparison table
-            message = format_comparison_table(successful_results)
+            message = format_comparison_table(successful_results, output_mode='bot')
             
             # Add failed stocks warning if any
             if failed_results:
@@ -161,16 +162,20 @@ async def compare_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # Add footer
             message += (
                 f"\n\n━━━━━━━━━━━━━━━━━━━━\n"
-                f"💡 *Tip:* Use `/analyze SYMBOL` for detailed analysis of any stock."
+                f"💡 *Click buttons below to analyze any stock in detail.*"
             )
+            
+            # Create keyboard with analyze buttons for each symbol
+            successful_symbols = [r['symbol'] for r in successful_results]
+            keyboard = create_comparison_keyboard(successful_symbols)
             
             # Handle long messages
             chunks = chunk_message(message)
             
-            # Edit progress message with first chunk
-            await progress_msg.edit_text(chunks[0], parse_mode='Markdown')
+            # Edit progress message with first chunk and keyboard
+            await progress_msg.edit_text(chunks[0], parse_mode='Markdown', reply_markup=keyboard)
             
-            # Send remaining chunks
+            # Send remaining chunks (without keyboard)
             for chunk in chunks[1:]:
                 await update.message.reply_text(chunk, parse_mode='Markdown')
             

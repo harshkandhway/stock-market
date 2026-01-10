@@ -1,0 +1,2958 @@
+COMPREHENSIVE STOCK TESTING REPORT
+================================================================================
+
+Generated: 2026-01-09 23:01:57
+
+SUMMARY
+--------------------------------------------------------------------------------
+Total Stocks: 500
+Successful: 454
+Errors: 46
+Critical Issues: 5
+Warnings: 31
+
+CRITICAL ISSUES
+--------------------------------------------------------------------------------
+
+GENERAL (4 occurrences):
+  ACMESOLAR.BO: SELL recommendation but pattern type is BULLISH with high confidence 75% - contradiction
+  SHIVATEX.BO: SELL recommendation but pattern type is BULLISH with high confidence 75% - contradiction
+  TIPSMUSIC.BO: SELL recommendation but pattern type is BULLISH with high confidence 80% - contradiction
+  YASHO.BO: SELL recommendation but pattern type is BULLISH with high confidence 80% - contradiction
+
+BUY RECOMMENDATION WITH INVALID R (1 occurrences):
+  COALINDIA.NS: BUY recommendation with invalid R:R 1.92:1 < 2.0:1 (no warning in recommendation)
+
+DETAILED RESULTS
+--------------------------------------------------------------------------------
+
+INGERRAND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.7%
+  Score: 4/10 (40.0%)
+  R:R: 4.31:1
+
+AUROPHARMA.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 72.8%
+  Score: 6/10 (60.0%)
+  R:R: 0.94:1
+
+ACMESOLAR.BO:
+  Recommendation: SELL
+  Confidence: 30.0%
+  Score: 2/10 (20.0%)
+  R:R: 0.96:1
+  Critical Issues:
+    - SELL recommendation but pattern type is BULLISH with high confidence 75% - contradiction
+
+TNPETRO.NS:
+  Recommendation: HOLD
+  Confidence: 50.4%
+  Score: 1/10 (10.0%)
+  R:R: 1.40:1
+
+SOLEX.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.8%
+  Score: 2/10 (20.0%)
+  R:R: 0.97:1
+
+LOTUSEYE.NS:
+  Recommendation: HOLD
+  Confidence: 55.1%
+  Score: 5/10 (50.0%)
+  R:R: 8.33:1
+
+HSCL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.0%
+  Score: 2/10 (20.0%)
+  R:R: 0.92:1
+
+GODAVARIB.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 51.3%
+  Score: 4/10 (40.0%)
+  R:R: 0.54:1
+
+MICEL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.0%
+  Score: 3/10 (30.0%)
+  R:R: 1.99:1
+
+BASF.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.2%
+  Score: 3/10 (30.0%)
+  R:R: 3.63:1
+
+BALKRISHNA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.8%
+  Score: 4/10 (40.0%)
+  R:R: 0.93:1
+
+GVPIL.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 99 rows, need at least 200 for medium timeframe
+
+SIGMA.NS:
+  Recommendation: BUY - R:R BELOW MINIMUM
+  Confidence: 76.3%
+  Score: 8/10 (80.0%)
+  R:R: 0.49:1
+  Warnings:
+    - BUY recommendation but volume 1.03x < 1.2x - weak confirmation
+
+SUPREMEINF.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.8%
+  Score: 3/10 (30.0%)
+  R:R: 5.25:1
+
+SWSOLAR.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.62:1
+
+AVTNPL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.5%
+  Score: 3/10 (30.0%)
+  R:R: 1.05:1
+
+ROHLTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.8%
+  Score: 0/10 (0.0%)
+  R:R: 1.43:1
+
+MCX.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 57.0%
+  Score: 4/10 (40.0%)
+  R:R: 0.64:1
+
+SIRCA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.2%
+  Score: 1/10 (10.0%)
+  R:R: 1.90:1
+
+PFIZER.BO:
+  Recommendation: SELL
+  Confidence: 29.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.16:1
+
+AFFORDABLE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.7%
+  Score: 1/10 (10.0%)
+  R:R: 1.35:1
+
+ADVANIHOTR.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.7%
+  Score: 1/10 (10.0%)
+  R:R: 1.73:1
+
+NAHARSPING.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 44.9%
+  Score: 5/10 (50.0%)
+  R:R: 3.31:1
+
+MIRZAINT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.3%
+  Score: 1/10 (10.0%)
+  R:R: 1.77:1
+
+EMKAY.BO:
+  Recommendation: HOLD
+  Confidence: 42.1%
+  Score: 5/10 (50.0%)
+  R:R: 1.64:1
+
+AFCONS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.1%
+  Score: 2/10 (20.0%)
+  R:R: 1.61:1
+
+MOTHERSON.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 53.6%
+  Score: 3/10 (30.0%)
+  R:R: 1.81:1
+
+SHILCTECH.NS:
+  ERROR: Data/Validation Error: Insufficient data for SHILCTECH.NS
+
+DYNPRO.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.8%
+  Score: 4/10 (40.0%)
+  R:R: 1.69:1
+
+HPIL.NS:
+  Recommendation: HOLD
+  Confidence: 49.8%
+  Score: 5/10 (50.0%)
+  R:R: 1.71:1
+
+GUJAPOLLO.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.04:1
+
+INDOTECH.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.86:1
+
+HEADSUP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.9%
+  Score: 0/10 (0.0%)
+  R:R: 1.08:1
+
+GOYALALUM.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 67.7%
+  Score: 8/10 (80.0%)
+  R:R: 1.45:1
+
+EVEREADY.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.1%
+  Score: 3/10 (30.0%)
+  R:R: 1.16:1
+
+WELCORP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.4%
+  Score: 4/10 (40.0%)
+  R:R: 3.61:1
+
+CAPACITE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.5%
+  Score: 3/10 (30.0%)
+  R:R: 2.09:1
+
+QUADFUTURE.BO:
+  Recommendation: SELL
+  Confidence: 32.2%
+  Score: 1/10 (10.0%)
+  R:R: 0.49:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+WINSOME.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.4%
+  Score: 2/10 (20.0%)
+  R:R: 0.97:1
+
+KAMDHENU.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 33.8%
+  Score: 0/10 (0.0%)
+  R:R: 0.96:1
+
+INDIANHUME.BO:
+  Recommendation: HOLD
+  Confidence: 55.2%
+  Score: 3/10 (30.0%)
+  R:R: 0.72:1
+
+FORTIS.NS:
+  Recommendation: HOLD
+  Confidence: 47.2%
+  Score: 3/10 (30.0%)
+  R:R: 0.77:1
+
+ASTRAMICRO.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 51.5%
+  Score: 4/10 (40.0%)
+  R:R: 0.64:1
+
+GSFC.BO:
+  Recommendation: HOLD
+  Confidence: 45.5%
+  Score: 5/10 (50.0%)
+  R:R: 1.02:1
+
+RAMCOIND.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 69.6%
+  Score: 8/10 (80.0%)
+  R:R: 2.34:1
+
+EMAMIPAP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.9%
+  Score: 6/10 (60.0%)
+  R:R: 3.29:1
+
+CENTENKA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 33.6%
+  Score: 3/10 (30.0%)
+  R:R: 6.07:1
+
+STCINDIA.NS:
+  Recommendation: HOLD
+  Confidence: 51.6%
+  Score: 3/10 (30.0%)
+  R:R: 0.52:1
+
+ARMANFIN.BO:
+  Recommendation: HOLD
+  Confidence: 54.3%
+  Score: 3/10 (30.0%)
+  R:R: 0.59:1
+
+GALAXYSURF.NS:
+  Recommendation: SELL
+  Confidence: 27.8%
+  Score: 1/10 (10.0%)
+  R:R: 2.49:1
+
+SURAJEST.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 33.0%
+  Score: 1/10 (10.0%)
+  R:R: 0.55:1
+
+HLVLTD.NS:
+  Recommendation: SELL
+  Confidence: 25.9%
+  Score: 1/10 (10.0%)
+  R:R: 0.55:1
+
+INDOTHAI.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 26.2%
+  Score: 3/10 (30.0%)
+  R:R: 2.30:1
+
+AFFLE.BO:
+  Recommendation: HOLD
+  Confidence: 44.8%
+  Score: 5/10 (50.0%)
+  R:R: 2.65:1
+
+POLYPLEX.BO:
+  Recommendation: WEAK SELL
+  Confidence: 37.8%
+  Score: 2/10 (20.0%)
+  R:R: 0.67:1
+
+HARRMALAYA.BO:
+  Recommendation: SELL
+  Confidence: 33.7%
+  Score: 1/10 (10.0%)
+  R:R: 0.71:1
+
+NELCAST.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.58:1
+
+HINDWAREAP.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.7%
+  Score: 4/10 (40.0%)
+  R:R: 4.10:1
+
+GLOBALVECT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.8%
+  Score: 0/10 (0.0%)
+  R:R: 1.01:1
+
+SBICARD.NS:
+  Recommendation: HOLD
+  Confidence: 57.7%
+  Score: 5/10 (50.0%)
+  R:R: 1.21:1
+
+XCHANGING.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.7%
+  Score: 7/10 (70.0%)
+  R:R: 3.83:1
+
+ENTERO.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 72.2%
+  Score: 8/10 (80.0%)
+  R:R: 0.57:1
+
+ONEPOINT.NS:
+  Recommendation: HOLD
+  Confidence: 54.3%
+  Score: 3/10 (30.0%)
+  R:R: 0.57:1
+
+WEALTH.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 68 rows, need at least 200 for medium timeframe
+
+TMPV.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 60 rows, need at least 200 for medium timeframe
+
+NETWEB.NS:
+  Recommendation: HOLD
+  Confidence: 55.5%
+  Score: 3/10 (30.0%)
+  R:R: 0.57:1
+
+RAMASTEEL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.0%
+  Score: 2/10 (20.0%)
+  R:R: 1.45:1
+
+INDOCO.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.5%
+  Score: 3/10 (30.0%)
+  R:R: 1.27:1
+
+ZYDUSLIFE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.2%
+  Score: 3/10 (30.0%)
+  R:R: 2.14:1
+
+SILVERTUC.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 63.4%
+  Score: 5/10 (50.0%)
+  R:R: 0.53:1
+
+CSBBANK.BO:
+  Recommendation: BUY - R:R BELOW MINIMUM
+  Confidence: 75.3%
+  Score: 8/10 (80.0%)
+  R:R: 0.55:1
+  Warnings:
+    - BUY recommendation but volume 0.38x < 1.2x - weak confirmation
+
+DAMCAPITAL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.7%
+  Score: 1/10 (10.0%)
+  R:R: 1.45:1
+
+STYL.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 71 rows, need at least 200 for medium timeframe
+
+BATAINDIA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.2%
+  Score: 3/10 (30.0%)
+  R:R: 2.63:1
+
+CEIGALL.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 63.2%
+  Score: 7/10 (70.0%)
+  R:R: 0.66:1
+
+KOTHARIPET.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for KOTHARIPET.BO: No data returned
+
+YATRA.NS:
+  Recommendation: HOLD
+  Confidence: 50.6%
+  Score: 2/10 (20.0%)
+  R:R: 1.34:1
+
+DYCL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.4%
+  Score: 5/10 (50.0%)
+  R:R: 3.74:1
+
+SECMARK.NS:
+  Recommendation: SELL
+  Confidence: 27.6%
+  Score: 1/10 (10.0%)
+  R:R: 0.94:1
+
+CARYSIL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.5%
+  Score: 2/10 (20.0%)
+  R:R: 1.17:1
+
+SEYAIND.NS:
+  Recommendation: WEAK SELL
+  Confidence: 35.9%
+  Score: 2/10 (20.0%)
+  R:R: 0.59:1
+
+STYL.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 69 rows, need at least 200 for medium timeframe
+
+KAPSTON.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for KAPSTON.BO: No data returned
+
+PVRINOX.BO:
+  Recommendation: HOLD
+  Confidence: 40.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.19:1
+
+MAHESHWARI.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 23.2%
+  Score: 3/10 (30.0%)
+  R:R: 3.05:1
+
+WELSPUNLIV.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.74:1
+
+TRAVELFOOD.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 126 rows, need at least 200 for medium timeframe
+
+ZENSARTECH.BO:
+  Recommendation: WEAK SELL
+  Confidence: 37.0%
+  Score: 4/10 (40.0%)
+  R:R: 1.02:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+VSTTILLERS.NS:
+  Recommendation: WEAK BUY
+  Confidence: 61.2%
+  Score: 6/10 (60.0%)
+  R:R: 3.80:1
+  Warnings:
+    - BUY recommendation but ADX 17.6 < 20 - weak trend
+    - BUY recommendation but volume 1.14x < 1.2x - weak confirmation
+
+MUTHOOTFIN.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 71.0%
+  Score: 7/10 (70.0%)
+  R:R: 0.76:1
+
+KIRLOSENG.BO:
+  Recommendation: HOLD
+  Confidence: 53.2%
+  Score: 4/10 (40.0%)
+  R:R: 0.75:1
+
+GSS.BO:
+  Recommendation: WEAK SELL
+  Confidence: 38.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.75:1
+
+SILGO.NS:
+  Recommendation: HOLD
+  Confidence: 57.4%
+  Score: 4/10 (40.0%)
+  R:R: 0.96:1
+
+LINCOLN.NS:
+  Recommendation: WEAK SELL
+  Confidence: 35.7%
+  Score: 2/10 (20.0%)
+  R:R: 0.65:1
+
+TDPOWERSYS.BO:
+  Recommendation: HOLD
+  Confidence: 52.3%
+  Score: 2/10 (20.0%)
+  R:R: 1.69:1
+
+SOMANYCERA.BO:
+  Recommendation: WEAK SELL
+  Confidence: 39.6%
+  Score: 4/10 (40.0%)
+  R:R: 0.65:1
+
+GROBTEA.NS:
+  Recommendation: HOLD
+  Confidence: 46.5%
+  Score: 5/10 (50.0%)
+  R:R: 0.64:1
+
+CGCL.NS:
+  Recommendation: HOLD
+  Confidence: 43.2%
+  Score: 2/10 (20.0%)
+  R:R: 0.69:1
+
+INDOSTAR.NS:
+  Recommendation: SELL
+  Confidence: 32.6%
+  Score: 0/10 (0.0%)
+  R:R: 0.72:1
+
+MKPL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.7%
+  Score: 2/10 (20.0%)
+  R:R: 1.51:1
+
+NATCAPSUQ.NS:
+  Recommendation: HOLD
+  Confidence: 51.7%
+  Score: 6/10 (60.0%)
+  R:R: 0.50:1
+
+MIDWESTLTD.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 53 rows, need at least 200 for medium timeframe
+
+DLINKINDIA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.4%
+  Score: 5/10 (50.0%)
+  R:R: 2.88:1
+
+ISFT.BO:
+  Recommendation: HOLD
+  Confidence: 49.2%
+  Score: 5/10 (50.0%)
+  R:R: 3.51:1
+
+INNOVACAP.BO:
+  Recommendation: HOLD
+  Confidence: 43.9%
+  Score: 6/10 (60.0%)
+  R:R: 3.67:1
+
+RKDL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.3%
+  Score: 1/10 (10.0%)
+  R:R: 0.97:1
+
+VIMTALABS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.9%
+  Score: 4/10 (40.0%)
+  R:R: 3.84:1
+
+UNIDT.NS:
+  Recommendation: SELL
+  Confidence: 32.1%
+  Score: 3/10 (30.0%)
+  R:R: 1.79:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+AKZOINDIA.NS:
+  Recommendation: SELL
+  Confidence: 33.0%
+  Score: 1/10 (10.0%)
+  R:R: 1.17:1
+
+IRMENERGY.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.1%
+  Score: 2/10 (20.0%)
+  R:R: 2.11:1
+
+WSI.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 51.5%
+  Score: 5/10 (50.0%)
+  R:R: 0.54:1
+
+WSI.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 68.2%
+  Score: 7/10 (70.0%)
+  R:R: 0.76:1
+
+EMIL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.2%
+  Score: 4/10 (40.0%)
+  R:R: 1.17:1
+
+INNOVACAP.NS:
+  Recommendation: SELL
+  Confidence: 28.8%
+  Score: 1/10 (10.0%)
+  R:R: 0.78:1
+
+ATALREAL.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 51.2%
+  Score: 4/10 (40.0%)
+  R:R: 0.55:1
+
+NIACL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.0%
+  Score: 1/10 (10.0%)
+  R:R: 1.75:1
+
+MUTHOOTCAP.NS:
+  Recommendation: HOLD
+  Confidence: 43.0%
+  Score: 1/10 (10.0%)
+  R:R: 0.75:1
+
+POONAWALLA.BO:
+  Recommendation: HOLD
+  Confidence: 43.5%
+  Score: 4/10 (40.0%)
+  R:R: 1.64:1
+
+ABDL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.0%
+  Score: 6/10 (60.0%)
+  R:R: 4.62:1
+
+WABAG.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.2%
+  Score: 0/10 (0.0%)
+  R:R: 0.97:1
+
+SUMICHEM.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.9%
+  Score: 5/10 (50.0%)
+  R:R: 2.59:1
+
+PERSISTENT.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 68.3%
+  Score: 4/10 (40.0%)
+  R:R: 0.71:1
+
+TATACHEM.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.87:1
+
+IITL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.57:1
+
+BAJAJELEC.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.87:1
+
+ROLEXRINGS.NS:
+  Recommendation: SELL
+  Confidence: 28.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.05:1
+
+ICICIBANK.BO:
+  Recommendation: BUY - R:R BELOW MINIMUM
+  Confidence: 76.5%
+  Score: 7/10 (70.0%)
+  R:R: 1.31:1
+  Warnings:
+    - BUY recommendation but volume 0.66x < 1.2x - weak confirmation
+
+NCC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 46.1%
+  Score: 7/10 (70.0%)
+  R:R: 3.14:1
+
+ZIMLAB.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 33.8%
+  Score: 1/10 (10.0%)
+  R:R: 0.76:1
+
+VIPULLTD.BO:
+  Recommendation: HOLD
+  Confidence: 49.3%
+  Score: 5/10 (50.0%)
+  R:R: 0.48:1
+
+3MINDIA.NS:
+  Recommendation: HOLD
+  Confidence: 59.9%
+  Score: 4/10 (40.0%)
+  R:R: 2.07:1
+
+CROWN.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for CROWN.BO: No data returned
+
+SIGACHI.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 44.9%
+  Score: 4/10 (40.0%)
+  R:R: 1.35:1
+
+ARROWGREEN.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.7%
+  Score: 0/10 (0.0%)
+  R:R: 1.60:1
+
+INOXINDIA.NS:
+  Recommendation: SELL
+  Confidence: 32.5%
+  Score: 1/10 (10.0%)
+  R:R: 0.69:1
+
+GUJGASLTD.BO:
+  Recommendation: HOLD
+  Confidence: 51.7%
+  Score: 3/10 (30.0%)
+  R:R: 0.69:1
+
+BIRLAMONEY.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.2%
+  Score: 1/10 (10.0%)
+  R:R: 0.60:1
+
+TDPOWERSYS.NS:
+  Recommendation: HOLD
+  Confidence: 50.6%
+  Score: 1/10 (10.0%)
+  R:R: 1.68:1
+
+DCMFINSERV.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.4%
+  Score: 3/10 (30.0%)
+  R:R: 0.91:1
+
+TEXMOPIPES.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.0%
+  Score: 1/10 (10.0%)
+  R:R: 1.55:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+GLOSTERLTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.0%
+  Score: 1/10 (10.0%)
+  R:R: 1.22:1
+
+SHIVATEX.BO:
+  Recommendation: WEAK SELL
+  Confidence: 38.2%
+  Score: 4/10 (40.0%)
+  R:R: 0.59:1
+  Critical Issues:
+    - SELL recommendation but pattern type is BULLISH with high confidence 75% - contradiction
+
+ELIN.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.0%
+  Score: 3/10 (30.0%)
+  R:R: 1.44:1
+
+VSTIND.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 26.8%
+  Score: 0/10 (0.0%)
+  R:R: 0.94:1
+
+KARURVYSYA.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 70.5%
+  Score: 5/10 (50.0%)
+  R:R: 0.63:1
+
+KICL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.3%
+  Score: 2/10 (20.0%)
+  R:R: 2.28:1
+
+SALONA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.3%
+  Score: 0/10 (0.0%)
+  R:R: 0.77:1
+
+NIITMTS.NS:
+  Recommendation: HOLD
+  Confidence: 55.3%
+  Score: 4/10 (40.0%)
+  R:R: 0.88:1
+
+WESTLIFE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.8%
+  Score: 4/10 (40.0%)
+  R:R: 3.53:1
+
+VGL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 25.9%
+  Score: 0/10 (0.0%)
+  R:R: 1.23:1
+
+MMFL.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 72.8%
+  Score: 8/10 (80.0%)
+  R:R: 0.57:1
+
+SEPC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.1%
+  Score: 0/10 (0.0%)
+  R:R: 1.16:1
+
+ZFCVINDIA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 47.2%
+  Score: 3/10 (30.0%)
+  R:R: 1.03:1
+
+RSYSTEMS.NS:
+  Recommendation: HOLD
+  Confidence: 40.6%
+  Score: 4/10 (40.0%)
+  R:R: 2.63:1
+
+BSL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 33.3%
+  Score: 3/10 (30.0%)
+  R:R: 1.29:1
+
+KIOCL.BO:
+  Recommendation: HOLD
+  Confidence: 45.3%
+  Score: 4/10 (40.0%)
+  R:R: 0.64:1
+
+IBULLSLTD.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.3%
+  Score: 3/10 (30.0%)
+  R:R: 1.92:1
+
+NRL.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for NRL.BO: No data returned
+
+TRIDENT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 45.6%
+  Score: 3/10 (30.0%)
+  R:R: 0.92:1
+
+PKTEA.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for PKTEA.BO: No data returned
+
+JPOLYINVST.NS:
+  Recommendation: HOLD
+  Confidence: 50.6%
+  Score: 3/10 (30.0%)
+  R:R: 1.54:1
+
+TRU.NS:
+  Recommendation: SELL
+  Confidence: 34.9%
+  Score: 1/10 (10.0%)
+  R:R: 1.04:1
+
+SPARC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.6%
+  Score: 0/10 (0.0%)
+  R:R: 1.11:1
+
+DODLA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.2%
+  Score: 0/10 (0.0%)
+  R:R: 1.84:1
+
+EIHAHOTELS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.6%
+  Score: 2/10 (20.0%)
+  R:R: 2.17:1
+
+ASHAPURMIN.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 54.6%
+  Score: 4/10 (40.0%)
+  R:R: 0.58:1
+
+SULA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.2%
+  Score: 5/10 (50.0%)
+  R:R: 4.21:1
+
+SINTERCOM.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 33.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.39:1
+
+AEQUS.NS:
+  ERROR: Data/Validation Error: Insufficient data for AEQUS.NS
+
+ENGINERSIN.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.1%
+  Score: 1/10 (10.0%)
+  R:R: 1.57:1
+
+DEEDEV.NS:
+  Recommendation: HOLD
+  Confidence: 46.4%
+  Score: 5/10 (50.0%)
+  R:R: 0.91:1
+
+STUDDS.NS:
+  ERROR: Data/Validation Error: Insufficient data for STUDDS.NS
+
+EICHERMOT.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 62.2%
+  Score: 6/10 (60.0%)
+  R:R: 0.88:1
+
+BANKINDIA.NS:
+  Recommendation: HOLD
+  Confidence: 59.4%
+  Score: 4/10 (40.0%)
+  R:R: 0.72:1
+
+DEVIT.BO:
+  Recommendation: SELL
+  Confidence: 34.0%
+  Score: 3/10 (30.0%)
+  R:R: 0.70:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+ENERGYDEV.NS:
+  Recommendation: SELL
+  Confidence: 31.6%
+  Score: 1/10 (10.0%)
+  R:R: 0.83:1
+
+TIPSMUSIC.BO:
+  Recommendation: SELL
+  Confidence: 28.5%
+  Score: 3/10 (30.0%)
+  R:R: 0.87:1
+  Critical Issues:
+    - SELL recommendation but pattern type is BULLISH with high confidence 80% - contradiction
+
+TATAINVEST.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.55:1
+
+AGARIND.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.0%
+  Score: 1/10 (10.0%)
+  R:R: 0.61:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+SHILCTECH.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.6%
+  Score: 3/10 (30.0%)
+  R:R: 1.03:1
+
+SHANTI.NS:
+  Recommendation: SELL
+  Confidence: 33.1%
+  Score: 5/10 (50.0%)
+  R:R: 0.83:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+KRISHANA.NS:
+  Recommendation: HOLD
+  Confidence: 53.2%
+  Score: 2/10 (20.0%)
+  R:R: 1.98:1
+
+RVHL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.0%
+  Score: 2/10 (20.0%)
+  R:R: 2.28:1
+
+TIIL.NS:
+  Recommendation: SELL
+  Confidence: 33.7%
+  Score: 4/10 (40.0%)
+  R:R: 1.88:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+RVTH.BO:
+  Recommendation: HOLD
+  Confidence: 50.3%
+  Score: 5/10 (50.0%)
+  R:R: 1.01:1
+
+LENSKART.BO:
+  ERROR: Data/Validation Error: Insufficient data for LENSKART.BO
+
+RADIOCITY.NS:
+  Recommendation: WEAK SELL
+  Confidence: 37.2%
+  Score: 3/10 (30.0%)
+  R:R: 1.89:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+HAPPYFORGE.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 71.6%
+  Score: 7/10 (70.0%)
+  R:R: 0.57:1
+
+HEG.NS:
+  Recommendation: BUY
+  Confidence: 74.8%
+  Score: 9/10 (90.0%)
+  R:R: 2.28:1
+  Warnings:
+    - BUY recommendation but volume 0.39x < 1.2x - weak confirmation
+
+NAVKARURB.BO:
+  Recommendation: SELL
+  Confidence: 31.2%
+  Score: 2/10 (20.0%)
+  R:R: 0.50:1
+
+GKENERGY.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 71 rows, need at least 200 for medium timeframe
+
+MOBIKWIK.BO:
+  Recommendation: SELL
+  Confidence: 31.2%
+  Score: 1/10 (10.0%)
+  R:R: 0.90:1
+
+LUPIN.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 70.2%
+  Score: 6/10 (60.0%)
+  R:R: 0.81:1
+
+RHETAN.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 61.2%
+  Score: 5/10 (50.0%)
+  R:R: 0.63:1
+
+CSBBANK.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 74.5%
+  Score: 8/10 (80.0%)
+  R:R: 0.55:1
+
+HGM.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 95 rows, need at least 200 for medium timeframe
+
+DGCONTENT.NS:
+  Recommendation: SELL
+  Confidence: 33.2%
+  Score: 5/10 (50.0%)
+  R:R: 4.02:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+KRISHNADEF.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for KRISHNADEF.BO: No data returned
+
+ELIN.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.0%
+  Score: 3/10 (30.0%)
+  R:R: 1.36:1
+
+INDOCO.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 45.4%
+  Score: 5/10 (50.0%)
+  R:R: 2.23:1
+
+TTML.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.3%
+  Score: 0/10 (0.0%)
+  R:R: 0.77:1
+
+RAJTV.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 52.0%
+  Score: 5/10 (50.0%)
+  R:R: 0.81:1
+
+RADICO.NS:
+  Recommendation: HOLD
+  Confidence: 53.6%
+  Score: 2/10 (20.0%)
+  R:R: 1.57:1
+
+WIPL.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for WIPL.BO: No data returned
+
+PENINLAND.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 44.2%
+  Score: 1/10 (10.0%)
+  R:R: 1.60:1
+
+LTF.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 62.1%
+  Score: 4/10 (40.0%)
+  R:R: 1.53:1
+
+POONAWALLA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.2%
+  Score: 1/10 (10.0%)
+  R:R: 0.66:1
+
+RAMCOSYS.BO:
+  Recommendation: HOLD
+  Confidence: 50.8%
+  Score: 3/10 (30.0%)
+  R:R: 1.57:1
+
+UCOBANK.NS:
+  Recommendation: WEAK SELL
+  Confidence: 36.3%
+  Score: 1/10 (10.0%)
+  R:R: 0.89:1
+
+FCL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.7%
+  Score: 1/10 (10.0%)
+  R:R: 2.05:1
+
+ORIENTLTD.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.9%
+  Score: 6/10 (60.0%)
+  R:R: 2.22:1
+
+HEXATRADEX.NS:
+  Recommendation: WEAK SELL
+  Confidence: 38.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.83:1
+
+COFORGE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.2%
+  Score: 3/10 (30.0%)
+  R:R: 0.80:1
+
+ANANDRATHI.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 66.8%
+  Score: 7/10 (70.0%)
+  R:R: 0.78:1
+
+GULFPETRO.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.6%
+  Score: 5/10 (50.0%)
+  R:R: 2.90:1
+
+TANLA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.7%
+  Score: 2/10 (20.0%)
+  R:R: 4.16:1
+
+NITIRAJ.NS:
+  Recommendation: SELL
+  Confidence: 30.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.74:1
+
+LAXMIDENTL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.7%
+  Score: 0/10 (0.0%)
+  R:R: 1.74:1
+
+SHIVALIK.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.23:1
+
+SEJALLTD.BO:
+  Recommendation: HOLD
+  Confidence: 50.8%
+  Score: 2/10 (20.0%)
+  R:R: 1.49:1
+
+SHAKTIPUMP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 25.1%
+  Score: 0/10 (0.0%)
+  R:R: 0.55:1
+
+KOTARISUG.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for KOTARISUG.BO: No data returned
+
+DDEVPLSTIK.NS:
+  Recommendation: WEAK BUY
+  Confidence: 68.8%
+  Score: 8/10 (80.0%)
+  R:R: 2.17:1
+  Warnings:
+    - BUY recommendation but volume 0.80x < 1.2x - weak confirmation
+
+NIACL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.9%
+  Score: 2/10 (20.0%)
+  R:R: 3.54:1
+
+INDIQUBE.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 111 rows, need at least 200 for medium timeframe
+
+AARTIPHARM.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 61.8%
+  Score: 6/10 (60.0%)
+  R:R: 0.74:1
+
+JKTYRE.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 52.3%
+  Score: 4/10 (40.0%)
+  R:R: 0.64:1
+
+WEWIN.NS:
+  Recommendation: WEAK SELL
+  Confidence: 36.9%
+  Score: 1/10 (10.0%)
+  R:R: 1.00:1
+
+PRAKASHSTL.BO:
+  Recommendation: HOLD
+  Confidence: 47.4%
+  Score: 3/10 (30.0%)
+  R:R: 0.49:1
+
+ANDHRSUGAR.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.7%
+  Score: 2/10 (20.0%)
+  R:R: 2.01:1
+
+MKPL.BO:
+  Recommendation: HOLD
+  Confidence: 43.1%
+  Score: 5/10 (50.0%)
+  R:R: 3.12:1
+
+SHREDIGCEM.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 60.8%
+  Score: 4/10 (40.0%)
+  R:R: 1.24:1
+
+MONARCH.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.4%
+  Score: 0/10 (0.0%)
+  R:R: 1.60:1
+
+RADAAN.NS:
+  Recommendation: HOLD
+  Confidence: 41.1%
+  Score: 4/10 (40.0%)
+  R:R: 2.92:1
+
+AVTNPL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.9%
+  Score: 3/10 (30.0%)
+  R:R: 1.02:1
+
+SHRIRAMPPS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.89:1
+
+DCXINDIA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 45.8%
+  Score: 5/10 (50.0%)
+  R:R: 0.55:1
+
+DHANUKA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.7%
+  Score: 6/10 (60.0%)
+  R:R: 3.08:1
+
+CAPILLARY.BO:
+  ERROR: Data/Validation Error: Insufficient data for CAPILLARY.BO
+
+DBREALTY.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.3%
+  Score: 1/10 (10.0%)
+  R:R: 1.80:1
+
+COALINDIA.NS:
+  Recommendation: STRONG BUY
+  Confidence: 75.5%
+  Score: 8/10 (80.0%)
+  R:R: 1.92:1
+  Critical Issues:
+    - BUY recommendation with invalid R:R 1.92:1 < 2.0:1 (no warning in recommendation)
+  Warnings:
+    - BUY recommendation but volume 0.91x < 1.2x - weak confirmation
+
+SANDUMA.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 69.9%
+  Score: 7/10 (70.0%)
+  R:R: 0.50:1
+
+SUPRIYA.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 60.1%
+  Score: 3/10 (30.0%)
+  R:R: 0.80:1
+
+VIVIDHA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.8%
+  Score: 4/10 (40.0%)
+  R:R: 1.28:1
+
+MUKANDLTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 47.2%
+  Score: 1/10 (10.0%)
+  R:R: 1.57:1
+
+DBEIL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.1%
+  Score: 4/10 (40.0%)
+  R:R: 1.35:1
+
+TATACONSUM.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 67.4%
+  Score: 5/10 (50.0%)
+  R:R: 0.78:1
+
+GANDHITUBE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.9%
+  Score: 4/10 (40.0%)
+  R:R: 4.81:1
+
+PREMIERPOL.NS:
+  Recommendation: SELL
+  Confidence: 34.1%
+  Score: 2/10 (20.0%)
+  R:R: 0.71:1
+
+ELECON.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.9%
+  Score: 1/10 (10.0%)
+  R:R: 1.21:1
+
+EIHAHOTELS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.1%
+  Score: 2/10 (20.0%)
+  R:R: 1.24:1
+
+SWSOLAR.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.41:1
+
+KSB.BO:
+  Recommendation: HOLD
+  Confidence: 52.9%
+  Score: 5/10 (50.0%)
+  R:R: 1.97:1
+
+JKIPL.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 69 rows, need at least 200 for medium timeframe
+
+TPLPLASTEH.NS:
+  Recommendation: SELL
+  Confidence: 29.9%
+  Score: 1/10 (10.0%)
+  R:R: 1.30:1
+
+BORANA.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 160 rows, need at least 200 for medium timeframe
+
+GEEKAYWIRE.NS:
+  Recommendation: HOLD
+  Confidence: 46.1%
+  Score: 5/10 (50.0%)
+  R:R: 1.91:1
+
+MCLEODRUSS.BO:
+  Recommendation: HOLD
+  Confidence: 53.0%
+  Score: 5/10 (50.0%)
+  R:R: 0.66:1
+
+UNITEDTEA.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for UNITEDTEA.BO: No data returned
+
+CENTRUM.BO:
+  Recommendation: WEAK SELL
+  Confidence: 37.3%
+  Score: 1/10 (10.0%)
+  R:R: 1.01:1
+
+VISHWARAJ.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.2%
+  Score: 4/10 (40.0%)
+  R:R: 2.98:1
+
+SAIL.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 69.6%
+  Score: 5/10 (50.0%)
+  R:R: 0.64:1
+
+CARBORUNIV.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.0%
+  Score: 1/10 (10.0%)
+  R:R: 2.30:1
+
+TBZ.NS:
+  Recommendation: WEAK SELL
+  Confidence: 38.8%
+  Score: 3/10 (30.0%)
+  R:R: 0.54:1
+
+WHIRLPOOL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.8%
+  Score: 4/10 (40.0%)
+  R:R: 2.15:1
+
+KARMAENG.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.7%
+  Score: 1/10 (10.0%)
+  R:R: 0.78:1
+
+KOTARISUG.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.0%
+  Score: 1/10 (10.0%)
+  R:R: 1.93:1
+
+BALKRISHNA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.6%
+  Score: 3/10 (30.0%)
+  R:R: 1.86:1
+
+PROTEAN.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.6%
+  Score: 2/10 (20.0%)
+  R:R: 3.94:1
+
+CENTRALBK.BO:
+  Recommendation: HOLD
+  Confidence: 43.7%
+  Score: 5/10 (50.0%)
+  R:R: 1.41:1
+
+ESCORTS.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 71.2%
+  Score: 7/10 (70.0%)
+  R:R: 1.66:1
+
+AHLADA.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 62.8%
+  Score: 7/10 (70.0%)
+  R:R: 0.64:1
+
+PTL.BO:
+  Recommendation: STRONG SELL
+  Confidence: 24.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.17:1
+
+HINDWAREAP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.2%
+  Score: 4/10 (40.0%)
+  R:R: 3.29:1
+
+EUREKAFORB.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.7%
+  Score: 2/10 (20.0%)
+  R:R: 1.45:1
+
+YASHO.BO:
+  Recommendation: WEAK SELL
+  Confidence: 36.2%
+  Score: 5/10 (50.0%)
+  R:R: 0.53:1
+  Critical Issues:
+    - SELL recommendation but pattern type is BULLISH with high confidence 80% - contradiction
+
+SGLTL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.66:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+SYSTMTXC.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 24.2%
+  Score: 1/10 (10.0%)
+  R:R: 0.73:1
+
+KRISHNADEF.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 71.6%
+  Score: 6/10 (60.0%)
+  R:R: 0.51:1
+
+FOSECOIND.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 45.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.74:1
+
+ELECTHERM.NS:
+  Recommendation: HOLD
+  Confidence: 46.6%
+  Score: 5/10 (50.0%)
+  R:R: 0.86:1
+
+TITAGARH.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.8%
+  Score: 1/10 (10.0%)
+  R:R: 0.63:1
+
+HINDCON.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for HINDCON.BO: No data returned
+
+ANANTRAJ.BO:
+  Recommendation: WEAK SELL
+  Confidence: 38.6%
+  Score: 1/10 (10.0%)
+  R:R: 0.57:1
+
+MUNJALAU.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.3%
+  Score: 1/10 (10.0%)
+  R:R: 1.59:1
+
+NSIL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.62:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+BBOX.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.7%
+  Score: 1/10 (10.0%)
+  R:R: 0.83:1
+
+VIKRAN.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 88 rows, need at least 200 for medium timeframe
+
+AFFLE.NS:
+  Recommendation: HOLD
+  Confidence: 46.5%
+  Score: 5/10 (50.0%)
+  R:R: 2.64:1
+
+BAJFINANCE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 48.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.65:1
+
+ICEMAKE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.82:1
+
+KSR.NS:
+  ERROR: Data/Validation Error: Insufficient data for KSR.NS
+
+ITI.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.6%
+  Score: 5/10 (50.0%)
+  R:R: 2.91:1
+
+IMPAL.NS:
+  Recommendation: SELL
+  Confidence: 26.1%
+  Score: 1/10 (10.0%)
+  R:R: 1.01:1
+
+AARTISURF.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.3%
+  Score: 3/10 (30.0%)
+  R:R: 2.16:1
+
+ALANKIT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.33:1
+
+SCPL.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 50.5%
+  Score: 4/10 (40.0%)
+  R:R: 0.57:1
+
+ESSARSHPNG.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.9%
+  Score: 0/10 (0.0%)
+  R:R: 0.86:1
+
+SADHNANIQ.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.6%
+  Score: 3/10 (30.0%)
+  R:R: 11.68:1
+
+WEALTH.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.6%
+  Score: 4/10 (40.0%)
+  R:R: 1.14:1
+
+SYMPHONY.BO:
+  Recommendation: HOLD
+  Confidence: 50.5%
+  Score: 3/10 (30.0%)
+  R:R: 0.69:1
+
+UMIYA-MRO.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 190 rows, need at least 200 for medium timeframe
+
+COLPAL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.45:1
+
+GTPL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.8%
+  Score: 2/10 (20.0%)
+  R:R: 2.11:1
+
+ADVANIHOTR.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.9%
+  Score: 1/10 (10.0%)
+  R:R: 0.64:1
+
+CARERATING.NS:
+  Recommendation: WEAK BUY - R:R SLIGHTLY BELOW MINIMUM
+  Confidence: 74.1%
+  Score: 8/10 (80.0%)
+  R:R: 1.89:1
+  Warnings:
+    - BUY recommendation but volume 0.60x < 1.2x - weak confirmation
+
+ABLBL.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 138 rows, need at least 200 for medium timeframe
+
+DLF.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.7%
+  Score: 3/10 (30.0%)
+  R:R: 2.46:1
+
+KOTAKBANK.NS:
+  Recommendation: WEAK BUY
+  Confidence: 61.0%
+  Score: 6/10 (60.0%)
+  R:R: 2.95:1
+  Warnings:
+    - BUY recommendation but ADX 15.9 < 20 - weak trend
+    - BUY recommendation but volume 0.97x < 1.2x - weak confirmation
+
+VOLTAS.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 67.0%
+  Score: 7/10 (70.0%)
+  R:R: 0.98:1
+
+OPTIEMUS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.5%
+  Score: 6/10 (60.0%)
+  R:R: 2.02:1
+
+MUKKA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.5%
+  Score: 2/10 (20.0%)
+  R:R: 2.49:1
+
+AIAENG.NS:
+  Recommendation: HOLD
+  Confidence: 54.2%
+  Score: 4/10 (40.0%)
+  R:R: 0.61:1
+
+FAZE3Q.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.2%
+  Score: 3/10 (30.0%)
+  R:R: 0.55:1
+
+MCLEODRUSS.NS:
+  Recommendation: HOLD
+  Confidence: 50.3%
+  Score: 2/10 (20.0%)
+  R:R: 0.66:1
+
+BHARTIARTL.NS:
+  Recommendation: HOLD
+  Confidence: 53.6%
+  Score: 3/10 (30.0%)
+  R:R: 2.81:1
+
+HIMATSEIDE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.3%
+  Score: 3/10 (30.0%)
+  R:R: 2.12:1
+
+MAXIND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.2%
+  Score: 3/10 (30.0%)
+  R:R: 1.37:1
+
+NAHARSPING.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.5%
+  Score: 2/10 (20.0%)
+  R:R: 2.02:1
+
+KESORAMIND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.1%
+  Score: 2/10 (20.0%)
+  R:R: 0.51:1
+
+BTML.NS:
+  Recommendation: SELL
+  Confidence: 30.9%
+  Score: 1/10 (10.0%)
+  R:R: 0.81:1
+
+BLKASHYAP.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.9%
+  Score: 0/10 (0.0%)
+  R:R: 0.95:1
+
+HARIOMPIPE.BO:
+  Recommendation: WEAK SELL
+  Confidence: 35.6%
+  Score: 2/10 (20.0%)
+  R:R: 0.59:1
+
+BOROLTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.97:1
+
+GODREJPROP.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.0%
+  Score: 1/10 (10.0%)
+  R:R: 1.46:1
+
+SCHAND.NS:
+  Recommendation: SELL
+  Confidence: 33.6%
+  Score: 1/10 (10.0%)
+  R:R: 0.57:1
+
+UBL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.4%
+  Score: 3/10 (30.0%)
+  R:R: 3.17:1
+
+HUDCO.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.0%
+  Score: 1/10 (10.0%)
+  R:R: 0.65:1
+
+GICRE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 25.7%
+  Score: 0/10 (0.0%)
+  R:R: 1.40:1
+
+MOLDTECH.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.8%
+  Score: 2/10 (20.0%)
+  R:R: 1.67:1
+
+TARC.NS:
+  Recommendation: HOLD
+  Confidence: 58.4%
+  Score: 5/10 (50.0%)
+  R:R: 0.58:1
+
+NECLIFE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.0%
+  Score: 3/10 (30.0%)
+  R:R: 1.57:1
+
+PATELENG.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.2%
+  Score: 0/10 (0.0%)
+  R:R: 1.92:1
+
+MAGADSUGAR.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.5%
+  Score: 5/10 (50.0%)
+  R:R: 2.59:1
+
+AURIONPRO.NS:
+  Recommendation: SELL
+  Confidence: 31.3%
+  Score: 0/10 (0.0%)
+  R:R: 1.07:1
+
+PGEL.NS:
+  Recommendation: HOLD
+  Confidence: 45.8%
+  Score: 2/10 (20.0%)
+  R:R: 0.61:1
+
+DIFFNKG.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.5%
+  Score: 2/10 (20.0%)
+  R:R: 1.33:1
+
+MAANALU.BO:
+  Recommendation: HOLD
+  Confidence: 56.0%
+  Score: 6/10 (60.0%)
+  R:R: 2.16:1
+
+TSFINV.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 66 rows, need at least 200 for medium timeframe
+
+NAHARCAP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.61:1
+
+INDIANB.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 62.5%
+  Score: 6/10 (60.0%)
+  R:R: 0.68:1
+
+INTELLECT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.1%
+  Score: 5/10 (50.0%)
+  R:R: 3.84:1
+
+BLUEJET.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.4%
+  Score: 0/10 (0.0%)
+  R:R: 1.77:1
+
+RPSGVENT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.0%
+  Score: 1/10 (10.0%)
+  R:R: 2.69:1
+
+SNOWMAN.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.3%
+  Score: 2/10 (20.0%)
+  R:R: 1.34:1
+
+ROSSTECH.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.66:1
+
+RADIANTCMS.BO:
+  Recommendation: HOLD
+  Confidence: 50.4%
+  Score: 5/10 (50.0%)
+  R:R: 1.29:1
+
+GAIL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.6%
+  Score: 0/10 (0.0%)
+  R:R: 1.57:1
+
+BHAGERIA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.1%
+  Score: 2/10 (20.0%)
+  R:R: 2.45:1
+
+STARPAPER.NS:
+  Recommendation: SELL
+  Confidence: 25.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.12:1
+
+SOLARINDS.NS:
+  Recommendation: HOLD
+  Confidence: 42.7%
+  Score: 3/10 (30.0%)
+  R:R: 0.65:1
+
+ATGL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.6%
+  Score: 2/10 (20.0%)
+  R:R: 2.42:1
+
+RATNAMANI.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.9%
+  Score: 0/10 (0.0%)
+  R:R: 1.52:1
+
+KICL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.3%
+  Score: 1/10 (10.0%)
+  R:R: 2.47:1
+
+DCMSHRIRAM.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.1%
+  Score: 3/10 (30.0%)
+  R:R: 3.10:1
+
+AGARWALEYE.BO:
+  Recommendation: BUY
+  Confidence: 70.1%
+  Score: 7/10 (70.0%)
+  R:R: 2.65:1
+  Warnings:
+    - BUY recommendation but ADX 8.6 < 20 - weak trend
+    - BUY recommendation but volume 0.66x < 1.2x - weak confirmation
+
+EMAMILTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.0%
+  Score: 1/10 (10.0%)
+  R:R: 2.13:1
+
+AGROPHOS.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for AGROPHOS.BO: No data returned
+
+GARFIBRES.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.9%
+  Score: 4/10 (40.0%)
+  R:R: 2.21:1
+
+TCS.BO:
+  Recommendation: HOLD
+  Confidence: 52.8%
+  Score: 4/10 (40.0%)
+  R:R: 1.71:1
+
+KITEX.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.6%
+  Score: 3/10 (30.0%)
+  R:R: 0.98:1
+
+DHANUKA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.4%
+  Score: 6/10 (60.0%)
+  R:R: 3.86:1
+
+BAFNAPH.NS:
+  Recommendation: HOLD
+  Confidence: 50.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.17:1
+
+ITDC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.6%
+  Score: 1/10 (10.0%)
+  R:R: 0.59:1
+
+VLEGOV.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.54:1
+
+PENINLAND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 45.7%
+  Score: 1/10 (10.0%)
+  R:R: 1.69:1
+
+WHEELS.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 53.5%
+  Score: 5/10 (50.0%)
+  R:R: 5.25:1
+
+BLS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.12:1
+
+INDIASHLTR.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.5%
+  Score: 2/10 (20.0%)
+  R:R: 1.47:1
+
+NH.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 67.8%
+  Score: 6/10 (60.0%)
+  R:R: 0.87:1
+
+FCSSOFT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.16:1
+
+NITINSPIN.BO:
+  Recommendation: SELL
+  Confidence: 25.3%
+  Score: 0/10 (0.0%)
+  R:R: 1.16:1
+
+TFL.BO:
+  Recommendation: HOLD
+  Confidence: 46.7%
+  Score: 3/10 (30.0%)
+  R:R: 0.47:1
+
+IVC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.52:1
+
+ITC.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.3%
+  Score: 6/10 (60.0%)
+  R:R: 3.29:1
+
+RADIANTCMS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.1%
+  Score: 0/10 (0.0%)
+  R:R: 0.99:1
+
+VADILALIND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.9%
+  Score: 2/10 (20.0%)
+  R:R: 1.67:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+CARTRADE.NS:
+  Recommendation: HOLD
+  Confidence: 54.4%
+  Score: 2/10 (20.0%)
+  R:R: 1.75:1
+
+NIRAJISPAT.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for NIRAJISPAT.BO: No data returned
+
+AARON.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.9%
+  Score: 0/10 (0.0%)
+  R:R: 1.86:1
+
+UCOBANK.BO:
+  Recommendation: WEAK SELL
+  Confidence: 36.3%
+  Score: 1/10 (10.0%)
+  R:R: 1.01:1
+
+ZEEL.BO:
+  Recommendation: WEAK SELL
+  Confidence: 38.2%
+  Score: 1/10 (10.0%)
+  R:R: 1.18:1
+
+RHIM.NS:
+  Recommendation: WEAK SELL
+  Confidence: 38.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.64:1
+
+HALEOSLABS.BO:
+  Recommendation: HOLD
+  Confidence: 49.3%
+  Score: 2/10 (20.0%)
+  R:R: 0.85:1
+
+NAZARA.BO:
+  Recommendation: BUY - R:R BELOW MINIMUM
+  Confidence: 75.3%
+  Score: 8/10 (80.0%)
+  R:R: 0.48:1
+  Warnings:
+    - BUY recommendation but volume 0.14x < 1.2x - weak confirmation
+
+EMIL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.7%
+  Score: 4/10 (40.0%)
+  R:R: 1.11:1
+
+DENORA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.8%
+  Score: 4/10 (40.0%)
+  R:R: 2.03:1
+
+CAPLIPOINT.BO:
+  Recommendation: WEAK SELL
+  Confidence: 38.5%
+  Score: 4/10 (40.0%)
+  R:R: 0.93:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+KALYANKJIL.NS:
+  Recommendation: HOLD
+  Confidence: 59.7%
+  Score: 5/10 (50.0%)
+  R:R: 0.65:1
+
+BALPHARMA.BO:
+  Recommendation: WEAK SELL
+  Confidence: 36.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.61:1
+
+TARMAT.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.2%
+  Score: 1/10 (10.0%)
+  R:R: 2.02:1
+
+BLUSPRING.BO:
+  ERROR: Data/Validation Error: Insufficient data for BLUSPRING.BO
+
+LINC.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.5%
+  Score: 5/10 (50.0%)
+  R:R: 0.89:1
+
+DAMODARIND.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 24.3%
+  Score: 2/10 (20.0%)
+  R:R: 1.13:1
+
+KRISHANA.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for KRISHANA.BO: No data returned
+
+AVADHSUGAR.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.7%
+  Score: 0/10 (0.0%)
+  R:R: 1.85:1
+
+KELLTONTEC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 23.4%
+  Score: 1/10 (10.0%)
+  R:R: 1.93:1
+
+RAMANEWS.NS:
+  Recommendation: HOLD
+  Confidence: 54.3%
+  Score: 4/10 (40.0%)
+  R:R: 0.98:1
+
+MEGASTAR.BO:
+  Recommendation: STRONG SELL
+  Confidence: 17.7%
+  Score: 1/10 (10.0%)
+  R:R: 0.88:1
+
+INDNIPPON.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.8%
+  Score: 1/10 (10.0%)
+  R:R: 0.83:1
+
+OSWALGREEN.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.4%
+  Score: 2/10 (20.0%)
+  R:R: 1.72:1
+
+BANCOINDIA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 46.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.89:1
+
+LATTEYS.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for LATTEYS.BO: No data returned
+
+3IINFOLTD.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.1%
+  Score: 1/10 (10.0%)
+  R:R: 1.86:1
+
+BELLACASA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.41:1
+
+APCOTEXIND.BO:
+  Recommendation: STRONG SELL
+  Confidence: 24.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.03:1
+
+SCHNEIDER.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.4%
+  Score: 5/10 (50.0%)
+  R:R: 1.44:1
+
+NAM-INDIA.BO:
+  Recommendation: WEAK BUY
+  Confidence: 65.7%
+  Score: 8/10 (80.0%)
+  R:R: 2.72:1
+  Warnings:
+    - BUY recommendation but ADX 17.7 < 20 - weak trend
+
+CORDSCABLE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 26.0%
+  Score: 2/10 (20.0%)
+  R:R: 2.17:1
+
+REGAAL.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 97 rows, need at least 200 for medium timeframe
+
+ORCHPHARMA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.3%
+  Score: 0/10 (0.0%)
+  R:R: 1.99:1
+
+SHAILY.NS:
+  Recommendation: HOLD
+  Confidence: 51.9%
+  Score: 1/10 (10.0%)
+  R:R: 1.51:1
+
+TEXRAIL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.4%
+  Score: 0/10 (0.0%)
+  R:R: 0.72:1
+
+SABEVENTS.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 63.8%
+  Score: 8/10 (80.0%)
+  R:R: 0.74:1
+
+OFSS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.7%
+  Score: 2/10 (20.0%)
+  R:R: 1.53:1
+
+GLENMARK.NS:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 71.0%
+  Score: 7/10 (70.0%)
+  R:R: 0.77:1
+
+AMANTA.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 85 rows, need at least 200 for medium timeframe
+
+TOKYOPLAST.BO:
+  Recommendation: HOLD
+  Confidence: 42.5%
+  Score: 4/10 (40.0%)
+  R:R: 1.09:1
+
+DPWIRES.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.2%
+  Score: 4/10 (40.0%)
+  R:R: 4.45:1
+
+GULPOLY.NS:
+  Recommendation: HOLD
+  Confidence: 43.2%
+  Score: 2/10 (20.0%)
+  R:R: 0.59:1
+
+SWELECTES.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.6%
+  Score: 3/10 (30.0%)
+  R:R: 2.84:1
+
+BOSCH-HCIL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.9%
+  Score: 2/10 (20.0%)
+  R:R: 0.77:1
+
+ROML.NS:
+  Recommendation: SELL
+  Confidence: 28.5%
+  Score: 1/10 (10.0%)
+  R:R: 0.73:1
+
+MASTEK.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.3%
+  Score: 1/10 (10.0%)
+  R:R: 1.37:1
+
+ATULAUTO.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.7%
+  Score: 1/10 (10.0%)
+  R:R: 0.91:1
+
+CENTRUM.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 48.5%
+  Score: 5/10 (50.0%)
+  R:R: 1.66:1
+
+SALASAR.BO:
+  Recommendation: SELL
+  Confidence: 33.8%
+  Score: 1/10 (10.0%)
+  R:R: 1.35:1
+
+ESSENTIA.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.7%
+  Score: 1/10 (10.0%)
+  R:R: 1.75:1
+  Warnings:
+    - Pattern confidence 55% is moderate - verify manually
+
+PRECOT.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for PRECOT.BO: No data returned
+
+MANAKSTEEL.BO:
+  Recommendation: HOLD
+  Confidence: 51.1%
+  Score: 3/10 (30.0%)
+  R:R: 0.52:1
+
+RECLTD.NS:
+  Recommendation: HOLD
+  Confidence: 58.8%
+  Score: 6/10 (60.0%)
+  R:R: 0.55:1
+
+IRCON.BO:
+  Recommendation: WEAK SELL
+  Confidence: 35.8%
+  Score: 1/10 (10.0%)
+  R:R: 0.57:1
+
+SOUTHBANK.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 71.1%
+  Score: 7/10 (70.0%)
+  R:R: 0.90:1
+
+KIRLPNU.BO:
+  Recommendation: WEAK SELL
+  Confidence: 39.1%
+  Score: 4/10 (40.0%)
+  R:R: 2.90:1
+  Warnings:
+    - SELL recommendation but pattern type is BULLISH (confidence 65%) - verify manually
+
+TIPSMUSIC.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.3%
+  Score: 3/10 (30.0%)
+  R:R: 0.85:1
+
+MASTERTR.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.4%
+  Score: 4/10 (40.0%)
+  R:R: 6.95:1
+
+ADANIPORTS.NS:
+  Recommendation: HOLD
+  Confidence: 51.5%
+  Score: 4/10 (40.0%)
+  R:R: 2.45:1
+
+IKS.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 66.5%
+  Score: 6/10 (60.0%)
+  R:R: 1.24:1
+
+MONEYBOXX.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.8%
+  Score: 4/10 (40.0%)
+  R:R: 1.26:1
+
+SIGNATURE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.7%
+  Score: 3/10 (30.0%)
+  R:R: 0.69:1
+
+PARADEEP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 40.5%
+  Score: 3/10 (30.0%)
+  R:R: 5.80:1
+
+TRU.BO:
+  Recommendation: HOLD
+  Confidence: 41.2%
+  Score: 4/10 (40.0%)
+  R:R: 1.55:1
+
+RECLTD.BO:
+  Recommendation: HOLD
+  Confidence: 58.8%
+  Score: 6/10 (60.0%)
+  R:R: 0.54:1
+
+COASTCORP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 47.0%
+  Score: 2/10 (20.0%)
+  R:R: 0.59:1
+
+TVSSRICHAK.NS:
+  Recommendation: HOLD
+  Confidence: 48.4%
+  Score: 3/10 (30.0%)
+  R:R: 0.58:1
+
+JSL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 49.5%
+  Score: 3/10 (30.0%)
+  R:R: 1.71:1
+
+PRIMO.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 24.7%
+  Score: 0/10 (0.0%)
+  R:R: 1.21:1
+
+KRSNAA.NS:
+  Recommendation: SELL
+  Confidence: 27.6%
+  Score: 1/10 (10.0%)
+  R:R: 0.70:1
+
+REDINGTON.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 64.6%
+  Score: 6/10 (60.0%)
+  R:R: 1.40:1
+
+VIVIMEDLAB.BO:
+  Recommendation: HOLD
+  Confidence: 53.7%
+  Score: 5/10 (50.0%)
+  R:R: 0.44:1
+
+CGPOWER.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 32.2%
+  Score: 4/10 (40.0%)
+  R:R: 2.82:1
+
+ORIENTBELL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.81:1
+
+SWANDEF.BO:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 82 rows, need at least 200 for medium timeframe
+
+MSTCLTD.BO:
+  Recommendation: SELL
+  Confidence: 31.0%
+  Score: 1/10 (10.0%)
+  R:R: 0.65:1
+
+PARACABLES.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 31.4%
+  Score: 1/10 (10.0%)
+  R:R: 0.84:1
+
+NAGREEKEXP.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 43.9%
+  Score: 3/10 (30.0%)
+  R:R: 1.01:1
+
+SAKAR.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for SAKAR.BO: No data returned
+
+PHOENIXLTD.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 73.2%
+  Score: 8/10 (80.0%)
+  R:R: 0.55:1
+
+VINCOFE.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 66.1%
+  Score: 5/10 (50.0%)
+  R:R: 0.59:1
+
+TRF.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.1%
+  Score: 0/10 (0.0%)
+  R:R: 1.79:1
+
+AEQUS.BO:
+  ERROR: Data/Validation Error: Insufficient data for AEQUS.BO
+
+UMIYA-MRO.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 27.8%
+  Score: 1/10 (10.0%)
+  R:R: 0.85:1
+
+SHANTIGEAR.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.0%
+  Score: 3/10 (30.0%)
+  R:R: 2.12:1
+
+TCPLPACK.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.7%
+  Score: 1/10 (10.0%)
+  R:R: 1.07:1
+
+ACE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.0%
+  Score: 0/10 (0.0%)
+  R:R: 1.90:1
+
+OFSS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 41.1%
+  Score: 2/10 (20.0%)
+  R:R: 1.62:1
+
+FISCHER.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 127 rows, need at least 200 for medium timeframe
+
+ANMOL.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.1%
+  Score: 1/10 (10.0%)
+  R:R: 0.54:1
+
+SVPGLOB.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.5%
+  Score: 4/10 (40.0%)
+  R:R: 3.32:1
+
+AAREYDRUGS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 38.3%
+  Score: 2/10 (20.0%)
+  R:R: 0.53:1
+
+DTIL.BO:
+  Recommendation: WEAK SELL
+  Confidence: 39.2%
+  Score: 2/10 (20.0%)
+  R:R: 0.64:1
+
+CLEDUCATE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 26.8%
+  Score: 1/10 (10.0%)
+  R:R: 2.37:1
+
+ZYDUSLIFE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 48.1%
+  Score: 6/10 (60.0%)
+  R:R: 3.33:1
+
+GANESHHOU.NS:
+  ERROR: Data/Validation Error: Indicator calculation failed: Insufficient data: 84 rows, need at least 200 for medium timeframe
+
+METROBRAND.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 35.3%
+  Score: 3/10 (30.0%)
+  R:R: 3.52:1
+
+SUNDRMFAST.NS:
+  Recommendation: HOLD
+  Confidence: 46.1%
+  Score: 5/10 (50.0%)
+  R:R: 3.44:1
+
+INVENTURE.BO:
+  Recommendation: SELL
+  Confidence: 34.4%
+  Score: 2/10 (20.0%)
+  R:R: 1.21:1
+
+MITTAL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 44.7%
+  Score: 5/10 (50.0%)
+  R:R: 1.53:1
+
+SHALBY.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 36.4%
+  Score: 2/10 (20.0%)
+  R:R: 1.73:1
+
+DOLLAR.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.6%
+  Score: 3/10 (30.0%)
+  R:R: 7.45:1
+
+MANBA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.4%
+  Score: 1/10 (10.0%)
+  R:R: 1.92:1
+
+LGHL.BO:
+  ERROR: Data/Validation Error: Data fetch failed: Failed to fetch data for LGHL.BO: No data returned
+
+DHAMPURSUG.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 28.2%
+  Score: 0/10 (0.0%)
+  R:R: 1.64:1
+
+RELTD.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 30.5%
+  Score: 0/10 (0.0%)
+  R:R: 1.12:1
+
+MANORAMA.BO:
+  Recommendation: HOLD
+  Confidence: 41.1%
+  Score: 4/10 (40.0%)
+  R:R: 5.04:1
+
+DIGISPICE.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 39.5%
+  Score: 4/10 (40.0%)
+  R:R: 0.54:1
+
+SANGHIIND.NS:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 62.9%
+  Score: 4/10 (40.0%)
+  R:R: 0.82:1
+
+MEDPLUS.BO:
+  Recommendation: HOLD - RISK/REWARD BELOW MINIMUM
+  Confidence: 69.0%
+  Score: 7/10 (70.0%)
+  R:R: 0.97:1
+
+JISLDVREQS.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.8%
+  Score: 3/10 (30.0%)
+  R:R: 1.38:1
+
+ARSHIYA.NS:
+  Recommendation: WEAK SELL
+  Confidence: 35.5%
+  Score: 1/10 (10.0%)
+  R:R: 1.26:1
+
+INDRAMEDCO.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.3%
+  Score: 4/10 (40.0%)
+  R:R: 2.02:1
+
+SANGHIIND.BO:
+  Recommendation: WEAK BUY
+  Confidence: 64.6%
+  Score: 8/10 (80.0%)
+  R:R: 2.57:1
+
+ADL.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 34.3%
+  Score: 3/10 (30.0%)
+  R:R: 1.70:1
+
+GAYAHWS.BO:
+  Recommendation: HOLD
+  Confidence: 54.0%
+  Score: 4/10 (40.0%)
+  R:R: 1.52:1
+
+BAJAJHCARE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 29.3%
+  Score: 0/10 (0.0%)
+  R:R: 1.97:1
+
+JKIL.BO:
+  Recommendation: SELL
+  Confidence: 28.5%
+  Score: 2/10 (20.0%)
+  R:R: 0.67:1
+
+MBLINFRA.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 42.5%
+  Score: 4/10 (40.0%)
+  R:R: 0.77:1
+
+ZAGGLE.BO:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 26.0%
+  Score: 3/10 (30.0%)
+  R:R: 1.75:1
+
+SIS.NS:
+  Recommendation: AVOID - SELL BLOCKED
+  Confidence: 37.8%
+  Score: 4/10 (40.0%)
+  R:R: 1.89:1
+
+SHYAMTEL.BO:
+  Recommendation: AVOID - BUY BLOCKED
+  Confidence: 54.2%
+  Score: 5/10 (50.0%)
+  R:R: 0.50:1

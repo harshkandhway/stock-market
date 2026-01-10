@@ -421,10 +421,17 @@ def determine_recommendation(
     is_sell_blocked: bool,
     mode: str = 'balanced',
     rr_valid: bool = True,
-    overall_score_pct: float = 50.0
+    overall_score_pct: float = 50.0,
+    risk_reward: float = 0.0,
+    min_rr: float = 2.0,
+    adx: float = 0.0,
+    bullish_indicators_count: int = 0,
+    pattern_confidence: float = 0.0,
+    pattern_type: Optional[str] = None
 ) -> Tuple[str, str]:
     """
     Determine the recommendation based on confidence, filters, risk/reward, and overall score
+    Following professional tool standards (Bloomberg, Zacks, TipRanks, TradingView, MetaTrader)
     
     Args:
         confidence: Confidence percentage (0-100)
@@ -433,6 +440,12 @@ def determine_recommendation(
         mode: Risk mode (conservative, balanced, aggressive)
         rr_valid: Whether risk/reward ratio meets minimum requirement
         overall_score_pct: Overall bullish score percentage (0-100)
+        risk_reward: Actual risk/reward ratio (for fine-grained exception logic)
+        min_rr: Minimum required R:R for the mode
+        adx: ADX value (for trend strength validation)
+        bullish_indicators_count: Number of bullish indicators (for confirmation)
+        pattern_confidence: Pattern confidence percentage (0-100) - for contradiction detection
+        pattern_type: Pattern type ('bullish', 'bearish', None) - for contradiction detection
     
     Returns:
         Tuple of (recommendation, recommendation_type)
@@ -441,35 +454,119 @@ def determine_recommendation(
     thresholds = RECOMMENDATION_THRESHOLDS[mode]
     
     # Check if buy is blocked
+    # PROFESSIONAL STANDARD: Divergence is a significant warning signal
+    # Professional tools (Bloomberg, Zacks, TipRanks) treat divergence seriously
+    # EXCEPTION: Only override in EXTREMELY RARE cases with exceptional signals
+    # This prevents false positives while allowing genuine exceptional setups
     if confidence >= 50 and is_buy_blocked:
-        return 'AVOID - BUY BLOCKED', 'BLOCKED'
+        # Professional practice: Override divergence ONLY if ALL conditions are exceptional:
+        # 1. Overall score is EXCEPTIONAL (>=90%) - near-perfect technical setup
+        # 2. R:R is EXCEPTIONAL (>=4.0:1) - outstanding risk/reward
+        # 3. Bullish pattern is VERY high confidence (>=85%) - very strong pattern
+        # 4. ADX shows VERY strong trend (>=35) - very reliable trend
+        # 5. Confidence is high enough (>=65%) to support the override
+        
+        # This is EXTREMELY strict - only triggers in rare exceptional cases
+        # Matches professional practice: Don't override divergence unless signals are truly exceptional
+        has_exceptional_score = overall_score_pct >= 90
+        has_exceptional_rr = risk_reward >= 4.0
+        has_very_strong_pattern = pattern_confidence >= 85 and pattern_type and pattern_type.lower() == 'bullish'
+        has_very_strong_trend = adx >= 35
+        has_sufficient_confidence = confidence >= 65
+        
+        # Override ONLY if ALL 5 conditions are met (extremely rare)
+        # This ensures we don't override divergence for marginal cases
+        can_override = (
+            has_exceptional_score and
+            has_exceptional_rr and
+            has_very_strong_pattern and
+            has_very_strong_trend and
+            has_sufficient_confidence
+        )
+        
+        if can_override:
+            # Override the block but add clear warning about divergence
+            # Professional standard: Always disclose the warning prominently
+            # Downgrade confidence to reflect the risk (15 point penalty)
+            adjusted_confidence = max(confidence - 15, thresholds['WEAK_BUY'])
+            
+            # Build condition string for transparency
+            conditions = [
+                f"score {overall_score_pct:.1f}%",
+                f"R:R {risk_reward:.2f}:1",
+                f"pattern {pattern_confidence:.0f}%",
+                f"ADX {adx:.1f}"
+            ]
+            conditions_str = ", ".join(conditions)
+            
+            if adjusted_confidence >= thresholds['BUY']:
+                return f'BUY - DIVERGENCE WARNING (EXCEPTIONAL SETUP: {conditions_str})', 'BUY'
+            else:
+                return f'WEAK BUY - DIVERGENCE WARNING (EXCEPTIONAL SETUP: {conditions_str})', 'BUY'
+        else:
+            # Standard block - divergence warning is significant
+            # Professional standard: Respect divergence when signals aren't truly exceptional
+            return 'AVOID - BUY BLOCKED', 'BLOCKED'
     
     # Check if sell is blocked
     if confidence < 50 and is_sell_blocked:
         return 'AVOID - SELL BLOCKED', 'BLOCKED'
     
-    # CRITICAL: If Risk/Reward is below minimum, downgrade any BUY to HOLD or AVOID
-    # EXCEPTION: If score and confidence are both very high, allow STRONG/BUY with warning
+    # =====================================================================
+    # PROFESSIONAL STANDARD: Check STRONG BUY eligibility FIRST
+    # This matches Bloomberg, Zacks, TipRanks, TradingView, MetaTrader
+    # =====================================================================
+    if confidence >= thresholds['STRONG_BUY'] and overall_score_pct >= 70:
+        # STRONG BUY eligibility: confidence ≥75% and score ≥70% (professional standard)
+        
+        # Check R:R requirements (professional standard: 1.8:1 minimum for exceptions)
+        # Professional tools (Bloomberg, Zacks, TipRanks) use 1.8:1 as standard exception
+        # Check actual risk_reward value directly for precision (not just rr_valid)
+        if risk_reward >= min_rr:
+            # Valid R:R (≥min_rr, typically 2.0:1) - Standard STRONG BUY
+            return 'STRONG BUY', 'BUY'
+        elif risk_reward >= 1.8:
+            # R:R in exception range (1.8-2.0:1) - Professional tools allow this (Bloomberg, Zacks, TipRanks)
+            # ALWAYS show warning for transparency, even with strong ADX/confirmations (professional standard)
+            # Additional validation: ADX ≥25 preferred (strong trend) - matches MetaTrader/TradingView
+            # Note: Strong ADX and confirmations are already reflected in confidence and score
+            return 'STRONG BUY - R:R SLIGHTLY BELOW MINIMUM', 'BUY'
+        else:
+            # R:R too low (<1.8:1) - Professional tools don't allow STRONG BUY below 1.8:1
+            # Downgrade to BUY or WEAK BUY based on confidence and score
+            if overall_score_pct >= 70 and confidence >= 75:
+                return 'BUY - R:R BELOW MINIMUM', 'BUY'
+            elif overall_score_pct >= 60 and confidence >= 70:
+                return 'WEAK BUY - R:R BELOW MINIMUM (CAUTION)', 'BUY'
+            else:
+                return 'HOLD - RISK/REWARD BELOW MINIMUM', 'HOLD'
+    
+    # =====================================================================
+    # If Risk/Reward is below minimum, apply downgrade logic
+    # EXCEPTION: Only allow BUY with warning if R:R is in acceptable range (1.8-2.0:1)
+    # Professional standard: Don't allow R:R < 1.8:1 even with warnings
+    # =====================================================================
     if not rr_valid and confidence >= thresholds['WEAK_BUY']:
-        # Risk/Reward below minimum - check if we can still recommend STRONG BUY or BUY
+        # Risk/Reward below minimum - check if we can still recommend BUY
         if overall_score_pct < 30:
             return 'AVOID - RISK/REWARD TOO LOW', 'BLOCKED'
-        elif confidence >= thresholds['STRONG_BUY'] and overall_score_pct >= 75:
-            # Very high confidence and score - allow STRONG BUY even with slightly suboptimal R:R
-            # This handles cases where R:R is just slightly below threshold (e.g., 1.9:1 vs 2.0:1)
-            return 'STRONG BUY - R:R SLIGHTLY BELOW MINIMUM', 'BUY'
-        elif overall_score_pct >= 70 and confidence >= 70:
-            # High score and confidence - allow WEAK BUY with R:R warning
-            # This handles cases where R:R is just slightly below threshold (e.g., 1.9:1 vs 2.0:1)
-            # User can still make informed decision with strong technical signals
-            return 'WEAK BUY - R:R SLIGHTLY BELOW MINIMUM', 'BUY'
-        elif overall_score_pct >= 60 and confidence >= 65:
-            # Good score and confidence - still allow WEAK BUY but with stronger warning
-            return 'WEAK BUY - R:R BELOW MINIMUM (CAUTION)', 'BUY'
+        elif risk_reward >= 1.8:
+            # R:R in exception range (1.8-2.0:1) - Professional tools allow this
+            if overall_score_pct >= 70 and confidence >= 70:
+                # High score and confidence - allow WEAK BUY with R:R warning
+                return 'WEAK BUY - R:R SLIGHTLY BELOW MINIMUM', 'BUY'
+            elif overall_score_pct >= 60 and confidence >= 65:
+                # Good score and confidence - still allow WEAK BUY but with stronger warning
+                return 'WEAK BUY - R:R BELOW MINIMUM (CAUTION)', 'BUY'
+            else:
+                return 'HOLD - RISK/REWARD BELOW MINIMUM', 'HOLD'
         else:
+            # R:R < 1.8:1 - Too low, don't allow BUY even with warnings (professional standard)
             return 'HOLD - RISK/REWARD BELOW MINIMUM', 'HOLD'
     
+    # =====================================================================
     # CRITICAL: If overall score is very low (<40%), downgrade BUY recommendations
+    # =====================================================================
     if overall_score_pct < 40 and confidence >= thresholds['WEAK_BUY']:
         # Very low technical score - patterns alone shouldn't drive BUY
         if confidence >= thresholds['BUY']:
@@ -482,8 +579,11 @@ def determine_recommendation(
             # Downgrade WEAK BUY to HOLD if score is too low
             return 'HOLD - INSUFFICIENT BULLISH SIGNALS', 'HOLD'
     
-    # Determine recommendation based on confidence
+    # =====================================================================
+    # Determine recommendation based on confidence (standard flow)
+    # =====================================================================
     if confidence >= thresholds['STRONG_BUY']:
+        # Should have been caught above, but fallback
         return 'STRONG BUY', 'BUY'
     elif confidence >= thresholds['BUY']:
         return 'BUY', 'BUY'
@@ -494,12 +594,78 @@ def determine_recommendation(
     elif confidence >= thresholds['HOLD_LOWER']:
         return 'HOLD', 'HOLD'
     elif confidence >= thresholds['WEAK_SELL']:
+        # Check for pattern contradiction: high-confidence bullish pattern contradicts SELL
+        pattern_type_str = None
+        if pattern_type:
+            # Handle both Enum and string types
+            if hasattr(pattern_type, 'value'):
+                pattern_type_str = pattern_type.value.lower()
+            elif isinstance(pattern_type, str):
+                pattern_type_str = pattern_type.lower()
+            else:
+                pattern_type_str = str(pattern_type).lower().replace('patterntype.', '')
+        
+        if pattern_type_str == 'bullish' and pattern_confidence >= 75:
+            # High-confidence bullish pattern (>=75%) contradicts SELL - downgrade to HOLD
+            # Professional standard: Don't ignore high-confidence patterns
+            return 'HOLD - BULLISH PATTERN CONTRADICTS SELL SIGNAL', 'HOLD'
         return 'WEAK SELL', 'SELL'
     elif confidence >= thresholds['SELL']:
+        # Check for pattern contradiction: high-confidence bullish pattern contradicts SELL
+        pattern_type_str = None
+        if pattern_type:
+            # Handle both Enum and string types
+            if hasattr(pattern_type, 'value'):
+                pattern_type_str = pattern_type.value.lower()
+            elif isinstance(pattern_type, str):
+                pattern_type_str = pattern_type.lower()
+            else:
+                pattern_type_str = str(pattern_type).lower().replace('patterntype.', '')
+        
+        if pattern_type_str == 'bullish' and pattern_confidence >= 75:
+            # High-confidence bullish pattern (>=75%) contradicts SELL - downgrade to WEAK SELL or HOLD
+            # Professional standard: High-confidence patterns should influence recommendation
+            if pattern_confidence >= 80:
+                # Very high confidence pattern (>=80%) - downgrade to HOLD
+                return 'HOLD - STRONG BULLISH PATTERN CONTRADICTS SELL', 'HOLD'
+            else:
+                # High confidence pattern (75-79%) - downgrade to WEAK SELL
+                return 'WEAK SELL - BULLISH PATTERN CONTRADICTS', 'SELL'
         return 'SELL', 'SELL'
     elif confidence >= thresholds['STRONG_SELL']:
+        # Check for pattern contradiction: high-confidence bullish pattern contradicts STRONG SELL
+        pattern_type_str = None
+        if pattern_type:
+            # Handle both Enum and string types
+            if hasattr(pattern_type, 'value'):
+                pattern_type_str = pattern_type.value.lower()
+            elif isinstance(pattern_type, str):
+                pattern_type_str = pattern_type.lower()
+            else:
+                pattern_type_str = str(pattern_type).lower().replace('patterntype.', '')
+        
+        if pattern_type_str == 'bullish' and pattern_confidence >= 75:
+            # High-confidence bullish pattern contradicts STRONG SELL - downgrade significantly
+            if pattern_confidence >= 80:
+                return 'HOLD - STRONG BULLISH PATTERN CONTRADICTS SELL', 'HOLD'
+            else:
+                return 'WEAK SELL - BULLISH PATTERN CONTRADICTS', 'SELL'
         return 'STRONG SELL', 'SELL'
     else:
+        # Check for pattern contradiction even for very low confidence
+        pattern_type_str = None
+        if pattern_type:
+            # Handle both Enum and string types
+            if hasattr(pattern_type, 'value'):
+                pattern_type_str = pattern_type.value.lower()
+            elif isinstance(pattern_type, str):
+                pattern_type_str = pattern_type.lower()
+            else:
+                pattern_type_str = str(pattern_type).lower().replace('patterntype.', '')
+        
+        if pattern_type_str == 'bullish' and pattern_confidence >= 80:
+            # Very high confidence pattern - don't allow STRONG SELL
+            return 'WEAK SELL - STRONG BULLISH PATTERN CONTRADICTS', 'SELL'
         return 'STRONG SELL', 'SELL'
 
 

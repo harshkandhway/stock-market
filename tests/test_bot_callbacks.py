@@ -87,14 +87,13 @@ class TestCallbackHandlers:
              patch('src.bot.handlers.callbacks.get_db_context') as mock_db, \
              patch('src.bot.handlers.callbacks.get_or_create_user'), \
              patch('src.bot.handlers.callbacks.get_user_settings') as mock_settings, \
-             patch('src.bot.handlers.callbacks.format_analysis_beginner') as mock_format:
+             patch('src.core.formatters.format_analysis_comprehensive') as mock_format:
             
             # Mock database context
             mock_db.return_value.__enter__.return_value = Mock()
             
             # Mock settings
             mock_settings_obj = Mock()
-            mock_settings_obj.beginner_mode = True
             mock_settings_obj.investment_horizon = '3months'
             mock_settings.return_value = mock_settings_obj
             

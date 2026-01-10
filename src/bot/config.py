@@ -341,8 +341,11 @@ def validate_config() -> bool:
     if not TELEGRAM_BOT_TOKEN:
         errors.append("TELEGRAM_BOT_TOKEN is not set")
     
-    if not TELEGRAM_ADMIN_IDS:
-        errors.append("TELEGRAM_ADMIN_IDS is not set")
+    # TELEGRAM_ADMIN_IDS is optional - if empty, bot is public (allows everyone)
+    # Only validate if it's explicitly set but invalid
+    if TELEGRAM_ADMIN_IDS_STR and not TELEGRAM_ADMIN_IDS:
+        # Admin IDs were provided but couldn't be parsed
+        errors.append(f"TELEGRAM_ADMIN_IDS contains invalid values: '{TELEGRAM_ADMIN_IDS_STR}'")
     
     if errors:
         print("Configuration errors:")
@@ -355,13 +358,18 @@ def validate_config() -> bool:
 
 def get_config_summary() -> str:
     """Get a summary of current configuration"""
+    if TELEGRAM_ADMIN_IDS:
+        access_info = f"Private ({len(TELEGRAM_ADMIN_IDS)} admin(s))"
+    else:
+        access_info = "Public (all users allowed)"
+    
     return f"""
 Bot Configuration:
 ==================
 Bot Name: {BOT_NAME}
 Version: {BOT_VERSION}
 Environment: {ENVIRONMENT}
-Admin IDs: {len(TELEGRAM_ADMIN_IDS)} configured
+Access Mode: {access_info}
 Database: {DATABASE_URL}
 Rate Limiting: {'Enabled' if ENABLE_RATE_LIMITING else 'Disabled'}
 Alert Check Interval: {ALERT_CHECK_INTERVAL}s

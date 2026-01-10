@@ -25,7 +25,8 @@ from ..utils.formatters import (
     format_alert,
     format_success,
     format_error,
-    format_warning
+    format_warning,
+    chunk_message
 )
 from ..utils.keyboards import (
     create_alert_type_keyboard,
@@ -74,7 +75,7 @@ async def alerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         message = f"🔔 *Your Active Alerts* ({len(alerts)})\n\n"
         
         for i, alert in enumerate(alerts, 1):
-            message += format_alert(alert, index=i) + "\n\n"
+            message += f"*{i}.* {format_alert(alert)}\n\n"
         
         message += (
             "━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -87,11 +88,22 @@ async def alerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         # Create keyboard with delete buttons
         keyboard = create_alert_list_keyboard(alerts)
         
+        # Chunk message if too long (Telegram limit is 4096 characters)
+        chunks = chunk_message(message)
+        
+        # Send first chunk with keyboard, rest without
         await update.message.reply_text(
-            message,
+            chunks[0],
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
+        
+        # Send remaining chunks if any
+        for chunk in chunks[1:]:
+            await update.message.reply_text(
+                chunk,
+                parse_mode='Markdown'
+            )
         
         logger.info(f"User {user_id} viewed {len(alerts)} active alerts")
 
@@ -267,13 +279,17 @@ async def handle_price_alert_input(update: Update, context: ContextTypes.DEFAULT
         with get_db_context() as db:
             user = get_or_create_user(db, user_id, username)
             
+            # Map operator to condition_type
+            condition_type = 'above' if operator == '>' else 'below'
+            
             alert = create_alert(
                 db=db,
-                user_id=user_id,
+                telegram_id=user_id,
                 symbol=symbol,
                 alert_type='price',
-                condition={'operator': operator, 'value': target_price},
-                message=f"{symbol} {direction} ₹{target_price:.2f}"
+                condition_type=condition_type,
+                threshold_value=target_price,
+                condition_data={'operator': operator, 'value': target_price}
             )
             
             if alert:

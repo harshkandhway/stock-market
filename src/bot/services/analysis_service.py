@@ -295,11 +295,41 @@ def analyze_stock(
     total_bullish = trend_score + momentum_score + volume_score + pattern_score + risk_score
     overall_score_pct = (total_bullish / 10) * 100
     
-    # Determine recommendation (now with risk/reward and overall score validation)
+    # Count bullish indicators for professional validation (multiple confirmations)
+    all_signals = signal_data.get('signals', {})
+    bullish_indicators_count = sum(1 for _, direction in all_signals.values() if direction == 'bullish')
+    
+    # Get ADX for trend strength validation (professional standard)
+    adx = indicators.get('adx', 0.0)
+    
+    # Get pattern information for contradiction detection
+    pattern_confidence = 0.0
+    pattern_type = None
+    if strongest_pattern:
+        # Pattern confidence is already 0-100 (not 0-1), so no need to multiply
+        pattern_confidence = getattr(strongest_pattern, 'confidence', 0.0)
+        if hasattr(strongest_pattern, 'type'):
+            pattern_type = getattr(strongest_pattern, 'type', None)
+            # Extract value if it's an Enum
+            if hasattr(pattern_type, 'value'):
+                pattern_type = pattern_type.value
+        elif hasattr(strongest_pattern, 'p_type'):
+            pattern_type = getattr(strongest_pattern, 'p_type', None)
+    
+    # Get minimum R:R for the mode
+    min_rr = RISK_MODES[mode]['min_risk_reward']
+    
+    # Determine recommendation (following professional tool standards)
     recommendation, recommendation_type = determine_recommendation(
         confidence, is_buy_blocked, is_sell_blocked, mode,
         rr_valid=rr_valid,
-        overall_score_pct=overall_score_pct
+        overall_score_pct=overall_score_pct,
+        risk_reward=risk_reward,
+        min_rr=min_rr,
+        adx=adx,
+        bullish_indicators_count=bullish_indicators_count,
+        pattern_confidence=pattern_confidence,
+        pattern_type=pattern_type
     )
     
     # Generate reasoning
@@ -365,6 +395,7 @@ def analyze_stock(
         'risk_reward': risk_reward,
         'rr_valid': rr_valid,
         'rr_explanation': rr_explanation,
+        'overall_score_pct': overall_score_pct,
         'reasoning': reasoning,
         'actions': actions,
         'trailing_data': trailing_data,

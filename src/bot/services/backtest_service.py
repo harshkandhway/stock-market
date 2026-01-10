@@ -16,6 +16,7 @@ from src.core.signals import (
     check_hard_filters, calculate_all_signals, determine_recommendation
 )
 from src.core.risk_management import calculate_targets, calculate_stoploss
+from src.core.config import RISK_MODES
 
 logger = logging.getLogger(__name__)
 
@@ -97,12 +98,41 @@ def backtest_strategy(
             # Note: In backtest, we use default values - actual R:R validation happens in analysis
             rr_valid = True  # Default for backtest
             overall_score_pct = 50.0  # Default for backtest
+            risk_reward = 2.0  # Default for backtest (assume valid R:R)
             
             # Determine recommendation
+            # Get minimum R:R for the mode (default to balanced if not specified)
+            test_mode = mode if mode else 'balanced'
+            min_rr = RISK_MODES[test_mode]['min_risk_reward']
+            
+            # Count bullish indicators
+            all_signals = signal_data.get('signals', {})
+            bullish_indicators_count = sum(1 for _, direction in all_signals.values() if direction == 'bullish')
+            
+            # Get ADX
+            adx = indicators.get('adx', 0.0)
+            
+            # Get pattern information for contradiction detection
+            strongest_pattern = indicators.get('strongest_pattern')
+            pattern_confidence = 0.0
+            pattern_type = None
+            if strongest_pattern:
+                pattern_confidence = getattr(strongest_pattern, 'confidence', 0.0) * 100  # Convert to percentage
+                if hasattr(strongest_pattern, 'type'):
+                    pattern_type = getattr(strongest_pattern, 'type', None)
+                elif hasattr(strongest_pattern, 'p_type'):
+                    pattern_type = getattr(strongest_pattern, 'p_type', None)
+            
             recommendation, recommendation_type = determine_recommendation(
                 confidence, is_buy_blocked, is_sell_blocked, mode,
                 rr_valid=rr_valid,
-                overall_score_pct=overall_score_pct
+                overall_score_pct=overall_score_pct,
+                risk_reward=risk_reward,
+                min_rr=min_rr,
+                adx=adx,
+                bullish_indicators_count=bullish_indicators_count,
+                pattern_confidence=pattern_confidence,
+                pattern_type=pattern_type
             )
             
             # Current position logic

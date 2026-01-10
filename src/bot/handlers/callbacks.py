@@ -47,7 +47,7 @@ from ..utils.keyboards import (
     create_back_button
 )
 from ..utils.validators import validate_stock_symbol, validate_price
-from ..config import RiskMode, Timeframe
+from ..config import RiskMode, Timeframe, MAX_MESSAGE_LENGTH
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,18 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     
     logger.info(f"Callback from user {user_id}: {callback_data}")
     
+    # Check authorization (if admin IDs are configured, only allow admins)
+    # If TELEGRAM_ADMIN_IDS is empty, allow everyone (public bot)
+    from ..config import TELEGRAM_ADMIN_IDS
+    if TELEGRAM_ADMIN_IDS:  # Only check if admin IDs are configured
+        if user_id not in TELEGRAM_ADMIN_IDS:
+            await query.answer(
+                "⛔ You are not authorized to use this bot.",
+                show_alert=True
+            )
+            logger.warning(f"Unauthorized callback attempt by user {user_id}: {callback_data}")
+            return
+    
     try:
         # Parse callback data
         parts = callback_data.split(':')
@@ -75,7 +87,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         params = parts[1:] if len(parts) > 1 else []
         
         # Handle settings callbacks through the settings handler
-        if callback_data.startswith("settings_"):
+        if callback_data.startswith("settings_") or callback_data.startswith("daily_buy_"):
             from ..handlers.settings import handle_settings_callback
             await handle_settings_callback(update, context)
             return
@@ -331,21 +343,23 @@ async def handle_alert_rsi_setup(query, context, params: list) -> None:
         # Create oversold alert (RSI < 30)
         alert_oversold = create_alert(
             db=db,
-            user_id=user_id,
+            telegram_id=user_id,
             symbol=symbol,
             alert_type='rsi',
-            condition={'operator': '<', 'value': 30},
-            message=f"RSI oversold for {symbol} (< 30)"
+            condition_type='below',
+            threshold_value=30.0,
+            condition_data={'operator': '<', 'value': 30}
         )
         
         # Create overbought alert (RSI > 70)
         alert_overbought = create_alert(
             db=db,
-            user_id=user_id,
+            telegram_id=user_id,
             symbol=symbol,
             alert_type='rsi',
-            condition={'operator': '>', 'value': 70},
-            message=f"RSI overbought for {symbol} (> 70)"
+            condition_type='above',
+            threshold_value=70.0,
+            condition_data={'operator': '>', 'value': 70}
         )
         
         if alert_oversold and alert_overbought:
@@ -378,11 +392,11 @@ async def handle_alert_signal_setup(query, context, params: list) -> None:
         # Create signal change alert
         alert = create_alert(
             db=db,
-            user_id=user_id,
+            telegram_id=user_id,
             symbol=symbol,
             alert_type='signal_change',
-            condition={},
-            message=f"Signal changed for {symbol}"
+            condition_type='change',
+            condition_data={}
         )
         
         if alert:
@@ -597,8 +611,26 @@ async def handle_analyze_refresh(query, context, params: list) -> None:
                             )
             else:
                 error_msg = analysis.get('error', 'Analysis failed') if analysis else 'Analysis failed'
+                
+                # Provide more helpful error messages
+                if 'Insufficient data' in error_msg:
+                    user_friendly_msg = (
+                        f"⚠️ *Insufficient Data for {symbol}*\n\n"
+                        f"This stock doesn't have enough historical data for analysis.\n\n"
+                        f"*Possible reasons:*\n"
+                        f"• Stock is newly listed (need at least 50 days of data)\n"
+                        f"• Trading is suspended or halted\n"
+                        f"• Symbol might be incorrect\n\n"
+                        f"*Try:*\n"
+                        f"• Verify the symbol is correct\n"
+                        f"• Check if the stock is actively traded\n"
+                        f"• Try analyzing a different stock"
+                    )
+                else:
+                    user_friendly_msg = f"Failed to analyze {symbol}: {error_msg}"
+                
                 await query.edit_message_text(
-                    format_error(f"Failed to analyze {symbol}: {error_msg}", output_mode='bot')
+                    format_error(user_friendly_msg, output_mode='bot')
                 )
     
     except Exception as e:
@@ -651,8 +683,27 @@ async def handle_analyze_quick(query, context, params: list) -> None:
                     for msg in messages:
                         await query.message.reply_text(msg, parse_mode='Markdown')
             else:
+                error_msg = result.get('message', 'Analysis failed')
+                
+                # Provide more helpful error messages
+                if 'Insufficient data' in error_msg:
+                    user_friendly_msg = (
+                        f"⚠️ *Insufficient Data for {symbol}*\n\n"
+                        f"This stock doesn't have enough historical data for analysis.\n\n"
+                        f"*Possible reasons:*\n"
+                        f"• Stock is newly listed (need at least 50 days of data)\n"
+                        f"• Trading is suspended or halted\n"
+                        f"• Symbol might be incorrect\n\n"
+                        f"*Try:*\n"
+                        f"• Verify the symbol is correct\n"
+                        f"• Check if the stock is actively traded\n"
+                        f"• Try analyzing a different stock"
+                    )
+                else:
+                    user_friendly_msg = error_msg
+                
                 await query.edit_message_text(
-                    format_error(result.get('message', 'Analysis failed'), output_mode='bot')
+                    format_error(user_friendly_msg, output_mode='bot')
                 )
     
     except Exception as e:
@@ -663,17 +714,76 @@ async def handle_analyze_quick(query, context, params: list) -> None:
 
 
 async def handle_analyze_full(query, context, params: list) -> None:
-    """Perform full analysis from callback."""
+    """Perform full analysis from callback - redirects to /analyze command."""
     if not params:
-        await query.edit_message_text(format_error("Invalid callback data"))
+        await query.answer("❌ Invalid symbol", show_alert=True)
         return
     
     symbol = params[0]
     
-    # Redirect to analyze command
-    await query.edit_message_text(
-        f"💡 Use `/analyze {symbol}` for full analysis"
-    )
+    # Validate symbol
+    if not validate_stock_symbol(symbol):
+        await query.answer(f"❌ Invalid symbol: {symbol}", show_alert=True)
+        return
+    
+    # Acknowledge callback
+    await query.answer("📊 Fetching full analysis...")
+    
+    # Get user settings and perform full analysis
+    user_id = query.from_user.id
+    
+    with get_db_context() as db:
+        user = get_or_create_user(db, user_id, query.from_user.username)
+        settings = get_user_settings(db, user_id)
+        
+        # Get user preferences
+        mode = settings.risk_mode if settings and settings.risk_mode else 'balanced'
+        timeframe = settings.timeframe if settings and settings.timeframe else 'medium'
+        horizon = getattr(settings, 'investment_horizon', None) or '3months'
+        
+        # Perform analysis
+        analysis_result = analyze_stock(
+            symbol=symbol,
+            mode=mode,
+            timeframe=timeframe,
+            horizon=horizon,
+            use_cache=False
+        )
+        
+        if 'error' in analysis_result:
+            await query.edit_message_text(
+                format_error(analysis_result['error'], 'bot'),
+                parse_mode='Markdown'
+            )
+            return
+        
+        # Format comprehensive analysis
+        formatted = format_analysis_comprehensive(
+            analysis_result,
+            output_mode='bot',
+            horizon=horizon
+        )
+        
+        # Split into chunks if needed
+        chunks = chunk_message(formatted, MAX_MESSAGE_LENGTH)
+        
+        # Send first chunk with action buttons
+        from ..utils.keyboards import create_analysis_action_keyboard
+        keyboard = create_analysis_action_keyboard(symbol)
+        
+        await query.edit_message_text(
+            chunks[0],
+            parse_mode='Markdown',
+            reply_markup=keyboard
+        )
+        
+        # Send remaining chunks
+        for chunk in chunks[1:]:
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=chunk,
+                parse_mode='Markdown'
+            )
 
 
 # ============================================================================
