@@ -104,6 +104,34 @@ MAX_BACKTEST_DAYS = 365
 # Message length limits (Telegram's limit is 4096)
 MAX_MESSAGE_LENGTH = 4000
 
+# =============================================================================
+# PAPER TRADING SETTINGS
+# =============================================================================
+
+PAPER_TRADING_ENABLED = os.getenv('PAPER_TRADING_ENABLED', 'true').lower() == 'true'
+PAPER_TRADING_DEFAULT_CAPITAL = float(os.getenv('PAPER_TRADING_DEFAULT_CAPITAL', '500000'))
+PAPER_TRADING_DEFAULT_MAX_POSITIONS = int(os.getenv('PAPER_TRADING_DEFAULT_MAX_POSITIONS', '15'))
+PAPER_TRADING_DEFAULT_RISK_PCT = float(os.getenv('PAPER_TRADING_DEFAULT_RISK_PCT', '1.0'))
+PAPER_TRADING_MONITOR_INTERVAL = int(os.getenv('PAPER_TRADING_MONITOR_INTERVAL', '300'))  # 5 minutes
+PAPER_TRADING_MAX_POSITION_SIZE_PCT = float(os.getenv('PAPER_TRADING_MAX_POSITION_SIZE_PCT', '20'))
+
+# Trailing stop percentages by signal type
+PAPER_TRADING_TRAILING_STOP = {
+    'STRONG BUY': 0.15,  # 15% from peak
+    'BUY': 0.20,         # 20% from peak
+    'WEAK BUY': 0.25     # 25% from peak
+}
+
+# Execution timing (IST)
+PAPER_TRADING_BUY_EXECUTION_TIME = os.getenv('PAPER_TRADING_BUY_EXECUTION_TIME', '09:20')  # HH:MM
+PAPER_TRADING_DAILY_SUMMARY_TIME = os.getenv('PAPER_TRADING_DAILY_SUMMARY_TIME', '16:00')  # HH:MM
+PAPER_TRADING_WEEKLY_SUMMARY_DAY = 6  # Sunday
+PAPER_TRADING_WEEKLY_SUMMARY_TIME = os.getenv('PAPER_TRADING_WEEKLY_SUMMARY_TIME', '18:00')  # HH:MM
+PAPER_TRADING_POSITION_REBALANCE_TIME = os.getenv('PAPER_TRADING_POSITION_REBALANCE_TIME', '11:00')  # HH:MM
+
+# Price movement tolerance for entry (% deviation from signal price)
+PAPER_TRADING_ENTRY_PRICE_TOLERANCE = float(os.getenv('PAPER_TRADING_ENTRY_PRICE_TOLERANCE', '3.0'))  # 3%
+
 # Currency symbol for display (default: ₹ for Indian Rupee)
 # Note: Using 'Rs ' for Windows console compatibility
 CURRENCY_SYMBOL = os.getenv('CURRENCY_SYMBOL', 'Rs ')
@@ -173,20 +201,22 @@ EMOJI = {
 MAIN_MENU_BUTTONS = [
     ['📊 Analyze Stock', '📈 Compare Stocks'],
     ['⭐ Watchlist', '🔔 Alerts'],
-    ['💼 Portfolio', '📅 Schedule Reports'],
+    ['💼 Portfolio', '📈 Paper Trading'],
     ['⚙️ Settings', 'ℹ️ Help'],
 ]
 
 ANALYSIS_ACTION_BUTTONS = [
     ['⭐ Add to Watchlist', '🔔 Set Alert'],
     ['💼 Add to Portfolio', '📊 View Chart'],
-    ['🔄 Refresh Analysis', '◀️ Back to Menu'],
+    ['📈 Paper Trade This', '🔄 Refresh Analysis'],
+    ['◀️ Back to Menu'],
 ]
 
 WATCHLIST_MENU_BUTTONS = [
     ['➕ Add Stock', '➖ Remove Stock'],
     ['📋 View Watchlist', '📊 Analyze All'],
-    ['🗑️ Clear Watchlist', '◀️ Back to Menu'],
+    ['📈 Paper Trade All', '🗑️ Clear Watchlist'],
+    ['◀️ Back to Menu'],
 ]
 
 ALERT_MENU_BUTTONS = [
@@ -205,6 +235,14 @@ SETTINGS_MENU_BUTTONS = [
     ['⚙️ Risk Mode', '⏱️ Timeframe'],
     ['💰 Set Capital', '🌍 Timezone'],
     ['◀️ Back to Menu'],
+]
+
+PAPER_TRADING_MENU_BUTTONS = [
+    ['▶️ Start Session', '⏹️ Stop Session'],
+    ['📊 Status', '📜 History'],
+    ['📈 Trade All BUY Signals', '⭐ Trade Watchlist'],
+    ['📈 Performance', '💡 Insights'],
+    ['⚙️ Settings', '◀️ Back to Menu'],
 ]
 
 # =============================================================================
@@ -258,6 +296,18 @@ HELP_MESSAGE = """
 • `/portfolio` - View portfolio
 • `/portfolio add SYMBOL SHARES PRICE` - Add position
 • `/portfolio remove SYMBOL` - Remove position
+
+**📈 Paper Trading:**
+• `/papertrade start` - Start paper trading session
+• `/papertrade stop` - Stop session
+• `/papertrade status` - View positions and P&L
+• `/papertrade history [N]` - Trade history
+• `/papertrade performance` - Detailed metrics
+• `/papertrade insights` - System recommendations
+• `/papertrade settings` - Configure settings
+• Paper trade a stock: Use "📈 Paper Trade This" button after analysis
+• Paper trade all BUY signals: Use "📈 Trade All BUY Signals" button
+• Paper trade watchlist: Use "📈 Paper Trade All" in watchlist menu
 
 **⚙️ Settings:**
 • `/settings` - View/change settings

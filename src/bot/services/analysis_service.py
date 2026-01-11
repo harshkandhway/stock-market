@@ -487,7 +487,7 @@ def search_symbol(query: str, limit: int = 10) -> List[Dict[str, str]]:
     """
     Search for stock symbols by name or ticker
     
-    Uses yahooquery to search for symbols and get company information.
+    Uses CSV file for fast local search, with optional yahooquery validation.
     
     Args:
         query: Search query (can be company name or ticker)
@@ -497,66 +497,73 @@ def search_symbol(query: str, limit: int = 10) -> List[Dict[str, str]]:
         List of matching stocks with symbol, name, and exchange
     """
     from yahooquery import Ticker
+    import csv
     
-    query = query.strip().upper()
+    query_clean = query.strip()
+    query_upper = query_clean.upper()
+    query_lower = query_clean.lower()
     results = []
     
     # First, try to read from stock_tickers.csv if available (faster)
     try:
-        import csv
         tickers_file = os.path.join(os.path.dirname(__file__), '../../../data/stock_tickers.csv')
         
         if os.path.exists(tickers_file):
             with open(tickers_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    ticker = row.get('ticker', '').upper()
-                    name = row.get('name', '').upper()
-                    market = row.get('market', '')
+                    ticker = row.get('ticker', '').strip()
+                    name = row.get('name', '').strip()
+                    market = row.get('market', '').strip()
                     
-                    # Check if query matches ticker or name
-                    if query in ticker or (name and query in name):
-                        # Try to get company info from yahooquery
-                        try:
-                            ticker_obj = Ticker(ticker)
-                            quote = ticker_obj.quote_type
-                            
-                            if quote and ticker in quote:
-                                company_info = quote[ticker]
-                                full_name = company_info.get('longName', company_info.get('shortName', name))
-                                exchange = company_info.get('exchange', market)
-                                
-                                results.append({
-                                    'symbol': ticker,
-                                    'name': full_name,
-                                    'exchange': exchange or market or 'Unknown'
-                                })
-                            else:
-                                # Fallback to CSV data
-                                results.append({
-                                    'symbol': ticker,
-                                    'name': row.get('name', ''),
-                                    'exchange': market or 'Unknown'
-                                })
-                        except Exception:
-                            # Fallback to CSV data
-                            results.append({
-                                'symbol': ticker,
-                                'name': row.get('name', ''),
-                                'exchange': market or 'Unknown'
-                            })
+                    if not ticker:
+                        continue
+                    
+                    ticker_upper = ticker.upper()
+                    name_upper = name.upper() if name else ''
+                    
+                    # Flexible matching: check if query appears in ticker or name
+                    # Prioritize exact matches and startswith matches
+                    match_score = 0
+                    if ticker_upper == query_upper:
+                        match_score = 100  # Exact ticker match
+                    elif ticker_upper.startswith(query_upper):
+                        match_score = 80  # Ticker starts with query
+                    elif query_upper in ticker_upper:
+                        match_score = 60  # Query in ticker
+                    elif name_upper and name_upper.startswith(query_upper):
+                        match_score = 70  # Name starts with query
+                    elif name_upper and query_upper in name_upper:
+                        match_score = 50  # Query in name
+                    
+                    if match_score > 0:
+                        # Use CSV data directly (faster, no API calls)
+                        results.append({
+                            'symbol': ticker,
+                            'name': name or ticker,
+                            'exchange': market or 'Unknown',
+                            'score': match_score
+                        })
                         
-                        if len(results) >= limit:
+                        if len(results) >= limit * 2:  # Get more candidates for sorting
                             break
     except Exception as e:
         logger.warning(f"Error reading tickers file: {e}")
     
-    # If no results from CSV, try direct yahooquery lookup
+    # Sort by match score (highest first) and limit results
+    if results:
+        results.sort(key=lambda x: x.get('score', 0), reverse=True)
+        results = results[:limit]
+        # Remove score from final results
+        for result in results:
+            result.pop('score', None)
+    
+    # If no results from CSV, try direct yahooquery lookup with common suffixes
     if not results:
         # Try common suffixes for Indian stocks
         suffixes = ['.NS', '.BO', '']
         for suffix in suffixes:
-            test_symbol = query + suffix if suffix else query
+            test_symbol = query_upper + suffix if suffix else query_upper
             try:
                 ticker_obj = Ticker(test_symbol)
                 quote = ticker_obj.quote_type
@@ -568,11 +575,12 @@ def search_symbol(query: str, limit: int = 10) -> List[Dict[str, str]]:
                     
                     results.append({
                         'symbol': test_symbol,
-                        'name': full_name,
+                        'name': full_name or test_symbol,
                         'exchange': exchange
                     })
                     break
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Could not validate symbol {test_symbol}: {e}")
                 continue
     
     return results[:limit]

@@ -26,11 +26,11 @@ logger = logging.getLogger(__name__)
 
 class DailyBuyAlertsScheduler:
     """Scheduler for daily BUY alerts analysis and notifications"""
-    
+
     def __init__(self, application: Application):
         """
         Initialize scheduler
-        
+
         Args:
             application: Telegram bot application instance
         """
@@ -40,26 +40,38 @@ class DailyBuyAlertsScheduler:
         self.analysis_task = None
         self.notification_task = None
         self.retry_task = None
+
+        # Paper trading scheduler (NEW)
+        self.paper_trading_scheduler = None
     
     async def start(self):
         """Start the scheduler"""
         if self.is_running:
             logger.warning("Scheduler is already running")
             return
-        
+
         self.is_running = True
         logger.info("Starting Daily BUY Alerts Scheduler...")
-        
+
         # Start analysis task (runs once daily)
         self.analysis_task = asyncio.create_task(self._run_daily_analysis())
-        
+
         # Start notification task (runs every 30 seconds to check for users to notify)
         self.notification_task = asyncio.create_task(self._run_notification_checker())
-        
+
         # Start retry task (runs every 2 minutes to retry failed alerts)
         self.retry_task = asyncio.create_task(self._run_retry_checker())
-        
+
         logger.info("Daily BUY Alerts Scheduler started")
+
+        # Start paper trading scheduler (NEW)
+        try:
+            from src.bot.services.paper_trading_scheduler import get_paper_trading_scheduler
+            self.paper_trading_scheduler = get_paper_trading_scheduler(self.application)
+            await self.paper_trading_scheduler.start()
+            logger.info("✅ Paper Trading Scheduler integrated and started")
+        except Exception as e:
+            logger.error("Failed to start paper trading scheduler: %s", str(e), exc_info=True)
     
     async def stop(self):
         """Stop the scheduler"""
@@ -75,6 +87,14 @@ class DailyBuyAlertsScheduler:
             self.notification_task.cancel()
         if self.retry_task:
             self.retry_task.cancel()
+        
+        # Stop paper trading scheduler
+        if self.paper_trading_scheduler:
+            try:
+                await self.paper_trading_scheduler.stop()
+                logger.info("✅ Paper Trading Scheduler stopped")
+            except Exception as e:
+                logger.error("Error stopping paper trading scheduler: %s", str(e), exc_info=True)
         
         logger.info("Daily BUY Alerts Scheduler stopped")
     

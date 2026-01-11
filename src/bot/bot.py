@@ -69,17 +69,64 @@ from src.bot.handlers.schedule import (
 from src.bot.handlers.backtest import (
     backtest_command
 )
+from src.bot.handlers.paper_trading import (
+    papertrade_command
+)
 from src.bot.handlers.callbacks import (
     handle_callback_query
 )
 from src.bot.services.alert_service import AlertService
 
 # Configure logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+import os
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
+
+# Import config after path setup
+from src.bot.config import LOG_FILE, LOG_LEVEL
+
+# Create logs directory if it doesn't exist
+log_dir = Path(__file__).parent.parent.parent / 'logs'
+log_dir.mkdir(parents=True, exist_ok=True)
+
+# Set up root logger with file handler
+root_logger = logging.getLogger()
+root_logger.setLevel(getattr(logging, LOG_LEVEL.upper(), logging.INFO))
+
+# Remove existing handlers to avoid duplicates
+for handler in root_logger.handlers[:]:
+    root_logger.removeHandler(handler)
+
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
+console_handler.setFormatter(console_formatter)
+root_logger.addHandler(console_handler)
+
+# File handler for main bot log
+log_file_path = Path(__file__).parent.parent.parent / LOG_FILE
+log_file_path.parent.mkdir(parents=True, exist_ok=True)
+file_handler = RotatingFileHandler(
+    filename=str(log_file_path),
+    mode='a',
+    maxBytes=10 * 1024 * 1024,  # 10 MB
+    backupCount=5,
+    encoding='utf-8'
+)
+file_handler.setLevel(logging.DEBUG)
+file_formatter = logging.Formatter(
+    '%(asctime)s | %(levelname)-8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+file_handler.setFormatter(file_formatter)
+root_logger.addHandler(file_handler)
+
 logger = logging.getLogger(__name__)
+logger.info(f"Logging configured - Console: INFO, File: {log_file_path} (DEBUG)")
 
 
 def check_authorization(user_id: int) -> bool:
@@ -153,6 +200,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         '⭐ Watchlist': '/watchlist',
         '🔔 Alerts': '/alerts',
         '💼 Portfolio': '/portfolio',
+        '📈 Paper Trading': '/papertrade',
         '📅 Schedule Reports': '/schedule',
         '⚙️ Settings': '/settings',
         'ℹ️ Help': '/help',
@@ -193,6 +241,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         elif command == '/portfolio':
             from src.bot.handlers.portfolio import portfolio_command
             await portfolio_command(update, context)
+        elif command == '/papertrade':
+            from src.bot.handlers.paper_trading import papertrade_command
+            await papertrade_command(update, context)
         elif command == '/settings':
             from src.bot.handlers.settings import settings_command
             await settings_command(update, context)
@@ -389,6 +440,9 @@ def create_bot_application() -> Application:
     # Backtest commands
     application.add_handler(CommandHandler("backtest", backtest_command))
     
+    # Paper trading commands
+    application.add_handler(CommandHandler("papertrade", papertrade_command))
+    
     # Callback query handler for inline buttons
     application.add_handler(CallbackQueryHandler(handle_callback_query))
     
@@ -418,6 +472,15 @@ async def post_init(application: Application):
         application: Bot application
     """
     logger.info("Bot post-initialization...")
+    
+    # Initialize paper trading logger
+    try:
+        from src.bot.utils.paper_trading_logger import setup_paper_trading_logger
+        pt_logger = setup_paper_trading_logger()
+        logger.info("Paper trading logger initialized")
+        pt_logger.info("Paper trading logger started")
+    except Exception as e:
+        logger.error(f"Failed to initialize paper trading logger: {e}", exc_info=True)
     
     # Initialize database
     from src.bot.database.db import init_db, test_connection

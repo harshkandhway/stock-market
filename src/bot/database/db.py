@@ -168,6 +168,39 @@ def migrate_database():
                     ))
                     conn.commit()
                     safe_print("✅ Removed deprecated beginner_mode column")
+            
+            # Add paper trading columns if they don't exist
+            if 'paper_trading_enabled' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_enabled BOOLEAN DEFAULT 0"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_enabled column")
+            
+            if 'paper_trading_capital' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_capital FLOAT DEFAULT 500000.0"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_capital column")
+            
+            if 'paper_trading_max_positions' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_max_positions INTEGER DEFAULT 15"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_max_positions column")
+            
+            if 'paper_trading_risk_per_trade_pct' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_per_trade_pct FLOAT DEFAULT 1.0"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_risk_per_trade_pct column")
     
     except Exception as e:
         safe_print(f"⚠️ Migration warning: {e}")

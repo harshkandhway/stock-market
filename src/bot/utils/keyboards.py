@@ -8,7 +8,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 
 from src.bot.config import (
     MAIN_MENU_BUTTONS, ANALYSIS_ACTION_BUTTONS, WATCHLIST_MENU_BUTTONS,
-    ALERT_MENU_BUTTONS, PORTFOLIO_MENU_BUTTONS, SETTINGS_MENU_BUTTONS
+    ALERT_MENU_BUTTONS, PORTFOLIO_MENU_BUTTONS, SETTINGS_MENU_BUTTONS,
+    PAPER_TRADING_MENU_BUTTONS
 )
 
 
@@ -69,10 +70,11 @@ def create_analysis_action_keyboard(symbol: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("📊 View Chart", callback_data=f"chart:{symbol}"),
         ],
         [
+            InlineKeyboardButton("📈 Paper Trade This", callback_data=f"papertrade_stock:{symbol}"),
             InlineKeyboardButton("💰 Position Sizing", callback_data=f"position_sizing:{symbol}"),
-            InlineKeyboardButton("🔄 Refresh Analysis", callback_data=f"analyze:{symbol}"),
         ],
         [
+            InlineKeyboardButton("🔄 Refresh Analysis", callback_data=f"analyze:{symbol}"),
             InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
         ],
     ]
@@ -120,7 +122,10 @@ def create_watchlist_menu_keyboard(symbols: List[str] = None) -> InlineKeyboardM
             InlineKeyboardButton("➖ Remove Stock", callback_data="watchlist_remove_prompt"),
         ],
         [
+            InlineKeyboardButton("📈 Paper Trade All", callback_data="papertrade_watchlist"),
             InlineKeyboardButton("🗑️ Clear Watchlist", callback_data="watchlist_clear_confirm"),
+        ],
+        [
             InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
         ],
     ])
@@ -675,6 +680,130 @@ def create_back_button(callback_data: str = "main_menu", label: str = "◀️ Ba
         InlineKeyboardMarkup with back button
     """
     keyboard = [[InlineKeyboardButton(label, callback_data=callback_data)]]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_paper_trading_menu_keyboard() -> ReplyKeyboardMarkup:
+    """
+    Create main paper trading menu keyboard
+    
+    Returns:
+        ReplyKeyboardMarkup with paper trading options
+    """
+    keyboard = [[KeyboardButton(text) for text in row] for row in PAPER_TRADING_MENU_BUTTONS]
+    
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True,
+        one_time_keyboard=False
+    )
+
+
+def create_paper_trade_stock_keyboard(symbol: str) -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for paper trading a specific stock
+    
+    Args:
+        symbol: Stock symbol
+    
+    Returns:
+        InlineKeyboardMarkup with paper trading options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Paper Trade This Stock", callback_data=f"papertrade_stock_confirm:{symbol}"),
+        ],
+        [
+            InlineKeyboardButton("📜 Check Trade History", callback_data=f"papertrade_stock_history:{symbol}"),
+        ],
+        [
+            InlineKeyboardButton("📊 View Analysis First", callback_data=f"analyze:{symbol}"),
+            InlineKeyboardButton("ℹ️ About Paper Trading", callback_data="papertrade_info"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back", callback_data=f"analyze:{symbol}"),
+        ],
+    ]
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_paper_trade_buy_signals_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for paper trading all BUY signals
+    
+    Returns:
+        InlineKeyboardMarkup with confirmation options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Trade All BUY Signals", callback_data="papertrade_buy_signals_confirm"),
+        ],
+        [
+            InlineKeyboardButton("📊 View Signals First", callback_data="papertrade_view_signals"),
+            InlineKeyboardButton("ℹ️ About BUY Signals", callback_data="papertrade_buy_signals_info"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="papertrade_menu"),
+        ],
+    ]
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_paper_trade_watchlist_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for paper trading all watchlist stocks
+    
+    Returns:
+        InlineKeyboardMarkup with confirmation options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Trade All Watchlist Stocks", callback_data="papertrade_watchlist_confirm"),
+        ],
+        [
+            InlineKeyboardButton("📋 View Watchlist First", callback_data="watchlist_show"),
+            InlineKeyboardButton("ℹ️ About Watchlist Trading", callback_data="papertrade_watchlist_info"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Watchlist", callback_data="watchlist_show"),
+        ],
+    ]
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_paper_trading_main_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for paper trading main menu
+    
+    Returns:
+        InlineKeyboardMarkup with paper trading options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("▶️ Start Session", callback_data="papertrade_start"),
+            InlineKeyboardButton("⏹️ Stop Session", callback_data="papertrade_stop"),
+        ],
+        [
+            InlineKeyboardButton("📊 Status", callback_data="papertrade_status"),
+            InlineKeyboardButton("📜 History", callback_data="papertrade_history"),
+        ],
+        [
+            InlineKeyboardButton("📈 Trade All BUY Signals", callback_data="papertrade_buy_signals"),
+            InlineKeyboardButton("⭐ Trade Watchlist", callback_data="papertrade_watchlist"),
+        ],
+        [
+            InlineKeyboardButton("📈 Performance", callback_data="papertrade_performance"),
+            InlineKeyboardButton("💡 Insights", callback_data="papertrade_insights"),
+        ],
+        [
+            InlineKeyboardButton("⚙️ Settings", callback_data="papertrade_settings"),
+            InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
+        ],
+    ]
+    
     return InlineKeyboardMarkup(keyboard)
 
 

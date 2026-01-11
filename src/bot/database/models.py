@@ -47,7 +47,7 @@ class User(Base):
 class UserSettings(Base):
     """User settings model - stores user preferences"""
     __tablename__ = 'user_settings'
-    
+
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True)
     risk_mode = Column(String(20), default='balanced')  # conservative, balanced, aggressive
@@ -60,10 +60,16 @@ class UserSettings(Base):
     daily_buy_alerts_enabled = Column(Boolean, default=False, index=True)
     daily_buy_alert_time = Column(String(10), default='09:00')  # HH:MM format in user's timezone
     last_daily_alert_sent = Column(DateTime, nullable=True)  # Track when alert was last sent successfully
-    
+
+    # Paper Trading Settings
+    paper_trading_enabled = Column(Boolean, default=False, index=True)
+    paper_trading_capital = Column(Float, default=500000.0)  # ₹5 lakhs default
+    paper_trading_max_positions = Column(Integer, default=15)  # 10-20 range, default 15
+    paper_trading_risk_per_trade_pct = Column(Float, default=1.0)  # 1% risk per trade
+
     # Relationship
     user = relationship("User", back_populates="settings")
-    
+
     def __repr__(self):
         return f"<UserSettings user_id={self.user_id} mode={self.risk_mode} horizon={self.investment_horizon}>"
 
@@ -334,7 +340,7 @@ class DailyBuySignal(Base):
 class PendingAlert(Base):
     """Pending alert model - tracks failed alerts that need retry"""
     __tablename__ = 'pending_alerts'
-    
+
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     telegram_id = Column(Integer, nullable=False, index=True)
@@ -343,19 +349,452 @@ class PendingAlert(Base):
     error_message = Column(Text)  # Last error message
     created_at = Column(DateTime, default=datetime.now, index=True)
     last_retry_at = Column(DateTime, nullable=True)  # When last retry was attempted
-    
+
     # Ensure one pending alert per user
     __table_args__ = (
         UniqueConstraint('user_id', name='uix_pending_alert_user'),
         Index('ix_pending_alert_user', 'user_id'),
         Index('ix_pending_alert_created', 'created_at'),
     )
-    
+
     # Relationship
     user = relationship("User", backref="pending_alerts")
-    
+
     def __repr__(self):
         return f"<PendingAlert user_id={self.user_id} telegram_id={self.telegram_id} retry_count={self.retry_count}>"
+
+
+# =============================================================================
+# PAPER TRADING MODELS
+# =============================================================================
+
+class PaperTradingSession(Base):
+    """Paper trading session model - tracks overall paper trading session"""
+    __tablename__ = 'paper_trading_sessions'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    # Session Status
+    is_active = Column(Boolean, default=True, index=True)
+    session_start = Column(DateTime, default=datetime.utcnow, nullable=False)
+    session_end = Column(DateTime, nullable=True)
+
+    # Capital Management
+    initial_capital = Column(Float, default=500000.0, nullable=False)  # ₹5 lakhs
+    current_capital = Column(Float, default=500000.0, nullable=False)
+    peak_capital = Column(Float, default=500000.0, nullable=False)
+
+    # Position Management
+    max_positions = Column(Integer, default=15, nullable=False)  # 10-20 range
+    current_positions = Column(Integer, default=0, nullable=False)
+
+    # Performance Summary
+    total_trades = Column(Integer, default=0, nullable=False)
+    winning_trades = Column(Integer, default=0, nullable=False)
+    losing_trades = Column(Integer, default=0, nullable=False)
+    total_profit = Column(Float, default=0.0, nullable=False)
+    total_loss = Column(Float, default=0.0, nullable=False)
+    max_drawdown_pct = Column(Float, default=0.0, nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", backref="paper_trading_sessions")
+    positions = relationship("PaperPosition", back_populates="session", cascade="all, delete-orphan")
+    trades = relationship("PaperTrade", back_populates="session", cascade="all, delete-orphan")
+    analytics = relationship("PaperTradeAnalytics", back_populates="session", cascade="all, delete-orphan")
+    logs = relationship("PaperTradingLog", back_populates="session", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<PaperTradingSession id={self.id} user_id={self.user_id} active={self.is_active} capital={self.current_capital}>"
+
+
+class PaperPosition(Base):
+    """Paper position model - tracks currently open positions"""
+    __tablename__ = 'paper_positions'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('paper_trading_sessions.id', ondelete='CASCADE'), nullable=False, index=True)
+    symbol = Column(String(50), nullable=False, index=True)
+    signal_id = Column(Integer, ForeignKey('daily_buy_signals.id', ondelete='SET NULL'), nullable=True)
+
+    # Entry Details
+    entry_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    entry_price = Column(Float, nullable=False)
+    shares = Column(Float, nullable=False)
+    position_value = Column(Float, nullable=False)
+
+    # Risk Management
+    target_price = Column(Float, nullable=False)
+    stop_loss_price = Column(Float, nullable=False)
+    trailing_stop = Column(Float, nullable=True)
+    initial_risk_reward = Column(Float, nullable=False)
+
+    # Signal Metadata
+    recommendation_type = Column(String(20), nullable=False)  # STRONG BUY, BUY, WEAK BUY
+    entry_confidence = Column(Float, nullable=False)
+    entry_score_pct = Column(Float, nullable=False)
+
+    # Current State
+    current_price = Column(Float, nullable=True)
+    unrealized_pnl = Column(Float, default=0.0)
+    unrealized_pnl_pct = Column(Float, default=0.0)
+    highest_price = Column(Float, nullable=True)
+    is_open = Column(Boolean, default=True, index=True)
+    days_held = Column(Integer, default=0)
+
+    # Analysis Snapshot
+    entry_analysis = Column(Text)  # JSON string with full analysis
+
+    # Timestamps
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('session_id', 'symbol', name='uix_session_symbol'),
+        Index('ix_paper_position_open', 'is_open'),
+        Index('ix_paper_position_entry_date', 'entry_date'),
+    )
+
+    # Relationships
+    session = relationship("PaperTradingSession", back_populates="positions")
+    signal = relationship("DailyBuySignal", backref="paper_positions")
+
+    @hybrid_property
+    def analysis(self):
+        """Get entry analysis as dict"""
+        if self.entry_analysis:
+            try:
+                return json.loads(self.entry_analysis)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    @analysis.setter
+    def analysis(self, value):
+        """Set entry analysis from dict"""
+        if value:
+            self.entry_analysis = json.dumps(value, default=str)
+        else:
+            self.entry_analysis = None
+
+    def __repr__(self):
+        return f"<PaperPosition id={self.id} session_id={self.session_id} symbol={self.symbol} open={self.is_open}>"
+
+
+class PaperTrade(Base):
+    """Paper trade model - tracks completed trades (entry + exit)"""
+    __tablename__ = 'paper_trades'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('paper_trading_sessions.id', ondelete='CASCADE'), nullable=False, index=True)
+    position_id = Column(Integer, ForeignKey('paper_positions.id', ondelete='SET NULL'), nullable=True)
+    symbol = Column(String(50), nullable=False, index=True)
+
+    # Entry Details
+    entry_date = Column(DateTime, nullable=False)
+    entry_price = Column(Float, nullable=False)
+    shares = Column(Float, nullable=False)
+    entry_value = Column(Float, nullable=False)
+
+    # Exit Details
+    exit_date = Column(DateTime, nullable=False)
+    exit_price = Column(Float, nullable=False)
+    exit_value = Column(Float, nullable=False)
+    exit_reason = Column(String(50), nullable=False, index=True)  # STOP_LOSS, TARGET_HIT, TRAILING_STOP, SELL_SIGNAL
+
+    # Performance Metrics
+    pnl = Column(Float, nullable=False)
+    pnl_pct = Column(Float, nullable=False)
+    days_held = Column(Integer, nullable=False)
+    r_multiple = Column(Float, nullable=False)  # Profit/Loss as multiple of initial risk
+    is_winner = Column(Boolean, nullable=False, index=True)
+    met_target = Column(Boolean, default=False)
+    hit_stop_loss = Column(Boolean, default=False)
+
+    # Signal Metadata (copied from position)
+    recommendation_type = Column(String(20), nullable=False)
+    entry_confidence = Column(Float, nullable=False)
+    entry_score_pct = Column(Float, nullable=False)
+    initial_risk_reward = Column(Float, nullable=False)
+
+    # Risk Management (from entry)
+    target_price = Column(Float, nullable=False)
+    stop_loss_price = Column(Float, nullable=False)
+
+    # Price Extremes
+    highest_price = Column(Float, nullable=True)
+    max_unrealized_gain = Column(Float, default=0.0)
+    max_unrealized_loss = Column(Float, default=0.0)
+
+    # Analysis Snapshots
+    entry_analysis = Column(Text)  # JSON - analysis at entry
+    exit_analysis = Column(Text, nullable=True)  # JSON - analysis at exit
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Indexes
+    __table_args__ = (
+        Index('ix_paper_trade_winner', 'is_winner', 'pnl'),
+        Index('ix_paper_trade_exit', 'exit_reason', 'exit_date'),
+        Index('ix_paper_trade_dates', 'entry_date', 'exit_date'),
+    )
+
+    # Relationships
+    session = relationship("PaperTradingSession", back_populates="trades")
+    position = relationship("PaperPosition", backref="trade")
+
+    @hybrid_property
+    def entry_analysis_data(self):
+        """Get entry analysis as dict"""
+        if self.entry_analysis:
+            try:
+                return json.loads(self.entry_analysis)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    @entry_analysis_data.setter
+    def entry_analysis_data(self, value):
+        """Set entry analysis from dict"""
+        if value:
+            self.entry_analysis = json.dumps(value, default=str)
+        else:
+            self.entry_analysis = None
+
+    @hybrid_property
+    def exit_analysis_data(self):
+        """Get exit analysis as dict"""
+        if self.exit_analysis:
+            try:
+                return json.loads(self.exit_analysis)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    @exit_analysis_data.setter
+    def exit_analysis_data(self, value):
+        """Set exit analysis from dict"""
+        if value:
+            self.exit_analysis = json.dumps(value, default=str)
+        else:
+            self.exit_analysis = None
+
+    def __repr__(self):
+        return f"<PaperTrade id={self.id} symbol={self.symbol} pnl={self.pnl} winner={self.is_winner}>"
+
+
+class PaperTradeAnalytics(Base):
+    """Paper trade analytics model - aggregate performance metrics by period"""
+    __tablename__ = 'paper_trade_analytics'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('paper_trading_sessions.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    # Period Definition
+    period_type = Column(String(20), nullable=False, index=True)  # 'daily', 'weekly', 'monthly'
+    period_start = Column(DateTime, nullable=False, index=True)
+    period_end = Column(DateTime, nullable=False)
+
+    # Trade Statistics
+    trades_count = Column(Integer, default=0, nullable=False)
+    winning_trades = Column(Integer, default=0, nullable=False)
+    losing_trades = Column(Integer, default=0, nullable=False)
+    win_rate_pct = Column(Float, default=0.0, nullable=False)
+
+    # P&L Metrics
+    gross_profit = Column(Float, default=0.0, nullable=False)
+    gross_loss = Column(Float, default=0.0, nullable=False)
+    net_pnl = Column(Float, default=0.0, nullable=False)
+    profit_factor = Column(Float, default=0.0, nullable=False)  # gross_profit / gross_loss
+
+    # Performance Metrics
+    avg_win = Column(Float, default=0.0, nullable=False)
+    avg_loss = Column(Float, default=0.0, nullable=False)
+    avg_r_multiple = Column(Float, default=0.0, nullable=False)
+    best_trade_pnl = Column(Float, default=0.0, nullable=False)
+    worst_trade_pnl = Column(Float, default=0.0, nullable=False)
+    avg_hold_time_days = Column(Float, default=0.0, nullable=False)
+    max_concurrent_positions = Column(Integer, default=0, nullable=False)
+
+    # Capital Metrics
+    starting_capital = Column(Float, nullable=False)
+    ending_capital = Column(Float, nullable=False)
+    period_return_pct = Column(Float, default=0.0, nullable=False)
+    max_drawdown_pct = Column(Float, default=0.0, nullable=False)
+
+    # Insights (JSON)
+    exit_reasons_breakdown = Column(Text)  # JSON: {"STOP_LOSS": 5, "TARGET_HIT": 8, ...}
+    insights = Column(Text)  # JSON: Generated recommendations and observations
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('session_id', 'period_type', 'period_start', name='uix_session_period'),
+        Index('ix_analytics_period', 'period_type', 'period_start'),
+    )
+
+    # Relationships
+    session = relationship("PaperTradingSession", back_populates="analytics")
+
+    @hybrid_property
+    def exit_breakdown(self):
+        """Get exit reasons breakdown as dict"""
+        if self.exit_reasons_breakdown:
+            try:
+                return json.loads(self.exit_reasons_breakdown)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    @exit_breakdown.setter
+    def exit_breakdown(self, value):
+        """Set exit reasons breakdown from dict"""
+        if value:
+            self.exit_reasons_breakdown = json.dumps(value)
+        else:
+            self.exit_reasons_breakdown = None
+
+    @hybrid_property
+    def insights_data(self):
+        """Get insights as dict"""
+        if self.insights:
+            try:
+                return json.loads(self.insights)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    @insights_data.setter
+    def insights_data(self, value):
+        """Set insights from dict"""
+        if value:
+            self.insights = json.dumps(value, default=str)
+        else:
+            self.insights = None
+
+    def __repr__(self):
+        return f"<PaperTradeAnalytics id={self.id} period={self.period_type} trades={self.trades_count} win_rate={self.win_rate_pct}%>"
+
+
+class PaperTradingLog(Base):
+    """Paper trading log model - detailed audit trail of all system actions"""
+    __tablename__ = 'paper_trading_logs'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('paper_trading_sessions.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    # Log Entry
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    log_level = Column(String(20), nullable=False, index=True)  # INFO, WARNING, ERROR, TRADE
+    category = Column(String(50), nullable=False, index=True)  # ENTRY, EXIT, MONITORING, ANALYSIS, ERROR
+    symbol = Column(String(50), nullable=True, index=True)
+    message = Column(Text, nullable=False)
+    details = Column(Text)  # JSON: Flexible metadata
+
+    # Optional References
+    position_id = Column(Integer, ForeignKey('paper_positions.id', ondelete='SET NULL'), nullable=True)
+    trade_id = Column(Integer, ForeignKey('paper_trades.id', ondelete='SET NULL'), nullable=True)
+
+    # Indexes
+    __table_args__ = (
+        Index('ix_log_timestamp_level', 'timestamp', 'log_level'),
+        Index('ix_log_category', 'category', 'timestamp'),
+    )
+
+    # Relationships
+    session = relationship("PaperTradingSession", back_populates="logs")
+    position = relationship("PaperPosition", backref="logs")
+    trade = relationship("PaperTrade", backref="logs")
+
+    @hybrid_property
+    def details_data(self):
+        """Get details as dict"""
+        if self.details:
+            try:
+                return json.loads(self.details)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+
+    @details_data.setter
+    def details_data(self, value):
+        """Set details from dict"""
+        if value:
+            self.details = json.dumps(value, default=str)
+        else:
+            self.details = None
+
+    def __repr__(self):
+        return f"<PaperTradingLog id={self.id} level={self.log_level} category={self.category} symbol={self.symbol}>"
+
+
+class PendingPaperTrade(Base):
+    """Pending paper trade model - queues trades to execute when market opens"""
+    __tablename__ = 'pending_paper_trades'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('paper_trading_sessions.id', ondelete='CASCADE'), nullable=False, index=True)
+    symbol = Column(String(50), nullable=False, index=True)
+    
+    # Request Details
+    requested_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    requested_by_user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    
+    # Signal/Analysis Data (stored as JSON)
+    signal_data = Column(Text, nullable=False)  # JSON with analysis, recommendation, prices, etc.
+    
+    # Status
+    status = Column(String(20), default='PENDING', nullable=False, index=True)  # PENDING, EXECUTED, FAILED, CANCELLED
+    execution_attempts = Column(Integer, default=0, nullable=False)
+    last_attempt_at = Column(DateTime, nullable=True)
+    error_message = Column(Text, nullable=True)
+    
+    # Execution Result
+    position_id = Column(Integer, ForeignKey('paper_positions.id', ondelete='SET NULL'), nullable=True)
+    executed_at = Column(DateTime, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Constraints
+    __table_args__ = (
+        Index('ix_pending_trade_status', 'status', 'requested_at'),
+        Index('ix_pending_trade_session', 'session_id', 'status'),
+    )
+    
+    # Relationships
+    session = relationship("PaperTradingSession", backref="pending_trades")
+    user = relationship("User", backref="pending_paper_trades")
+    position = relationship("PaperPosition", backref="pending_trade")
+    
+    @hybrid_property
+    def signal_data_dict(self):
+        """Get signal data as dict"""
+        if self.signal_data:
+            try:
+                return json.loads(self.signal_data)
+            except json.JSONDecodeError:
+                return {}
+        return {}
+    
+    @signal_data_dict.setter
+    def signal_data_dict(self, value):
+        """Set signal data from dict"""
+        if value:
+            self.signal_data = json.dumps(value, default=str)
+        else:
+            self.signal_data = None
+    
+    def __repr__(self):
+        return f"<PendingPaperTrade id={self.id} symbol={self.symbol} status={self.status}>"
 
 
 # =============================================================================

@@ -801,7 +801,7 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
             logger.info(f"User {user_id} {'enabled' if new_status else 'disabled'} daily BUY alerts")
         
         elif data.startswith("daily_buy_alert_time:"):
-            time_str = data.split(":")[1]
+            time_str = data.split(":", 1)[1]
             
             if time_str == "custom":
                 context.user_data['awaiting_alert_time_input'] = True
@@ -1156,6 +1156,9 @@ Even if you have 10 losing trades in a row (unlikely), you'd only lose 10-20% of
             mode_key = settings.risk_mode or 'balanced'
             mode = RISK_MODE_INFO.get(mode_key, RISK_MODE_INFO['balanced'])
             
+            daily_buy_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
+            daily_buy_alert_time = getattr(settings, 'daily_buy_alert_time', '09:00') or '09:00'
+            
             message = f"""
 *📋 ALL YOUR SETTINGS*
 ━━━━━━━━━━━━━━━━━━━━
@@ -1179,13 +1182,16 @@ Even if you have 10 losing trades in a row (unlikely), you'd only lose 10-20% of
 *🔔 NOTIFICATIONS*
    {'Enabled' if settings.notifications_enabled else 'Disabled'}
 
+*📈 DAILY BUY ALERTS*
+   {'✅ Enabled' if daily_buy_enabled else '❌ Disabled'}
+   {f'Alert Time: {daily_buy_alert_time} ({settings.timezone})' if daily_buy_enabled else ''}
+
 *🌍 TIMEZONE*
    {settings.timezone}
 
 ━━━━━━━━━━━━━━━━━━━━
 """
             
-            daily_buy_enabled = getattr(settings, 'daily_buy_alerts_enabled', False) or False
             keyboard = create_settings_menu_keyboard(daily_buy_enabled)
             await safe_edit_message(query, message, reply_markup=keyboard)
         

@@ -35,9 +35,9 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             format_error(
                 "Please provide a search keyword.\n\n"
                 "Usage: `/search KEYWORD`\n\n"
-                "Example: `/search reliance`",
-                parse_mode='Markdown'
-            )
+                "Example: `/search reliance`"
+            ),
+            parse_mode='Markdown'
         )
         return
     
