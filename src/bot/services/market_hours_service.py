@@ -70,14 +70,16 @@ class MarketHoursService:
             # Convert to IST if different timezone
             check_time = check_time.astimezone(self.TIMEZONE)
 
+        logger.info(f"Market hours check: input_time={check_time}, weekday={check_time.weekday()}, time={check_time.strftime('%H:%M:%S IST')}")
+
         # Check if weekend (Saturday=5, Sunday=6)
         if check_time.weekday() >= 5:
-            logger.debug("Market closed: Weekend (%s)", check_time.strftime('%A'))
+            logger.info("Market closed: Weekend (%s)", check_time.strftime('%A'))
             return False
 
         # Check if holiday
         if self._is_holiday(check_time.date()):
-            logger.debug("Market closed: Holiday (%s)", check_time.date())
+            logger.info("Market closed: Holiday (%s)", check_time.date())
             return False
 
         # Check market hours
@@ -85,9 +87,9 @@ class MarketHoursService:
         is_open = self.MARKET_OPEN <= current_time <= self.MARKET_CLOSE
 
         if is_open:
-            logger.debug("Market is OPEN at %s", check_time.strftime('%H:%M:%S'))
+            logger.info("Market is OPEN at %s (between %s and %s)", check_time.strftime('%H:%M:%S'), self.MARKET_OPEN.strftime('%H:%M'), self.MARKET_CLOSE.strftime('%H:%M'))
         else:
-            logger.debug("Market closed: Outside trading hours (%s)", check_time.strftime('%H:%M:%S'))
+            logger.info("Market closed: Outside trading hours (%s, market hours: %s-%s)", check_time.strftime('%H:%M:%S'), self.MARKET_OPEN.strftime('%H:%M'), self.MARKET_CLOSE.strftime('%H:%M'))
 
         return is_open
 

@@ -426,6 +426,15 @@ class PaperTradingScheduler:
                             pending.executed_at = datetime.utcnow()
                             executed += 1
                             logger.info(f"Executed pending trade for {pending.symbol}")
+
+                            # Send individual trade execution notification
+                            try:
+                                await self._send_trade_execution_notification(
+                                    session.user_id, pending.symbol, position, "individual"
+                                )
+                            except Exception as notify_error:
+                                logger.error(f"Failed to send individual trade notification: {notify_error}")
+
                         else:
                             pending.status = 'FAILED'
                             pending.error_message = "Position entry returned None"
@@ -445,9 +454,108 @@ class PaperTradingScheduler:
                         db.commit()
                 
                 logger.info(f"Pending trades execution complete: {executed} executed, {failed} failed")
-                
+
+                # Send summary notification if any trades were executed
+                if executed > 0:
+                    try:
+                        await self._send_trade_execution_summary_notification(executed, failed)
+                    except Exception as notify_error:
+                        logger.error(f"Failed to send summary notification: {notify_error}")
+
         except Exception as e:
             logger.error(f"Error executing pending trades: {e}", exc_info=True)
+
+    async def _send_buy_signals_summary_notification(self, result: dict):
+        """Send summary notification for buy signals execution"""
+        try:
+            with get_db_context() as db:
+                # Get all active sessions that had signals processed
+                from ..database.models import PaperTradingSession
+                active_sessions = db.query(PaperTradingSession).filter(
+                    PaperTradingSession.is_active == True
+                ).all()
+
+                summary_message = (
+                    f"🎯 *Daily Buy Signals Executed*\n\n"
+                    f"📈 *{result['signals_found']}* signals analyzed\n"
+                    f"✅ *{result['positions_opened']}* positions opened\n"
+                    f"⏭️ *{result['skipped']}* signals skipped\n\n"
+                    f"Signals processed across *{result['sessions_processed']}* active session(s)."
+                )
+
+                for session in active_sessions:
+                    try:
+                        await self.application.bot.send_message(
+                            chat_id=session.user_id,
+                            text=summary_message,
+                            parse_mode='Markdown'
+                        )
+                        logger.info(f"Sent buy signals summary to user {session.user_id}")
+                    except Exception as e:
+                        logger.error(f"Failed to send buy signals summary to user {session.user_id}: {e}")
+
+        except Exception as e:
+            logger.error(f"Failed to send buy signals summary notifications: {e}")
+
+    async def _send_trade_execution_notification(self, user_id: int, symbol: str, position, notification_type: str = "individual"):
+        """Send notification to user about trade execution"""
+        try:
+            if notification_type == "individual":
+                message = (
+                    f"✅ *Paper Trade Executed*\n\n"
+                    f"📈 *{symbol}*\n"
+                    f"💰 Entry Price: ₹{position.entry_price:.2f}\n"
+                    f"🎯 Target: ₹{position.target_price:.2f}\n"
+                    f"🛡️ Stop Loss: ₹{position.stop_loss_price:.2f}\n"
+                    f"📊 Shares: {position.shares:.2f}\n\n"
+                    f"Trade executed automatically at market open."
+                )
+            else:
+                # Summary notification
+                message = f"✅ {position} paper trade(s) executed automatically at market open."
+
+            # Send via Telegram bot
+            await self.application.bot.send_message(
+                chat_id=user_id,
+                text=message,
+                parse_mode='Markdown'
+            )
+
+            logger.info(f"Sent {notification_type} trade notification to user {user_id} for {symbol}")
+
+        except Exception as e:
+            logger.error(f"Failed to send trade notification to user {user_id}: {e}")
+
+    async def _send_trade_execution_summary_notification(self, executed_count: int, failed_count: int):
+        """Send summary notification to all users with active sessions"""
+        try:
+            with get_db_context() as db:
+                # Get all active sessions
+                from ..database.models import PaperTradingSession
+                active_sessions = db.query(PaperTradingSession).filter(
+                    PaperTradingSession.is_active == True
+                ).all()
+
+                summary_message = (
+                    f"📊 *Paper Trading Summary*\n\n"
+                    f"✅ *{executed_count}* trade(s) executed successfully\n"
+                    f"❌ *{failed_count}* trade(s) failed\n\n"
+                    f"All pending trades have been processed at market open."
+                )
+
+                for session in active_sessions:
+                    try:
+                        await self.application.bot.send_message(
+                            chat_id=session.user_id,
+                            text=summary_message,
+                            parse_mode='Markdown'
+                        )
+                        logger.info(f"Sent summary notification to user {session.user_id}")
+                    except Exception as e:
+                        logger.error(f"Failed to send summary to user {session.user_id}: {e}")
+
+        except Exception as e:
+            logger.error(f"Failed to send summary notifications: {e}")
 
     async def _execute_buy_signals(self):
         """Execute BUY signals for all active sessions"""
@@ -466,7 +574,12 @@ class PaperTradingScheduler:
                     result['skipped']
                 )
 
-                # TODO: Send notifications about opened positions
+                # Send notifications about opened positions
+                if result['positions_opened'] > 0:
+                    try:
+                        await self._send_buy_signals_summary_notification(result)
+                    except Exception as notify_error:
+                        logger.error(f"Failed to send buy signals summary notification: {notify_error}")
 
         except Exception as e:
             logger.error("Failed to execute BUY signals: %s", str(e), exc_info=True)

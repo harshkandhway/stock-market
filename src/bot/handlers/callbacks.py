@@ -1370,7 +1370,7 @@ async def handle_papertrade_stock_confirm(query, context, params: list) -> None:
             await query.edit_message_text(
                 f"⏳ *Processing Paper Trade*\n\n"
                 f"Symbol: *{symbol}*\n"
-                f"Status: Analyzing stock...",
+                f"Status: Checking market status...",
                 parse_mode='Markdown'
             )
         except Exception as edit_err:
@@ -1383,17 +1383,29 @@ async def handle_papertrade_stock_confirm(query, context, params: list) -> None:
                 )
             except:
                 pass
-        
+
         with get_db_context() as db:
             trading_service = get_paper_trading_service(db)
             active_session = await trading_service.get_active_session(user_id)
-            
+
+            logger.info(f"Paper trade attempt: user={user_id}, symbol={symbol}, active_session={'EXISTS' if active_session else 'NONE'}")
+
             if not active_session:
-                await query.answer(
-                    "❌ No active session. Use /papertrade start first!",
-                    show_alert=True
+                logger.info(f"Auto-creating paper trading session for user {user_id}")
+                # Auto-create session as per user requirements
+                from ..database.models import PaperTradingSession, UserSettings
+                user = get_or_create_user(db, user_id, query.from_user.username)
+                settings = get_user_settings(db, user_id)
+
+                active_session = PaperTradingSession(
+                    user_id=user_id,
+                    initial_capital=settings.default_capital if settings else 100000,
+                    current_capital=settings.default_capital if settings else 100000,
+                    is_active=True
                 )
-                return
+                db.add(active_session)
+                db.commit()
+                logger.info(f"Created new session {active_session.id} for user {user_id}")
             
             # Check if stock is already in positions
             from ..database.models import PaperPosition
@@ -1402,15 +1414,37 @@ async def handle_papertrade_stock_confirm(query, context, params: list) -> None:
                 PaperPosition.symbol == symbol,
                 PaperPosition.is_open == True
             ).first()
-            
+
             if existing:
                 await query.answer(
                     f"⚠️ Already have open position in {symbol}",
                     show_alert=True
                 )
                 return
-            
-            # Analyze the stock to get current signal
+
+            # Check market hours FIRST - queue if closed
+            from ..services.market_hours_service import get_market_hours_service
+            market_hours = get_market_hours_service()
+            is_market_open = market_hours.is_market_open()
+
+            if not is_market_open:
+                logger.info(f"Market is closed - queueing trade for {symbol} to execute when market opens")
+                # Show immediate feedback that we're queueing
+                try:
+                    await query.edit_message_text(
+                        f"⏳ *Market Closed - Queueing Trade*\n\n"
+                        f"Symbol: *{symbol}*\n"
+                        f"Status: Preparing to queue...\n\n"
+                        f"Trade will execute automatically when market opens.",
+                        parse_mode='Markdown'
+                    )
+                except Exception as edit_err:
+                    logger.warning(f"Could not edit message: {edit_err}")
+                # Queue the trade instead of executing immediately
+                await _queue_paper_trade_for_market_open(query, context, symbol, active_session, user_id, db)
+                return
+
+            # Market is open - proceed with analysis
             try:
                 await query.edit_message_text(
                     f"⏳ *Analyzing Stock*\n\n"
@@ -1421,20 +1455,9 @@ async def handle_papertrade_stock_confirm(query, context, params: list) -> None:
                 )
             except Exception as edit_err:
                 logger.warning(f"Could not edit message: {edit_err}")
-            
+
             try:
                 logger.info(f"Analyzing {symbol} for paper trade...")
-                
-                # Check market hours - queue if closed
-                from ..services.market_hours_service import get_market_hours_service
-                market_hours = get_market_hours_service()
-                is_market_open = market_hours.is_market_open()
-                
-                if not is_market_open:
-                    logger.info(f"Market is closed - queueing trade for {symbol} to execute when market opens")
-                    # Queue the trade instead of executing immediately
-                    await _queue_paper_trade_for_market_open(query, context, symbol, active_session, user_id, db)
-                    return
                 
                 # Market is open - proceed with normal execution
                 
@@ -1840,6 +1863,7 @@ async def _queue_paper_trade_for_market_open(
         
         # Create pending trade (with or without analysis)
         try:
+            logger.info(f"Creating pending trade: session_id={session.id}, symbol={symbol}, user_id={user_id}")
             pending_trade = PendingPaperTrade(
                 session_id=session.id,
                 symbol=symbol,
@@ -1848,8 +1872,10 @@ async def _queue_paper_trade_for_market_open(
                 status='PENDING'
             )
             db.add(pending_trade)
+            db.flush()  # Validate before commit
             db.commit()
-            
+            logger.info(f"Successfully created pending trade with ID {pending_trade.id}")
+
             # Get next market open time
             market_hours = get_market_hours_service()
             next_open = market_hours.get_next_market_open()
@@ -1945,53 +1971,33 @@ async def handle_papertrade_stock_history(query, context, params: list) -> None:
             pass
         
         with get_db_context() as db:
-            # Get active session
+            # Get active session (but don't require it for history)
             trading_service = get_paper_trading_service(db)
             active_session = await trading_service.get_active_session(user_id)
-            
-            if not active_session:
-                # Create keyboard with back button and start session button
-                from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-                keyboard = InlineKeyboardMarkup([
-                    [
-                        InlineKeyboardButton("▶️ Start Paper Trading Session", callback_data="papertrade_start"),
-                    ],
-                    [
-                        InlineKeyboardButton("◀️ Back to Paper Trade Menu", callback_data=f"papertrade_stock:{symbol}"),
-                    ],
-                    [
-                        InlineKeyboardButton("📊 View Analysis", callback_data=f"analyze:{symbol}"),
-                    ],
-                ])
-                
-                await query.edit_message_text(
-                    f"📜 *Trade History for {symbol}*\n\n"
-                    f"❌ No active paper trading session found.\n\n"
-                    f"Use `/papertrade start` to begin paper trading.",
-                    parse_mode='Markdown',
-                    reply_markup=keyboard
-                )
-                return
-            
-            # Query open positions
-            open_positions = db.query(PaperPosition).filter(
-                PaperPosition.session_id == active_session.id,
+
+            logger.info(f"Trade history request: user={user_id}, symbol={symbol}, active_session={'EXISTS' if active_session else 'NONE'}")
+
+            # Query open positions (from all user's sessions)
+            open_positions = db.query(PaperPosition).join(PaperTradingSession).filter(
+                PaperTradingSession.user_id == user_id,
                 PaperPosition.symbol == symbol,
                 PaperPosition.is_open == True
             ).order_by(PaperPosition.entry_date.desc()).all()
-            
-            # Query pending trades
-            pending_trades = db.query(PendingPaperTrade).filter(
-                PendingPaperTrade.session_id == active_session.id,
+
+            # Query pending trades (from all user's sessions)
+            pending_trades = db.query(PendingPaperTrade).join(PaperTradingSession).filter(
+                PaperTradingSession.user_id == user_id,
                 PendingPaperTrade.symbol == symbol,
-                PendingPaperTrade.status == 'PENDING'
-            ).order_by(PendingPaperTrade.requested_at.desc()).all()
-            
-            # Query closed trades (history)
-            closed_trades = db.query(PaperTrade).filter(
-                PaperTrade.session_id == active_session.id,
+                PendingPaperTrade.status.in_(['PENDING', 'EXECUTED', 'FAILED', 'CANCELLED'])
+            ).order_by(PendingPaperTrade.requested_at.desc()).limit(10).all()
+
+            # Query closed trades (history from all sessions)
+            closed_trades = db.query(PaperTrade).join(PaperTradingSession).filter(
+                PaperTradingSession.user_id == user_id,
                 PaperTrade.symbol == symbol
             ).order_by(PaperTrade.exit_date.desc()).limit(20).all()
+
+            logger.info(f"Found data: open_positions={len(open_positions)}, pending_trades={len(pending_trades)}, closed_trades={len(closed_trades)}")
             
             # Build message
             message = f"📜 *Trade History for {symbol}*\n\n"

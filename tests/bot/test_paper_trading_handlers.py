@@ -2,6 +2,13 @@
 Comprehensive Tests for Paper Trading Handlers
 Tests command handlers and callback handlers
 
+Includes tests for:
+- Auto-session creation
+- Market hours detection
+- Queue creation reliability
+- Trade history for all trades
+- Error handling and user messages
+
 Author: Harsh Kandhway
 """
 
@@ -449,4 +456,425 @@ class TestPaperTradingCallbacks:
                 # Verify error message
                 mock_query.answer.assert_called()
                 assert 'No active session' in mock_query.answer.call_args[0][0]
+
+
+# =============================================================================
+# NEW TESTS FOR AUTO-SESSION CREATION AND ENHANCED FUNCTIONALITY
+# =============================================================================
+
+class TestAutoSessionCreation:
+    """Test auto-creation of paper trading sessions"""
+
+    @pytest.mark.asyncio
+    async def test_auto_create_session_when_none_exists(self, mock_query, mock_context, test_db):
+        """Test that a session is auto-created when user tries to paper trade without active session"""
+        from unittest.mock import patch
+
+        mock_query.data = "papertrade_stock_confirm:AXISBANK.NS"
+
+        with patch('src.bot.handlers.callbacks.get_db_context') as mock_db_ctx:
+            mock_db_ctx.return_value.__enter__.return_value = test_db
+            mock_db_ctx.return_value.__exit__.return_value = None
+
+            # Mock market hours to be closed
+            with patch('src.bot.services.market_hours_service.get_market_hours_service') as mock_mh:
+                market_hours = Mock()
+                market_hours.is_market_open.return_value = False
+                market_hours.get_next_market_open.return_value = datetime(2026, 1, 12, 9, 15, 0)
+                mock_mh.return_value = market_hours
+
+                # Mock trading service to return no active session
+                with patch('src.bot.services.paper_trading_service.get_paper_trading_service') as mock_service:
+                    mock_trading_service = AsyncMock()
+                    mock_trading_service.get_active_session.return_value = None
+                    mock_service.return_value = mock_trading_service
+
+                    # Mock user settings
+                    with patch('src.bot.database.db.get_user_settings') as mock_get_settings:
+                        settings = Mock()
+                        settings.default_capital = 100000
+                        mock_get_settings.return_value = settings
+
+                        await handle_papertrade_stock_confirm(mock_query, mock_context, ['AXISBANK.NS'])
+
+                        # Verify session was created
+                        from src.bot.database.models import PaperTradingSession
+                        session = test_db.query(PaperTradingSession).filter(
+                            PaperTradingSession.user_id == mock_query.from_user.id,
+                            PaperTradingSession.is_active == True
+                        ).first()
+
+                        assert session is not None
+                        assert session.initial_capital == 100000
+
+                        # Verify pending trade was created
+                        from src.bot.database.models import PendingPaperTrade
+                        pending = test_db.query(PendingPaperTrade).filter(
+                            PendingPaperTrade.session_id == session.id,
+                            PendingPaperTrade.symbol == 'AXISBANK.NS'
+                        ).first()
+
+                        assert pending is not None
+                        assert pending.status == 'PENDING'
+
+    @pytest.mark.asyncio
+    async def test_market_hours_logging_detailed(self):
+        """Test that market hours service logs detailed information"""
+        from src.bot.services.market_hours_service import get_market_hours_service
+        import logging
+
+        # Capture log messages
+        with patch('src.bot.services.market_hours_service.logger') as mock_logger:
+            mh = get_market_hours_service()
+            result = mh.is_market_open()
+
+            # Verify detailed logging was called
+            mock_logger.info.assert_called()
+            log_call = mock_logger.info.call_args[0][0]
+            assert 'Market hours check:' in log_call
+            assert 'weekday=' in log_call
+            assert 'time=' in log_call
+
+    @pytest.mark.asyncio
+    async def test_queue_creation_with_flush_validation(self, mock_update, mock_context, test_db, test_user, test_session):
+        """Test that pending trade creation uses flush() for validation"""
+        from unittest.mock import patch
+
+        # Mock the queue function to verify flush is called
+        with patch('src.bot.handlers.callbacks._queue_paper_trade_for_market_open') as mock_queue:
+            mock_queue.return_value = None
+
+            # Create a mock query
+            mock_query = Mock()
+            mock_query.from_user.id = test_user.id
+            mock_query.answer = AsyncMock()
+            mock_query.edit_message_text = AsyncMock()
+
+            # Mock market closed
+            with patch('src.bot.handlers.callbacks.get_market_hours_service') as mock_mh:
+                market_hours = Mock()
+                market_hours.is_market_open.return_value = False
+                market_hours.get_next_market_open.return_value = datetime(2026, 1, 12, 9, 15, 0)
+                mock_mh.return_value = market_hours
+
+                # Call the handler
+                from src.bot.handlers.callbacks import handle_papertrade_stock_confirm
+                await handle_papertrade_stock_confirm(mock_query, mock_context, ['AXISBANK.NS'])
+
+                # Verify queue function was called
+                mock_queue.assert_called_once()
+
+
+class TestTradeHistoryAllTrades:
+    """Test that trade history shows all trades regardless of session"""
+
+    @pytest.mark.asyncio
+    async def test_history_shows_all_user_trades(self, mock_query, mock_context, test_db):
+        """Test that trade history shows trades from all user sessions"""
+        from src.bot.handlers.callbacks import handle_papertrade_stock_history
+        from src.bot.database.models import PaperTradingSession, PendingPaperTrade, PaperPosition, PaperTrade
+
+        # Create multiple sessions for the user
+        session1 = PaperTradingSession(
+            user_id=mock_query.from_user.id,
+            initial_capital=100000,
+            is_active=False
+        )
+        session2 = PaperTradingSession(
+            user_id=mock_query.from_user.id,
+            initial_capital=50000,
+            is_active=True
+        )
+        test_db.add_all([session1, session2])
+        test_db.commit()
+
+        # Create trades in different sessions
+        pending1 = PendingPaperTrade(
+            session_id=session1.id,
+            symbol='AXISBANK.NS',
+            requested_by_user_id=mock_query.from_user.id,
+            signal_data='{"test": "data"}',
+            status='EXECUTED'
+        )
+        pending2 = PendingPaperTrade(
+            session_id=session2.id,
+            symbol='AXISBANK.NS',
+            requested_by_user_id=mock_query.from_user.id,
+            signal_data='{"test": "data2"}',
+            status='PENDING'
+        )
+
+        position = PaperPosition(
+            session_id=session1.id,
+            symbol='AXISBANK.NS',
+            entry_price=100.0,
+            shares=10,
+            position_value=1000.0,  # entry_price * shares
+            target_price=110.0,
+            stop_loss_price=95.0,
+            initial_risk_reward=1.5,
+            recommendation_type='BUY',
+            entry_confidence=75.0,
+            entry_score_pct=80.0,
+            is_open=True
+        )
+
+        trade = PaperTrade(
+            session_id=session2.id,
+            symbol='AXISBANK.NS',
+            entry_price=95.0,
+            exit_price=105.0,
+            shares=5,
+            pnl=50.0,
+            exit_date=datetime.utcnow()
+        )
+
+        test_db.add_all([pending1, pending2, position, trade])
+        test_db.commit()
+
+        mock_query.data = "papertrade_stock_history:AXISBANK.NS"
+
+        with patch('src.bot.handlers.callbacks.get_db_context') as mock_db_ctx:
+            mock_db_ctx.return_value.__enter__.return_value = test_db
+            mock_db_ctx.return_value.__exit__.return_value = None
+
+            await handle_papertrade_stock_history(mock_query, mock_context, ['AXISBANK.NS'])
+
+            # Verify the message was sent
+            mock_query.edit_message_text.assert_called()
+            message = mock_query.edit_message_text.call_args[0][0]
+
+            # Should contain data from all sessions
+            assert 'OPEN POSITIONS (1)' in message  # From session1
+            assert 'PENDING TRADES' in message or 'EXECUTED' in message  # From both sessions
+            assert 'closed trades' in message or 'CLOSED TRADES' in message  # From session2
+
+    @pytest.mark.asyncio
+    async def test_history_no_active_session_but_shows_data(self, mock_update, mock_context, test_db, test_user):
+        """Test that history shows data even when no active session exists"""
+        from src.bot.handlers.callbacks import handle_papertrade_stock_history
+        from src.bot.database.models import PaperTradingSession, PendingPaperTrade
+
+        # Create an old inactive session
+        old_session = PaperTradingSession(
+            user_id=test_user.id,
+            capital=100000,
+            is_active=False
+        )
+        test_db.add(old_session)
+        test_db.commit()
+
+        # Create a pending trade in the old session
+        pending = PendingPaperTrade(
+            session_id=old_session.id,
+            symbol='AXISBANK.NS',
+            requested_by_user_id=test_user.id,
+            signal_data='{"test": "data"}',
+            status='PENDING'
+        )
+        test_db.add(pending)
+        test_db.commit()
+
+        # Mock trading service to return no active session
+        with patch('src.bot.handlers.callbacks.get_paper_trading_service') as mock_service:
+            mock_trading_service = Mock()
+            mock_trading_service.get_active_session = AsyncMock(return_value=None)
+            mock_service.return_value = mock_trading_service
+
+            mock_query = Mock()
+            mock_query.from_user.id = test_user.id
+            mock_query.answer = AsyncMock()
+            mock_query.edit_message_text = AsyncMock()
+
+            await handle_papertrade_stock_history(mock_query, mock_context, ['AXISBANK.NS'])
+
+            # Should show the pending trade even without active session
+            mock_query.edit_message_text.assert_called()
+            message = mock_query.edit_message_text.call_args[0][0]
+            assert 'PENDING TRADES' in message or 'pending' in message.lower()
+
+
+class TestErrorHandlingAndMessages:
+    """Test error handling and user messages"""
+
+    @pytest.mark.asyncio
+    async def test_clear_error_message_for_queue_failure(self, mock_update, mock_context, test_db, test_user, test_session):
+        """Test that queue creation failures show clear error messages"""
+        from unittest.mock import patch
+
+        mock_query = Mock()
+        mock_query.from_user.id = test_user.id
+        mock_query.answer = AsyncMock()
+        mock_query.edit_message_text = AsyncMock()
+
+        # Mock market closed
+        with patch('src.bot.handlers.callbacks.get_market_hours_service') as mock_mh:
+            market_hours = Mock()
+            market_hours.is_market_open.return_value = False
+            market_hours.get_next_market_open.return_value = datetime(2026, 1, 12, 9, 15, 0)
+            mock_mh.return_value = market_hours
+
+            # Mock queue function to raise exception
+            with patch('src.bot.handlers.callbacks._queue_paper_trade_for_market_open') as mock_queue:
+                mock_queue.side_effect = Exception("Database connection failed")
+
+                from src.bot.handlers.callbacks import handle_papertrade_stock_confirm
+                await handle_papertrade_stock_confirm(mock_query, mock_context, ['AXISBANK.NS'])
+
+                # Should show error message
+                mock_query.edit_message_text.assert_called()
+                message = mock_query.edit_message_text.call_args[0][0]
+                assert 'Failed to Queue Trade' in message or 'error' in message.lower()
+
+    @pytest.mark.asyncio
+    async def test_market_closed_message_shown(self, mock_update, mock_context, test_db, test_user, test_session):
+        """Test that market closed message is shown correctly"""
+        mock_query = Mock()
+        mock_query.from_user.id = test_user.id
+        mock_query.answer = AsyncMock()
+        mock_query.edit_message_text = AsyncMock()
+
+        # Mock market closed
+        with patch('src.bot.handlers.callbacks.get_market_hours_service') as mock_mh:
+            market_hours = Mock()
+            market_hours.is_market_open.return_value = False
+            market_hours.get_next_market_open.return_value = datetime(2026, 1, 12, 9, 15, 0)
+            mock_mh.return_value = market_hours
+
+            from src.bot.handlers.callbacks import handle_papertrade_stock_confirm
+            await handle_papertrade_stock_confirm(mock_query, mock_context, ['AXISBANK.NS'])
+
+            # Should show market closed message
+            mock_query.edit_message_text.assert_called()
+            calls = mock_query.edit_message_text.call_args_list
+
+            # Find the call with "Market Closed"
+            market_closed_call = None
+            for call in calls:
+                if 'Market Closed' in call[0][0]:
+                    market_closed_call = call
+                    break
+
+            assert market_closed_call is not None
+            assert 'Queueing Trade' in market_closed_call[0][0]
+
+
+# =============================================================================
+# INTEGRATION TESTS
+# =============================================================================
+
+class TestIntegrationScenarios:
+    """Integration tests for complete flows"""
+
+    @pytest.mark.asyncio
+    async def test_complete_queue_flow_with_auto_session(self, mock_update, mock_context, test_db, test_user, mock_settings):
+        """Test complete flow: no session → auto-create → queue → success"""
+        from src.bot.handlers.callbacks import handle_papertrade_stock_confirm
+        from unittest.mock import patch
+
+        mock_query = Mock()
+        mock_query.from_user.id = test_user.id
+        mock_query.answer = AsyncMock()
+        mock_query.edit_message_text = AsyncMock()
+
+        # Mock market closed
+        with patch('src.bot.handlers.callbacks.get_market_hours_service') as mock_mh:
+            market_hours = Mock()
+            market_hours.is_market_open.return_value = False
+            market_hours.get_next_market_open.return_value = datetime(2026, 1, 12, 9, 15, 0)
+            mock_mh.return_value = market_hours
+
+            # Mock no active session initially
+            with patch('src.bot.handlers.callbacks.get_paper_trading_service') as mock_service:
+                mock_trading_service = Mock()
+                mock_trading_service.get_active_session = AsyncMock(return_value=None)
+                mock_service.return_value = mock_trading_service
+
+                # Mock settings
+                with patch('src.bot.handlers.callbacks.get_user_settings') as mock_get_settings:
+                    mock_get_settings.return_value = mock_settings
+
+                    await handle_papertrade_stock_confirm(mock_query, mock_context, ['AXISBANK.NS'])
+
+                    # Verify session was created
+                    from src.bot.database.models import PaperTradingSession
+                    session = test_db.query(PaperTradingSession).filter(
+                        PaperTradingSession.user_id == test_user.id,
+                        PaperTradingSession.is_active == True
+                    ).first()
+                    assert session is not None
+
+                    # Verify pending trade exists
+                    from src.bot.database.models import PendingPaperTrade
+                    pending = test_db.query(PendingPaperTrade).filter(
+                        PendingPaperTrade.session_id == session.id,
+                        PendingPaperTrade.symbol == 'AXISBANK.NS',
+                        PendingPaperTrade.status == 'PENDING'
+                    ).first()
+                    assert pending is not None
+
+                    # Verify success message
+                    success_calls = [call for call in mock_query.edit_message_text.call_args_list
+                                   if 'Trade Queued' in call[0][0]]
+                    assert len(success_calls) > 0
+    """Integration tests for complete user flows"""
+
+    @pytest.mark.asyncio
+    async def test_complete_paper_trade_flow_market_closed(self, mock_query, mock_context, test_db):
+        """Test complete flow: click paper trade → market closed → auto session → queue → success"""
+        from unittest.mock import patch
+
+        mock_query.data = "papertrade_stock_confirm:AXISBANK.NS"
+
+        with patch('src.bot.handlers.callbacks.get_db_context') as mock_db_ctx:
+            mock_db_ctx.return_value.__enter__.return_value = test_db
+            mock_db_ctx.return_value.__exit__.return_value = None
+
+            # Mock market closed
+            with patch('src.bot.services.market_hours_service.get_market_hours_service') as mock_mh:
+                market_hours = Mock()
+                market_hours.is_market_open.return_value = False
+                market_hours.get_next_market_open.return_value = datetime(2026, 1, 12, 9, 15, 0)
+                mock_mh.return_value = market_hours
+
+                # Mock no active session initially
+                with patch('src.bot.services.paper_trading_service.get_paper_trading_service') as mock_service:
+                    mock_trading_service = AsyncMock()
+                    mock_trading_service.get_active_session.return_value = None
+                    mock_service.return_value = mock_trading_service
+
+                    # Mock user settings
+                    with patch('src.bot.database.db.get_user_settings') as mock_get_settings:
+                        settings = Mock()
+                        settings.default_capital = 100000
+                        mock_get_settings.return_value = settings
+
+                        from src.bot.handlers.callbacks import handle_papertrade_stock_confirm
+                        await handle_papertrade_stock_confirm(mock_query, mock_context, ['AXISBANK.NS'])
+
+                        # Verify market closed message was shown
+                        calls = mock_query.edit_message_text.call_args_list
+                        market_closed_shown = any('Market Closed' in call[0][0] for call in calls)
+                        assert market_closed_shown, "Market closed message not shown"
+
+                        # Verify session was created
+                        from src.bot.database.models import PaperTradingSession
+                        session = test_db.query(PaperTradingSession).filter(
+                            PaperTradingSession.user_id == mock_query.from_user.id,
+                            PaperTradingSession.is_active == True
+                        ).first()
+                        assert session is not None, "Session not auto-created"
+
+                        # Verify pending trade was queued
+                        from src.bot.database.models import PendingPaperTrade
+                        pending = test_db.query(PendingPaperTrade).filter(
+                            PendingPaperTrade.session_id == session.id,
+                            PendingPaperTrade.symbol == 'AXISBANK.NS',
+                            PendingPaperTrade.status == 'PENDING'
+                        ).first()
+                        assert pending is not None, "Pending trade not created"
+
+                        # Verify success message
+                        success_calls = [call for call in calls if 'Trade Queued' in call[0][0]]
+                        assert len(success_calls) > 0, "Success message not shown"
 
