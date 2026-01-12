@@ -168,7 +168,7 @@ def migrate_database():
                     ))
                     conn.commit()
                     safe_print("✅ Removed deprecated beginner_mode column")
-            
+
             # Add paper trading columns if they don't exist
             if 'paper_trading_enabled' not in columns:
                 with engine.connect() as conn:
@@ -177,15 +177,15 @@ def migrate_database():
                     ))
                     conn.commit()
                     safe_print("✅ Added paper_trading_enabled column")
-            
-            if 'paper_trading_capital' not in columns:
+
+            if 'paper_trading_default_capital' not in columns:
                 with engine.connect() as conn:
                     conn.execute(text(
-                        "ALTER TABLE user_settings ADD COLUMN paper_trading_capital FLOAT DEFAULT 500000.0"
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_default_capital FLOAT DEFAULT 500000.0"
                     ))
                     conn.commit()
-                    safe_print("✅ Added paper_trading_capital column")
-            
+                    safe_print("✅ Added paper_trading_default_capital column")
+
             if 'paper_trading_max_positions' not in columns:
                 with engine.connect() as conn:
                     conn.execute(text(
@@ -193,14 +193,70 @@ def migrate_database():
                     ))
                     conn.commit()
                     safe_print("✅ Added paper_trading_max_positions column")
-            
-            if 'paper_trading_risk_per_trade_pct' not in columns:
+
+            if 'paper_trading_risk_percentage' not in columns:
                 with engine.connect() as conn:
                     conn.execute(text(
-                        "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_per_trade_pct FLOAT DEFAULT 1.0"
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_percentage FLOAT DEFAULT 1.0"
                     ))
                     conn.commit()
-                    safe_print("✅ Added paper_trading_risk_per_trade_pct column")
+                    safe_print("✅ Added paper_trading_risk_percentage column")
+
+            if 'paper_trading_monitor_interval_seconds' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_monitor_interval_seconds INTEGER DEFAULT 60"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_monitor_interval_seconds column")
+
+            if 'paper_trading_max_position_size_pct' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_max_position_size_pct FLOAT DEFAULT 10.0"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_max_position_size_pct column")
+
+            if 'paper_trading_buy_execution_time' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_buy_execution_time VARCHAR(5) DEFAULT '09:15'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_buy_execution_time column")
+
+            if 'paper_trading_daily_summary_time' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_daily_summary_time VARCHAR(5) DEFAULT '18:00'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_daily_summary_time column")
+
+            if 'paper_trading_weekly_summary_time' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_weekly_summary_time VARCHAR(5) DEFAULT '18:00'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_weekly_summary_time column")
+
+            if 'paper_trading_position_rebalance_time' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_position_rebalance_time VARCHAR(5) DEFAULT '15:30'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_position_rebalance_time column")
+
+            if 'paper_trading_entry_price_tolerance_pct' not in columns:
+                with engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_entry_price_tolerance_pct FLOAT DEFAULT 0.5"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_entry_price_tolerance_pct column")
     
     except Exception as e:
         safe_print(f"⚠️ Migration warning: {e}")

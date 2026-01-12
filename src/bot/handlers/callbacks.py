@@ -1399,8 +1399,8 @@ async def handle_papertrade_stock_confirm(query, context, params: list) -> None:
 
                 active_session = PaperTradingSession(
                     user_id=user_id,
-                    initial_capital=settings.default_capital if settings else 100000,
-                    current_capital=settings.default_capital if settings else 100000,
+                    initial_capital=settings.paper_trading_default_capital if settings and settings.paper_trading_enabled else 100000,
+                    current_capital=settings.paper_trading_default_capital if settings and settings.paper_trading_enabled else 100000,
                     is_active=True
                 )
                 db.add(active_session)

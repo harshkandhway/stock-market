@@ -49,9 +49,9 @@ class TestPaperTradingCompleteFlow:
         settings = UserSettings(
             user_id=test_user.id,
             paper_trading_enabled=True,
-            paper_trading_capital=500000.0,
+            paper_trading_default_capital=500000.0,
             paper_trading_max_positions=15,
-            paper_trading_risk_per_trade_pct=1.0
+            paper_trading_risk_percentage=1.0
         )
         test_db.add(settings)
         test_db.commit()
@@ -65,7 +65,7 @@ class TestPaperTradingCompleteFlow:
         trading_service = PaperTradingService(test_db)
         session = await trading_service.start_session(
             test_user.telegram_id,
-            test_settings.paper_trading_capital,
+            test_settings.paper_trading_default_capital,
             test_settings.paper_trading_max_positions
         )
         
@@ -178,7 +178,7 @@ class TestPaperTradingCompleteFlow:
         trading_service = PaperTradingService(test_db)
         session = await trading_service.start_session(
             test_user.telegram_id,
-            test_settings.paper_trading_capital,
+            test_settings.paper_trading_default_capital,
             test_settings.paper_trading_max_positions
         )
         
@@ -251,7 +251,7 @@ class TestPaperTradingCompleteFlow:
         trading_service = PaperTradingService(test_db)
         session = await trading_service.start_session(
             test_user.telegram_id,
-            test_settings.paper_trading_capital,
+            test_settings.paper_trading_default_capital,
             test_settings.paper_trading_max_positions
         )
         
@@ -301,7 +301,7 @@ class TestPaperTradingCompleteFlow:
         trading_service = PaperTradingService(test_db)
         session = await trading_service.start_session(
             test_user.telegram_id,
-            test_settings.paper_trading_capital,
+            test_settings.paper_trading_default_capital,
             test_settings.paper_trading_max_positions
         )
         

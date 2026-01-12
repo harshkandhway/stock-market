@@ -340,13 +340,19 @@ def create_settings_menu_keyboard(daily_buy_alerts_enabled: bool = False) -> Inl
         ],
         [
             InlineKeyboardButton(
-                f"🔔 Daily BUY Alerts ({alert_status})", 
+                f"🔔 Daily BUY Alerts ({alert_status})",
                 callback_data="settings_daily_buy_alerts"
             ),
         ],
         [
             InlineKeyboardButton(
-                "📋 View All My Settings", 
+                "📊 Paper Trading Settings",
+                callback_data="settings_paper_trading"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📋 View All My Settings",
                 callback_data="settings_show"
             ),
         ],
@@ -815,3 +821,91 @@ def remove_keyboard() -> dict:
         Dictionary for ReplyKeyboardRemove
     """
     return {"remove_keyboard": True}
+
+
+def create_paper_trading_settings_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for paper trading settings menu.
+
+    Returns:
+        InlineKeyboardMarkup with paper trading settings options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "🔄 Enable/Disable Paper Trading",
+                callback_data="settings_paper_trading_enabled"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "💰 Default Capital (₹500,000)",
+                callback_data="settings_paper_trading_capital"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🎯 Max Positions (15)",
+                callback_data="settings_paper_trading_max_positions"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "⚠️ Risk per Trade (1.0%)",
+                callback_data="settings_paper_trading_risk"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "⏱️ Monitor Interval (5 min)",
+                callback_data="settings_paper_trading_monitor"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📏 Max Position Size (20%)",
+                callback_data="settings_paper_trading_max_size"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🕘 Buy Execution Time (09:20)",
+                callback_data="settings_paper_trading_buy_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📊 Daily Summary (16:00)",
+                callback_data="settings_paper_trading_daily_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📅 Weekly Summary (18:00)",
+                callback_data="settings_paper_trading_weekly_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🔄 Rebalance Time (11:00)",
+                callback_data="settings_paper_trading_rebalance_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🎯 Price Tolerance (3.0%)",
+                callback_data="settings_paper_trading_tolerance"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🔄 Reset to Defaults",
+                callback_data="settings_paper_trading_reset"
+            ),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
+        ],
+    ]
+
+    return InlineKeyboardMarkup(keyboard)

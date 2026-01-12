@@ -61,11 +61,18 @@ class UserSettings(Base):
     daily_buy_alert_time = Column(String(10), default='09:00')  # HH:MM format in user's timezone
     last_daily_alert_sent = Column(DateTime, nullable=True)  # Track when alert was last sent successfully
 
-    # Paper Trading Settings
-    paper_trading_enabled = Column(Boolean, default=False, index=True)
-    paper_trading_capital = Column(Float, default=500000.0)  # ₹5 lakhs default
-    paper_trading_max_positions = Column(Integer, default=15)  # 10-20 range, default 15
-    paper_trading_risk_per_trade_pct = Column(Float, default=1.0)  # 1% risk per trade
+    # Paper Trading Settings (using .env defaults)
+    paper_trading_enabled = Column(Boolean, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_ENABLED']).PAPER_TRADING_ENABLED)
+    paper_trading_default_capital = Column(Float, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_DEFAULT_CAPITAL']).PAPER_TRADING_DEFAULT_CAPITAL)
+    paper_trading_max_positions = Column(Integer, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_DEFAULT_MAX_POSITIONS']).PAPER_TRADING_DEFAULT_MAX_POSITIONS)
+    paper_trading_risk_percentage = Column(Float, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_DEFAULT_RISK_PCT']).PAPER_TRADING_DEFAULT_RISK_PCT)
+    paper_trading_monitor_interval_seconds = Column(Integer, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_MONITOR_INTERVAL']).PAPER_TRADING_MONITOR_INTERVAL)
+    paper_trading_max_position_size_pct = Column(Float, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_MAX_POSITION_SIZE_PCT']).PAPER_TRADING_MAX_POSITION_SIZE_PCT)
+    paper_trading_buy_execution_time = Column(String(5), default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_BUY_EXECUTION_TIME']).PAPER_TRADING_BUY_EXECUTION_TIME)
+    paper_trading_daily_summary_time = Column(String(5), default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_DAILY_SUMMARY_TIME']).PAPER_TRADING_DAILY_SUMMARY_TIME)
+    paper_trading_weekly_summary_time = Column(String(5), default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_WEEKLY_SUMMARY_TIME']).PAPER_TRADING_WEEKLY_SUMMARY_TIME)
+    paper_trading_position_rebalance_time = Column(String(5), default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_POSITION_REBALANCE_TIME']).PAPER_TRADING_POSITION_REBALANCE_TIME)
+    paper_trading_entry_price_tolerance_pct = Column(Float, default=lambda: __import__('src.bot.config', fromlist=['PAPER_TRADING_ENTRY_PRICE_TOLERANCE']).PAPER_TRADING_ENTRY_PRICE_TOLERANCE)
 
     # Relationship
     user = relationship("User", back_populates="settings")
