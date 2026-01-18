@@ -98,10 +98,11 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         paper_trading_actions = [
             "papertrade_stock", "papertrade_stock_confirm", "papertrade_stock_history",
             "papertrade_buy_signals", "papertrade_buy_signals_confirm", "papertrade_watchlist", "papertrade_watchlist_confirm",
-            "papertrade_menu", "papertrade_start", "papertrade_stop", "papertrade_status",
+            "papertrade_menu", "papertrade_main", "papertrade_start", "papertrade_stop", "papertrade_status",
             "papertrade_history", "papertrade_performance", "papertrade_insights",
             "papertrade_settings", "papertrade_info", "papertrade_buy_signals_info",
-            "papertrade_watchlist_info", "papertrade_view_signals"
+            "papertrade_watchlist_info", "papertrade_view_signals",
+            "papertrade_status_menu", "papertrade_signals_menu", "papertrade_signals_info"
         ]
         
         if action in paper_trading_actions:
@@ -122,6 +123,14 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
                 await handle_papertrade_watchlist_confirm(query, context)
             elif action == "papertrade_menu":
                 await handle_papertrade_menu(query, context)
+            elif action == "papertrade_main":
+                await handle_papertrade_main(query, context)
+            elif action == "papertrade_status_menu":
+                await handle_papertrade_status_menu(query, context)
+            elif action == "papertrade_signals_menu":
+                await handle_papertrade_signals_menu(query, context)
+            elif action == "papertrade_signals_info":
+                await handle_papertrade_signals_info(query, context)
             elif action == "papertrade_start":
                 await handle_papertrade_start(query, context)
             elif action == "papertrade_stop":
@@ -144,6 +153,12 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
                 await handle_papertrade_watchlist_info(query, context)
             elif action == "papertrade_view_signals":
                 await handle_papertrade_view_signals(query, context)
+            elif action == "papertrade_status_menu":
+                await handle_papertrade_status_menu(query, context)
+            elif action == "papertrade_signals_menu":
+                await handle_papertrade_signals_menu(query, context)
+            elif action == "papertrade_signals_info":
+                await handle_papertrade_signals_info(query, context)
         else:
             # Acknowledge callbacks for other handlers
             await query.answer()
@@ -2387,19 +2402,8 @@ async def handle_papertrade_watchlist_confirm(query, context) -> None:
 
 
 async def handle_papertrade_menu(query, context) -> None:
-    """Show paper trading main menu."""
-    from ..utils.keyboards import create_paper_trading_main_keyboard
-    
-    await query.edit_message_text(
-        "📈 *Paper Trading Menu*\n\n"
-        "Manage your paper trading session:\n\n"
-        "• Start/Stop session\n"
-        "• View status and history\n"
-        "• Trade BUY signals or watchlist\n"
-        "• View performance and insights",
-        parse_mode='Markdown',
-        reply_markup=create_paper_trading_main_keyboard()
-    )
+    """Show paper trading main menu - redirects to new Step 1 menu."""
+    await handle_papertrade_main(query, context)
 
 
 async def handle_papertrade_start(query, context) -> None:
@@ -2628,3 +2632,89 @@ async def handle_papertrade_view_signals(query, context) -> None:
     except Exception as e:
         logger.error(f"Error viewing signals: {e}", exc_info=True)
         await query.answer("❌ Error loading signals", show_alert=True)
+
+
+async def handle_papertrade_main(query, context) -> None:
+    """Show main paper trading menu (Step 1)."""
+    from ..database.models import PaperTradingSession
+
+    user_id = query.from_user.id
+
+    try:
+        with get_db_context() as db:
+            session = db.query(PaperTradingSession).filter(
+                PaperTradingSession.user_id == user_id,
+                PaperTradingSession.is_active == True
+            ).first()
+
+            session_active = session is not None
+
+        from ..utils.keyboards import create_paper_trading_main_keyboard
+
+        keyboard = create_paper_trading_main_keyboard(session_active=session_active)
+
+        await query.edit_message_text(
+            "📈 *Paper Trading*\n\n"
+            "Practice trading without real money.\n"
+            "Test strategies and track performance.",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+
+    except Exception as e:
+        logger.error(f"Error showing paper trading main menu: {e}", exc_info=True)
+        await query.answer("❌ Error loading menu", show_alert=True)
+
+
+async def handle_papertrade_status_menu(query, context) -> None:
+    """Show Status Overview submenu (Step 2a)."""
+    from ..utils.keyboards import create_paper_trading_status_submenu_keyboard
+
+    keyboard = create_paper_trading_status_submenu_keyboard()
+
+    await query.edit_message_text(
+        "📊 *Status Overview*\n\n"
+        "View your paper trading status:\n"
+        "• Full Status - Current positions and P&L\n"
+        "• Trade History - Completed trades\n"
+        "• Performance - Win rate and metrics\n"
+        "• Insights - System recommendations",
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+async def handle_papertrade_signals_menu(query, context) -> None:
+    """Show Trade Signals submenu (Step 2b)."""
+    from ..utils.keyboards import create_paper_trading_signals_submenu_keyboard
+
+    keyboard = create_paper_trading_signals_submenu_keyboard()
+
+    await query.edit_message_text(
+        "📈 *Trade Signals*\n\n"
+        "Execute paper trades based on signals:\n"
+        "• Trade All BUY Signals - Execute for all BUY signals\n"
+        "• Trade Watchlist - Execute for watchlist stocks\n"
+        "• About Signals - Learn how signals work",
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+async def handle_papertrade_signals_info(query, context) -> None:
+    """Show information about how trade signals work."""
+    await query.edit_message_text(
+        "ℹ️ *About Trade Signals*\n\n"
+        "**What are BUY Signals?**\n"
+        "BUY signals are generated when technical indicators suggest a stock may rise.\n\n"
+        "**Signal Types:**\n"
+        "• 🟢 STRONG BUY - High confidence\n"
+        "• 🟢 BUY - Good opportunity\n"
+        "• 🟡 WEAK BUY - Moderate signal\n\n"
+        "**How It Works:**\n"
+        "1. System analyzes stocks daily\n"
+        "2. Generates BUY signals based on technical analysis\n"
+        "3. You can trade these signals paper-style\n\n"
+        "**Note:** Paper trading lets you practice without real money.",
+        parse_mode='Markdown'
+    )

@@ -1,0 +1,53 @@
+================================================================================
+                     PAPER TRADING CAPITAL CALCULATION FIX
+                              SUMMARY REPORT
+================================================================================
+
+ISSUE IDENTIFIED:
+The Telegram bot was displaying INCORRECT capital and P&L values.
+
+BEFORE FIX (Wrong):
+  - Current Capital:  69,268.15  (was adding cash + unrealized P&L)
+  - Total P&L:        -30,731.85 (wrong calculation)
+  - Deployed Capital: 30,767.40  (was using entry values)
+
+AFTER FIX (Correct):
+  - Current Capital:  100,035.55 (shows cash + current market value)
+  - Total P&L:        +35.55     (correct - unrealized gains only)
+  - Deployed Capital: 30,802.95  (now uses current prices)
+
+ROOT CAUSE:
+Two bugs in paper_portfolio_service.py:
+
+1. update_session_capital() was using:
+   total_capital = get_available_capital() + current_deployed_value
+   = (session.current_capital - deployed_entry) + deployed_current
+   = session.current_capital + (deployed_current - deployed_entry)
+   = session.current_capital + unrealized_pnl  (DOUBLE COUNTING!)
+
+2. get_portfolio_summary() was calculating deployed_capital using 
+   entry values instead of current prices.
+
+FILES MODIFIED:
+src/bot/services/paper_portfolio_service.py
+  - update_session_capital() (line 283-327): Fixed total_capital calculation
+  - get_portfolio_summary() (line 345-347): Fixed deployed_capital to use current prices
+
+VERIFICATION:
+All calculations verified:
+  [OK] total_capital = session.current_capital + deployed_capital (current prices)
+  [OK] total_return = total_capital - initial_capital
+  [OK] deployed_capital uses current prices (not entry values)
+  [OK] total_unrealized_pnl is correctly calculated
+
+TESTING FILES CREATED:
+1. tests/bot/test_paper_trading_capital_fix.py - Unit tests
+2. verify_capital_fix.py - Comprehensive verification script
+
+USAGE:
+Run verification:
+  python verify_capital_fix.py
+
+================================================================================
+                           FIX COMPLETE
+================================================================================
