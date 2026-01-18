@@ -284,7 +284,10 @@ class PaperPortfolioService:
         """
         Recalculate total session capital (cash + positions)
 
-        Total Capital = current_capital (cash) + sum(open_position_current_values)
+        Total Capital = session.current_capital (cash including invested) + sum(open_position_current_values)
+
+        The session.current_capital already reflects cash after position entries,
+        so we simply add the current market value of all open positions.
 
         Args:
             session: Paper trading session
@@ -292,10 +295,7 @@ class PaperPortfolioService:
         Returns:
             Updated total capital
         """
-        # Get unrealized P&L
-        unrealized_data = self.get_total_unrealized_pnl(session)
-
-        # Total capital = cash + current position values
+        # Get open positions
         open_positions = self.db.query(PaperPosition).filter(
             PaperPosition.session_id == session.id,
             PaperPosition.is_open == True
@@ -309,20 +309,19 @@ class PaperPortfolioService:
             else:
                 current_deployed_value += pos.position_value  # Use entry value if current price not available
 
-        # Available cash (not in positions)
-        available_cash = self.get_available_capital(session)
-
-        # Total capital
-        total_capital = available_cash + current_deployed_value
+        # Total capital = session.current_capital + current deployed value
+        # session.current_capital already has cash (after position entries)
+        # Adding current_deployed_value gives total portfolio value
+        total_capital = session.current_capital + current_deployed_value
 
         # Update peak capital if new high
         if total_capital > session.peak_capital:
             session.peak_capital = total_capital
-            logger.info("New peak capital: ₹%.2f", total_capital)
+            logger.info("New peak capital: %.2f", total_capital)
 
         logger.debug(
-            "Total capital: ₹%.2f (cash: ₹%.2f + positions: ₹%.2f)",
-            total_capital, available_cash, current_deployed_value
+            "Total capital: %.2f (cash: %.2f + positions: %.2f)",
+            total_capital, session.current_capital, current_deployed_value
         )
 
         return total_capital
@@ -344,8 +343,15 @@ class PaperPortfolioService:
         ).all()
 
         # Capital breakdown
+        # Calculate deployed capital at current market prices (for consistency with total_capital)
+        deployed_capital = 0.0
+        for pos in open_positions:
+            if pos.current_price is not None:
+                deployed_capital += pos.shares * pos.current_price
+            else:
+                deployed_capital += pos.position_value  # Fallback to entry value
+
         available_capital = self.get_available_capital(session)
-        deployed_capital = sum(pos.position_value for pos in open_positions)
 
         # Unrealized P&L
         unrealized_data = self.get_total_unrealized_pnl(session)

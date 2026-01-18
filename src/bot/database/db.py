@@ -126,7 +126,7 @@ def migrate_database():
             
             # Add investment_horizon column if it doesn't exist
             if 'investment_horizon' not in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN investment_horizon VARCHAR(20) DEFAULT '3months'"
                     ))
@@ -135,7 +135,7 @@ def migrate_database():
             
             # Add daily_buy_alerts_enabled column if it doesn't exist
             if 'daily_buy_alerts_enabled' not in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN daily_buy_alerts_enabled BOOLEAN DEFAULT 0"
                     ))
@@ -144,7 +144,7 @@ def migrate_database():
             
             # Add daily_buy_alert_time column if it doesn't exist
             if 'daily_buy_alert_time' not in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN daily_buy_alert_time VARCHAR(10) DEFAULT '09:00'"
                     ))
@@ -153,7 +153,7 @@ def migrate_database():
             
             # Add last_daily_alert_sent column if it doesn't exist (for tracking alert status)
             if 'last_daily_alert_sent' not in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN last_daily_alert_sent DATETIME"
                     ))
@@ -162,45 +162,163 @@ def migrate_database():
             
             # Remove beginner_mode column if it exists (deprecated - using unified formatter)
             if 'beginner_mode' in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings DROP COLUMN beginner_mode"
                     ))
                     conn.commit()
                     safe_print("✅ Removed deprecated beginner_mode column")
+
+            # =====================================================================
+            # PAPER TRADING MIGRATION - RENAME OLD COLUMNS
+            # =====================================================================
+            # Safely rename old column names to new names while preserving data
+            # This handles the migration from old schema to new schema
             
-            # Add paper trading columns if they don't exist
+            # Rename paper_trading_capital -> paper_trading_default_capital
+            if 'paper_trading_capital' in columns and 'paper_trading_default_capital' not in columns:
+                try:
+                    with engine.connect() as conn:
+                        conn.execute(text(
+                            "ALTER TABLE user_settings RENAME COLUMN paper_trading_capital TO paper_trading_default_capital"
+                        ))
+                        conn.commit()
+                    safe_print("✅ Renamed paper_trading_capital -> paper_trading_default_capital (data preserved)")
+                except Exception as e:
+                    safe_print(f"⚠️ Could not rename paper_trading_capital: {e}")
+            
+            # Rename paper_trading_risk_per_trade_pct -> paper_trading_risk_percentage
+            if 'paper_trading_risk_per_trade_pct' in columns and 'paper_trading_risk_percentage' not in columns:
+                try:
+                    with engine.connect() as conn:
+                        conn.execute(text(
+                            "ALTER TABLE user_settings RENAME COLUMN paper_trading_risk_per_trade_pct TO paper_trading_risk_percentage"
+                        ))
+                        conn.commit()
+                    safe_print("✅ Renamed paper_trading_risk_per_trade_pct -> paper_trading_risk_percentage (data preserved)")
+                except Exception as e:
+                    safe_print(f"⚠️ Could not rename paper_trading_risk_per_trade_pct: {e}")
+            
+            # =====================================================================
+            # PAPER TRADING MIGRATION - ADD NEW COLUMNS
+            # =====================================================================
+            # Now add any missing new columns with proper defaults
+            # IMPORTANT: SQLAlchemy caches schema, so we need to dispose and recreate engine
+            # to get accurate column list after renames
+            
+            # Dispose old engine to clear schema cache
+            engine.dispose()
+            
+            # Create new engine and inspector to get fresh schema
+            from sqlalchemy import create_engine as _create_engine
+            from src.bot.config import DATABASE_URL
+            new_engine = _create_engine(
+                DATABASE_URL,
+                connect_args={'check_same_thread': False} if 'sqlite' in DATABASE_URL else {},
+                poolclass=StaticPool if 'sqlite' in DATABASE_URL else None,
+                echo=False
+            )
+            new_inspector = inspect(new_engine)
+            columns = [col['name'] for col in new_inspector.get_columns('user_settings')]
+            
+            # Add paper_trading_enabled if it doesn't exist
             if 'paper_trading_enabled' not in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN paper_trading_enabled BOOLEAN DEFAULT 0"
                     ))
                     conn.commit()
                     safe_print("✅ Added paper_trading_enabled column")
             
-            if 'paper_trading_capital' not in columns:
-                with engine.connect() as conn:
+            # Add paper_trading_default_capital if it doesn't exist
+            if 'paper_trading_default_capital' not in columns:
+                with new_engine.connect() as conn:
                     conn.execute(text(
-                        "ALTER TABLE user_settings ADD COLUMN paper_trading_capital FLOAT DEFAULT 500000.0"
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_default_capital FLOAT DEFAULT 500000.0"
                     ))
                     conn.commit()
-                    safe_print("✅ Added paper_trading_capital column")
+                    safe_print("✅ Added paper_trading_default_capital column")
             
+            # Add paper_trading_max_positions if it doesn't exist
             if 'paper_trading_max_positions' not in columns:
-                with engine.connect() as conn:
+                with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN paper_trading_max_positions INTEGER DEFAULT 15"
                     ))
                     conn.commit()
                     safe_print("✅ Added paper_trading_max_positions column")
             
-            if 'paper_trading_risk_per_trade_pct' not in columns:
-                with engine.connect() as conn:
+            # Add paper_trading_risk_percentage if it doesn't exist
+            if 'paper_trading_risk_percentage' not in columns:
+                with new_engine.connect() as conn:
                     conn.execute(text(
-                        "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_per_trade_pct FLOAT DEFAULT 1.0"
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_percentage FLOAT DEFAULT 1.0"
                     ))
                     conn.commit()
-                    safe_print("✅ Added paper_trading_risk_per_trade_pct column")
+                    safe_print("✅ Added paper_trading_risk_percentage column")
+            
+            # Add paper_trading_monitor_interval_seconds if it doesn't exist
+            if 'paper_trading_monitor_interval_seconds' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_monitor_interval_seconds INTEGER DEFAULT 300"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_monitor_interval_seconds column")
+            
+            # Add paper_trading_max_position_size_pct if it doesn't exist
+            if 'paper_trading_max_position_size_pct' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_max_position_size_pct FLOAT DEFAULT 20.0"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_max_position_size_pct column")
+            
+            # Add paper_trading_buy_execution_time if it doesn't exist
+            if 'paper_trading_buy_execution_time' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_buy_execution_time VARCHAR(5) DEFAULT '09:20'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_buy_execution_time column")
+            
+            # Add paper_trading_daily_summary_time if it doesn't exist
+            if 'paper_trading_daily_summary_time' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_daily_summary_time VARCHAR(5) DEFAULT '16:00'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_daily_summary_time column")
+            
+            # Add paper_trading_weekly_summary_time if it doesn't exist
+            if 'paper_trading_weekly_summary_time' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_weekly_summary_time VARCHAR(5) DEFAULT '18:00'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_weekly_summary_time column")
+            
+            # Add paper_trading_position_rebalance_time if it doesn't exist
+            if 'paper_trading_position_rebalance_time' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_position_rebalance_time VARCHAR(5) DEFAULT '11:00'"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_position_rebalance_time column")
+            
+            # Add paper_trading_entry_price_tolerance_pct if it doesn't exist
+            if 'paper_trading_entry_price_tolerance_pct' not in columns:
+                with new_engine.connect() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_entry_price_tolerance_pct FLOAT DEFAULT 3.0"
+                    ))
+                    conn.commit()
+                    safe_print("✅ Added paper_trading_entry_price_tolerance_pct column")
     
     except Exception as e:
         safe_print(f"⚠️ Migration warning: {e}")

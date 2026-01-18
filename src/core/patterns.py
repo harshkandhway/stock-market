@@ -1562,3 +1562,5 @@ def detect_all_patterns(df: pd.DataFrame) -> Dict[str, any]:
         'pattern_summary': summary,
     }
 
+
+

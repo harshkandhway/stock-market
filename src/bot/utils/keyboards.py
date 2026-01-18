@@ -340,13 +340,19 @@ def create_settings_menu_keyboard(daily_buy_alerts_enabled: bool = False) -> Inl
         ],
         [
             InlineKeyboardButton(
-                f"🔔 Daily BUY Alerts ({alert_status})", 
+                f"🔔 Daily BUY Alerts ({alert_status})",
                 callback_data="settings_daily_buy_alerts"
             ),
         ],
         [
             InlineKeyboardButton(
-                "📋 View All My Settings", 
+                "📊 Paper Trading Settings",
+                callback_data="settings_paper_trading"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📋 View All My Settings",
                 callback_data="settings_show"
             ),
         ],
@@ -774,36 +780,86 @@ def create_paper_trade_watchlist_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def create_paper_trading_main_keyboard() -> InlineKeyboardMarkup:
+def create_paper_trading_main_keyboard(session_active: bool = False) -> InlineKeyboardMarkup:
     """
-    Create inline keyboard for paper trading main menu
-    
+    Create main paper trading menu keyboard (Step 1).
+
+    Args:
+        session_active: Whether user has an active paper trading session
+
     Returns:
         InlineKeyboardMarkup with paper trading options
     """
+    start_stop_label = "⏹️ Stop Session" if session_active else "▶️ Start Session"
+    start_stop_callback = "papertrade_stop" if session_active else "papertrade_start"
+
     keyboard = [
         [
-            InlineKeyboardButton("▶️ Start Session", callback_data="papertrade_start"),
-            InlineKeyboardButton("⏹️ Stop Session", callback_data="papertrade_stop"),
+            InlineKeyboardButton(start_stop_label, callback_data=start_stop_callback),
         ],
         [
-            InlineKeyboardButton("📊 Status", callback_data="papertrade_status"),
-            InlineKeyboardButton("📜 History", callback_data="papertrade_history"),
-        ],
-        [
-            InlineKeyboardButton("📈 Trade All BUY Signals", callback_data="papertrade_buy_signals"),
-            InlineKeyboardButton("⭐ Trade Watchlist", callback_data="papertrade_watchlist"),
-        ],
-        [
-            InlineKeyboardButton("📈 Performance", callback_data="papertrade_performance"),
-            InlineKeyboardButton("💡 Insights", callback_data="papertrade_insights"),
+            InlineKeyboardButton("📊 Status Overview", callback_data="papertrade_status_menu"),
+            InlineKeyboardButton("📈 Trade Signals", callback_data="papertrade_signals_menu"),
         ],
         [
             InlineKeyboardButton("⚙️ Settings", callback_data="papertrade_settings"),
             InlineKeyboardButton("◀️ Back to Menu", callback_data="main_menu"),
         ],
     ]
-    
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_paper_trading_status_submenu_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create Status Overview submenu keyboard (Step 2a).
+
+    Returns:
+        InlineKeyboardMarkup with status options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("📊 Full Status", callback_data="papertrade_status"),
+        ],
+        [
+            InlineKeyboardButton("📜 Trade History", callback_data="papertrade_history"),
+        ],
+        [
+            InlineKeyboardButton("📈 Performance", callback_data="papertrade_performance"),
+        ],
+        [
+            InlineKeyboardButton("💡 Insights", callback_data="papertrade_insights"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="papertrade_main"),
+        ],
+    ]
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_paper_trading_signals_submenu_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create Trade Signals submenu keyboard (Step 2b).
+
+    Returns:
+        InlineKeyboardMarkup with signal options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("📈 Trade All BUY Signals", callback_data="papertrade_buy_signals"),
+        ],
+        [
+            InlineKeyboardButton("⭐ Trade Watchlist", callback_data="papertrade_watchlist"),
+        ],
+        [
+            InlineKeyboardButton("ℹ️ About Signals", callback_data="papertrade_signals_info"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="papertrade_main"),
+        ],
+    ]
+
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -815,3 +871,91 @@ def remove_keyboard() -> dict:
         Dictionary for ReplyKeyboardRemove
     """
     return {"remove_keyboard": True}
+
+
+def create_paper_trading_settings_keyboard() -> InlineKeyboardMarkup:
+    """
+    Create inline keyboard for paper trading settings menu.
+
+    Returns:
+        InlineKeyboardMarkup with paper trading settings options
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "🔄 Enable/Disable Paper Trading",
+                callback_data="settings_paper_trading_enabled"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "💰 Default Capital (₹500,000)",
+                callback_data="settings_paper_trading_capital"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🎯 Max Positions (15)",
+                callback_data="settings_paper_trading_max_positions"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "⚠️ Risk per Trade (1.0%)",
+                callback_data="settings_paper_trading_risk"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "⏱️ Monitor Interval (5 min)",
+                callback_data="settings_paper_trading_monitor"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📏 Max Position Size (20%)",
+                callback_data="settings_paper_trading_max_size"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🕘 Buy Execution Time (09:20)",
+                callback_data="settings_paper_trading_buy_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📊 Daily Summary (16:00)",
+                callback_data="settings_paper_trading_daily_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📅 Weekly Summary (18:00)",
+                callback_data="settings_paper_trading_weekly_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🔄 Rebalance Time (11:00)",
+                callback_data="settings_paper_trading_rebalance_time"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🎯 Price Tolerance (3.0%)",
+                callback_data="settings_paper_trading_tolerance"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "🔄 Reset to Defaults",
+                callback_data="settings_paper_trading_reset"
+            ),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back to Settings", callback_data="settings_menu"),
+        ],
+    ]
+
+    return InlineKeyboardMarkup(keyboard)

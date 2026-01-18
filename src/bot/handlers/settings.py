@@ -441,8 +441,25 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 *🎯 Risk Mode:* {mode['emoji']} {mode['name']}
    {mode['description']}
 
-*💰 Capital:* Rs {settings.default_capital or 100000:,.0f}
+*💰 Analysis Capital:* Rs {settings.default_capital or 100000:,.0f}
    For position sizing calculations
+
+━━━━━━━━━━━━━━━━━━━━
+
+*📊 PAPER TRADING SETTINGS*
+━━━━━━━━━━━━━━━━━━━━
+
+*Enable Paper Trading:* {'✅ ON' if getattr(settings, 'paper_trading_enabled', True) else '❌ OFF'}
+*Default Capital:* ₹{getattr(settings, 'paper_trading_default_capital', 500000):,.0f}
+*Max Positions:* {getattr(settings, 'paper_trading_max_positions', 15)}
+*Risk per Trade:* {getattr(settings, 'paper_trading_risk_percentage', 1.0)}%
+*Monitor Interval:* {getattr(settings, 'paper_trading_monitor_interval_seconds', 300)//60} min
+*Max Position Size:* {getattr(settings, 'paper_trading_max_position_size_pct', 20.0)}%
+*Buy Execution:* {getattr(settings, 'paper_trading_buy_execution_time', '09:20')} IST
+*Daily Summary:* {getattr(settings, 'paper_trading_daily_summary_time', '16:00')} IST
+*Weekly Summary:* {getattr(settings, 'paper_trading_weekly_summary_time', '18:00')} IST
+*Rebalance:* {getattr(settings, 'paper_trading_position_rebalance_time', '11:00')} IST
+*Price Tolerance:* {getattr(settings, 'paper_trading_entry_price_tolerance_pct', 3.0)}%
 
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -881,7 +898,1049 @@ Your subscription is private. We never share your data.
                 reply_markup=keyboard,
                 parse_mode='Markdown'
             )
-        
+
+        # =====================================================================
+        # PAPER TRADING SETTINGS MENU
+        # =====================================================================
+        elif data == "settings_paper_trading":
+            from ..utils.keyboards import create_paper_trading_settings_keyboard
+
+            message = """
+*📊 PAPER TRADING SETTINGS*
+━━━━━━━━━━━━━━━━━━━━
+
+Customize how your automated paper trading works:
+
+*⚙️ Core Settings:*
+• Enable/disable paper trading
+• Set default capital for new sessions
+• Configure maximum concurrent positions
+
+*💰 Risk Management:*
+• Risk percentage per trade (recommended: 1-2%)
+• Maximum position size as % of capital
+• Price tolerance for signal execution
+
+*⏰ Timing & Automation:*
+• When pending trades execute (market open)
+• Daily/weekly performance summaries
+• Position monitoring frequency
+• Automatic rebalancing schedule
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Select any setting below to customize:*
+"""
+
+            keyboard = create_paper_trading_settings_keyboard()
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        # =====================================================================
+        # PAPER TRADING INDIVIDUAL SETTINGS
+        # =====================================================================
+        elif data == "settings_paper_trading_enabled":
+            current = getattr(settings, 'paper_trading_enabled', True)
+            status = "✅ ENABLED" if current else "❌ DISABLED"
+
+            message = f"""
+*🔄 PAPER TRADING ENABLE/DISABLE*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current Status:* {status}
+
+*What this does:*
+• When **enabled**: Automatically execute BUY signals as paper trades
+• When **disabled**: Only receive signal notifications (no trading)
+
+*Note:* You can still manually paper trade with `/papertrade` even when disabled.
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose new status:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Enable Paper Trading", callback_data="settings_paper_trading_enabled:enable")],
+                [InlineKeyboardButton("❌ Disable Paper Trading", callback_data="settings_paper_trading_enabled:disable")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_enabled:"):
+            action = data.split(":")[1]
+            new_value = action == "enable"
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_enabled=new_value)
+
+            status = "✅ ENABLED" if new_value else "❌ DISABLED"
+            await safe_edit_message(
+                query,
+                f"✅ *Paper trading {action}d!*\n\n"
+                f"Status: {status}\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_capital":
+            current = getattr(settings, 'paper_trading_default_capital', 500000)
+
+            message = f"""
+*💰 PAPER TRADING DEFAULT CAPITAL*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* ₹{current:,.0f}
+
+*What this is:*
+This is the virtual capital amount used for new paper trading sessions.
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose new capital amount:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("₹1,00,000", callback_data="settings_paper_trading_capital:100000")],
+                [InlineKeyboardButton("₹2,50,000", callback_data="settings_paper_trading_capital:250000")],
+                [InlineKeyboardButton("₹5,00,000", callback_data="settings_paper_trading_capital:500000")],
+                [InlineKeyboardButton("₹10,00,000", callback_data="settings_paper_trading_capital:1000000")],
+                [InlineKeyboardButton("💰 Custom Amount", callback_data="settings_paper_trading_capital:custom")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_capital:"):
+            value = data.split(":")[1]
+
+            if value == "custom":
+                context.user_data['awaiting_paper_trading_capital_input'] = True
+
+                await safe_edit_message(
+                    query,
+                    "*💰 ENTER CUSTOM CAPITAL AMOUNT*\n\n"
+                    "Type your paper trading capital amount:\n\n"
+                    "Examples:\n"
+                    "• `75000` for Rs 75,000\n"
+                    "• `150000` for Rs 1,50,000\n"
+                    "• `300000` for Rs 3,00,000\n\n"
+                    "Minimum: Rs 10,000\n"
+                    "Maximum: Rs 1,00,00,000\n\n"
+                    "_Just type the number and send_",
+                    parse_mode='Markdown'
+                )
+            else:
+                amount = int(value)
+                with get_db_context() as db:
+                    update_user_settings(db, user_id, paper_trading_default_capital=amount)
+
+                await safe_edit_message(
+                    query,
+                    f"✅ *Capital updated!*\n\n"
+                    f"Paper trading capital: ₹{amount:,.0f}\n\n"
+                    f"Use `/settings` to see all your settings.",
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                    ])
+                )
+
+        elif data == "settings_paper_trading_max_positions":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_max_positions:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_risk":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_risk:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_monitor":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_monitor:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_max_size":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_max_size:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_buy_time":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_buy_time:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_daily_time":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_daily_time:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_weekly_time":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_weekly_time:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_rebalance_time":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_rebalance_time:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_tolerance":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data.startswith("settings_paper_trading_tolerance:"):
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_reset":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_reset:confirm":
+            await safe_edit_message(
+                query,
+                "*Feature Coming Soon!*\n\n"
+                "This paper trading setting is under development.\n\n"
+                "Use `/settings` to see all your current settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        # =====================================================================
+        # INVESTMENT HORIZON SELECTION
+        # =====================================================================
+        # PAPER TRADING INDIVIDUAL SETTINGS
+        # =====================================================================
+        elif data == "settings_paper_trading_enabled":
+            current = getattr(settings, 'paper_trading_enabled', True)
+            status = "✅ ENABLED" if current else "❌ DISABLED"
+
+            message = f"""
+*🔄 PAPER TRADING ENABLE/DISABLE*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current Status:* {status}
+
+*What this does:*
+• When **enabled**: Automatically execute BUY signals as paper trades
+• When **disabled**: Only receive signal notifications (no trading)
+
+*Note:* You can still manually paper trade with `/papertrade` even when disabled.
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose new status:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Enable Paper Trading", callback_data="settings_paper_trading_enabled:enable")],
+                [InlineKeyboardButton("❌ Disable Paper Trading", callback_data="settings_paper_trading_enabled:disable")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_enabled:"):
+            action = data.split(":")[1]
+            new_value = action == "enable"
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_enabled=new_value)
+
+            status = "✅ ENABLED" if new_value else "❌ DISABLED"
+            await safe_edit_message(
+                query,
+                f"✅ *Paper trading {action}d!*\n\n"
+                f"Status: {status}\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        # =====================================================================
+        # INVESTMENT HORIZON SELECTION
+        # =====================================================================
+        # PAPER TRADING INDIVIDUAL SETTINGS
+        # =====================================================================
+        elif data == "settings_paper_trading_enabled":
+            current = getattr(settings, 'paper_trading_enabled', True)
+            status = "✅ ENABLED" if current else "❌ DISABLED"
+
+            message = f"""
+*🔄 PAPER TRADING ENABLE/DISABLE*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current Status:* {status}
+
+*What this does:*
+• When **enabled**: Automatically execute BUY signals as paper trades
+• When **disabled**: Only receive signal notifications (no trading)
+
+*Note:* You can still manually paper trade with `/papertrade` even when disabled.
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose new status:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Enable Paper Trading", callback_data="settings_paper_trading_enabled:enable")],
+                [InlineKeyboardButton("❌ Disable Paper Trading", callback_data="settings_paper_trading_enabled:disable")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_enabled:"):
+            action = data.split(":")[1]
+            new_value = action == "enable"
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_enabled=new_value)
+
+            status = "✅ ENABLED" if new_value else "❌ DISABLED"
+            await safe_edit_message(
+                query,
+                f"✅ *Paper trading {action}d!*\n\n"
+                f"Status: {status}\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_capital":
+            current = getattr(settings, 'paper_trading_default_capital', 500000)
+
+            message = f"""
+*💰 PAPER TRADING DEFAULT CAPITAL*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* ₹{current:,.0f}
+
+*What this is:*
+This is the virtual capital amount used for new paper trading sessions.
+
+*When it's used:*
+• When you start paper trading without an active session
+• For calculating position sizes and risk management
+• For P&L calculations and performance tracking
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose new capital amount:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("₹1,00,000", callback_data="settings_paper_trading_capital:100000")],
+                [InlineKeyboardButton("₹2,50,000", callback_data="settings_paper_trading_capital:250000")],
+                [InlineKeyboardButton("₹5,00,000", callback_data="settings_paper_trading_capital:500000")],
+                [InlineKeyboardButton("₹10,00,000", callback_data="settings_paper_trading_capital:1000000")],
+                [InlineKeyboardButton("💰 Custom Amount", callback_data="settings_paper_trading_capital:custom")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_capital:"):
+            value = data.split(":")[1]
+
+            if value == "custom":
+                context.user_data['awaiting_paper_trading_capital_input'] = True
+
+                await safe_edit_message(
+                    query,
+                    "*💰 ENTER CUSTOM CAPITAL AMOUNT*\n\n"
+                    "Type your paper trading capital amount:\n\n"
+                    "Examples:\n"
+                    "• `75000` for Rs 75,000\n"
+                    "• `150000` for Rs 1,50,000\n"
+                    "• `300000` for Rs 3,00,000\n\n"
+                    "Minimum: Rs 10,000\n"
+                    "Maximum: Rs 1,00,00,000\n\n"
+                    "_Just type the number and send_",
+                    parse_mode='Markdown'
+                )
+            else:
+                amount = int(value)
+                with get_db_context() as db:
+                    update_user_settings(db, user_id, paper_trading_default_capital=amount)
+
+                await safe_edit_message(
+                    query,
+                    f"✅ *Capital updated!*\n\n"
+                    f"Paper trading capital: ₹{amount:,.0f}\n\n"
+                    f"Use `/settings` to see all your settings.",
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                    ])
+                )
+
+        elif data == "settings_paper_trading_max_positions":
+            current = getattr(settings, 'paper_trading_max_positions', 15)
+
+            message = f"""
+*🎯 MAXIMUM CONCURRENT POSITIONS*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current} positions
+
+*What this controls:*
+Maximum number of stocks you can hold simultaneously in paper trading.
+
+*Guidelines:*
+• **5-10**: Conservative (experienced traders)
+• **10-15**: Balanced (most traders)
+• **15-25**: Aggressive (portfolio managers)
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose maximum positions:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("5 Positions", callback_data="settings_paper_trading_max_positions:5")],
+                [InlineKeyboardButton("10 Positions", callback_data="settings_paper_trading_max_positions:10")],
+                [InlineKeyboardButton("15 Positions ⭐", callback_data="settings_paper_trading_max_positions:15")],
+                [InlineKeyboardButton("20 Positions", callback_data="settings_paper_trading_max_positions:20")],
+                [InlineKeyboardButton("25 Positions", callback_data="settings_paper_trading_max_positions:25")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_max_positions:"):
+            value = int(data.split(":")[1])
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_max_positions=value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Max positions updated!*\n\n"
+                f"Maximum concurrent positions: {value}\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_risk":
+            current = getattr(settings, 'paper_trading_risk_percentage', 1.0)
+
+            message = f"""
+*⚠️ RISK PER TRADE PERCENTAGE*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current}%
+
+*What this is:*
+Maximum percentage of your capital to risk on any single trade.
+
+*Professional Guidelines:*
+• **0.5-1%**: Conservative (recommended for most)
+• **1-2%**: Balanced (experienced traders)
+• **2-5%**: Aggressive (high risk tolerance)
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose risk percentage:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("0.5% (Conservative)", callback_data="settings_paper_trading_risk:0.5")],
+                [InlineKeyboardButton("1.0% (Recommended)", callback_data="settings_paper_trading_risk:1.0")],
+                [InlineKeyboardButton("1.5% (Balanced)", callback_data="settings_paper_trading_risk:1.5")],
+                [InlineKeyboardButton("2.0% (Experienced)", callback_data="settings_paper_trading_risk:2.0")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_risk:"):
+            value = float(data.split(":")[1])
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_risk_percentage=value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Risk percentage updated!*\n\n"
+                f"Risk per trade: {value}%\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_monitor":
+            current_seconds = getattr(settings, 'paper_trading_monitor_interval_seconds', 300)
+            current_minutes = current_seconds // 60
+
+            message = f"""
+*⏱️ MONITORING INTERVAL*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current_minutes} minutes
+
+*What this controls:*
+How often the system checks for:
+• Price updates for P&L calculations
+• Stop loss triggers
+• Take profit levels
+
+*Guidelines:*
+• **1-2 min**: Very frequent (resource intensive)
+• **5 min**: Balanced (recommended)
+• **10-15 min**: Less frequent (saves resources)
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose monitoring interval:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("1 minute", callback_data="settings_paper_trading_monitor:60")],
+                [InlineKeyboardButton("2 minutes", callback_data="settings_paper_trading_monitor:120")],
+                [InlineKeyboardButton("5 minutes ⭐", callback_data="settings_paper_trading_monitor:300")],
+                [InlineKeyboardButton("10 minutes", callback_data="settings_paper_trading_monitor:600")],
+                [InlineKeyboardButton("15 minutes", callback_data="settings_paper_trading_monitor:900")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_monitor:"):
+            seconds = int(data.split(":")[1])
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_monitor_interval_seconds=seconds)
+
+            minutes = seconds // 60
+            await safe_edit_message(
+                query,
+                f"✅ *Monitoring interval updated!*\n\n"
+                f"Check every: {minutes} minutes\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_max_size":
+            current = getattr(settings, 'paper_trading_max_position_size_pct', 20.0)
+
+            message = f"""
+*📏 MAX POSITION SIZE PERCENTAGE*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current}%
+
+*What this is:*
+Maximum percentage of your total capital that can be invested in a single stock.
+
+*Guidelines:*
+• **5-10%**: Very conservative
+• **10-20%**: Balanced (recommended)
+• **20-30%**: Aggressive
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose max position size:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("5% (Conservative)", callback_data="settings_paper_trading_max_size:5.0")],
+                [InlineKeyboardButton("10% (Safe)", callback_data="settings_paper_trading_max_size:10.0")],
+                [InlineKeyboardButton("20% (Recommended)", callback_data="settings_paper_trading_max_size:20.0")],
+                [InlineKeyboardButton("30% (Aggressive)", callback_data="settings_paper_trading_max_size:30.0")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_max_size:"):
+            value = float(data.split(":")[1])
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_max_position_size_pct=value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Max position size updated!*\n\n"
+                f"Maximum per position: {value}%\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_buy_time":
+            current = getattr(settings, 'paper_trading_buy_execution_time', '09:15')
+
+            message = f"""
+*🕘 BUY EXECUTION TIME*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current} IST
+
+*What this is:*
+When pending BUY orders are executed during market hours.
+
+*Important Notes:*
+• Must be during market hours (9:15 AM - 3:30 PM IST)
+• Orders execute at the specified time if signal conditions are met
+• If market is closed, orders wait for next trading day
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose execution time:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("9:15 AM (Market Open)", callback_data="settings_paper_trading_buy_time:09:15")],
+                [InlineKeyboardButton("9:30 AM", callback_data="settings_paper_trading_buy_time:09:30")],
+                [InlineKeyboardButton("10:00 AM", callback_data="settings_paper_trading_buy_time:10:00")],
+                [InlineKeyboardButton("11:00 AM", callback_data="settings_paper_trading_buy_time:11:00")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_buy_time:"):
+            time_value = data.split(":")[1] + ":" + data.split(":")[2]
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_buy_execution_time=time_value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Buy execution time updated!*\n\n"
+                f"Execute buys at: {time_value} IST\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_daily_time":
+            current = getattr(settings, 'paper_trading_daily_summary_time', '18:00')
+
+            message = f"""
+*📊 DAILY SUMMARY TIME*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current} IST
+
+*What this does:*
+Sends daily performance summary every day at this time.
+
+*Summary includes:*
+• Today's P&L
+• Active positions
+• Pending orders
+• Performance statistics
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose daily summary time:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("4:00 PM", callback_data="settings_paper_trading_daily_time:16:00")],
+                [InlineKeyboardButton("6:00 PM ⭐", callback_data="settings_paper_trading_daily_time:18:00")],
+                [InlineKeyboardButton("8:00 PM", callback_data="settings_paper_trading_daily_time:20:00")],
+                [InlineKeyboardButton("9:00 PM", callback_data="settings_paper_trading_daily_time:21:00")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_daily_time:"):
+            time_value = data.split(":")[1] + ":" + data.split(":")[2]
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_daily_summary_time=time_value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Daily summary time updated!*\n\n"
+                f"Send summary at: {time_value} IST\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_weekly_time":
+            current = getattr(settings, 'paper_trading_weekly_summary_time', '18:00')
+
+            message = f"""
+*📅 WEEKLY SUMMARY TIME*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current} IST
+
+*What this does:*
+Sends weekly performance summary every Sunday at this time.
+
+*Summary includes:*
+• Weekly P&L
+• Best/worst performers
+• Portfolio allocation
+• Risk metrics
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose weekly summary time:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("4:00 PM", callback_data="settings_paper_trading_weekly_time:16:00")],
+                [InlineKeyboardButton("6:00 PM ⭐", callback_data="settings_paper_trading_weekly_time:18:00")],
+                [InlineKeyboardButton("8:00 PM", callback_data="settings_paper_trading_weekly_time:20:00")],
+                [InlineKeyboardButton("9:00 PM", callback_data="settings_paper_trading_weekly_time:21:00")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_weekly_time:"):
+            time_value = data.split(":")[1] + ":" + data.split(":")[2]
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_weekly_summary_time=time_value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Weekly summary time updated!*\n\n"
+                f"Send summary at: {time_value} IST\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_rebalance_time":
+            current = getattr(settings, 'paper_trading_position_rebalance_time', '15:30')
+
+            message = f"""
+*🔄 POSITION REBALANCE TIME*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current} IST
+
+*What this does:*
+Time when the system checks and rebalances portfolio positions.
+
+*Rebalancing includes:*
+• Adjusting position sizes based on performance
+• Closing underperforming positions
+• Opening new positions for winners
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose rebalance time:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("2:00 PM", callback_data="settings_paper_trading_rebalance_time:14:00")],
+                [InlineKeyboardButton("3:00 PM", callback_data="settings_paper_trading_rebalance_time:15:00")],
+                [InlineKeyboardButton("3:30 PM ⭐", callback_data="settings_paper_trading_rebalance_time:15:30")],
+                [InlineKeyboardButton("4:00 PM", callback_data="settings_paper_trading_rebalance_time:16:00")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_rebalance_time:"):
+            time_value = data.split(":")[1] + ":" + data.split(":")[2]
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_position_rebalance_time=time_value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Rebalance time updated!*\n\n"
+                f"Rebalance at: {time_value} IST\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_tolerance":
+            current = getattr(settings, 'paper_trading_entry_price_tolerance_pct', 3.0)
+
+            message = f"""
+*🎯 ENTRY PRICE TOLERANCE*
+━━━━━━━━━━━━━━━━━━━━
+
+*Current:* {current}%
+
+*What this is:*
+Maximum price slippage allowed when executing buy orders.
+
+*How it works:*
+• If signal price is ₹100
+• Tolerance 2% = Buy if price ≤ ₹102
+• Tolerance 5% = Buy if price ≤ ₹105
+
+*Guidelines:*
+• **1-2%**: Tight (may miss opportunities)
+• **2-5%**: Balanced (recommended)
+• **5-10%**: Loose (easier execution)
+
+━━━━━━━━━━━━━━━━━━━━
+
+Choose price tolerance:
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("1.0% (Tight)", callback_data="settings_paper_trading_tolerance:1.0")],
+                [InlineKeyboardButton("2.0% (Conservative)", callback_data="settings_paper_trading_tolerance:2.0")],
+                [InlineKeyboardButton("3.0% (Recommended)", callback_data="settings_paper_trading_tolerance:3.0")],
+                [InlineKeyboardButton("5.0% (Balanced)", callback_data="settings_paper_trading_tolerance:5.0")],
+                [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data.startswith("settings_paper_trading_tolerance:"):
+            value = float(data.split(":")[1])
+
+            with get_db_context() as db:
+                update_user_settings(db, user_id, paper_trading_entry_price_tolerance_pct=value)
+
+            await safe_edit_message(
+                query,
+                f"✅ *Price tolerance updated!*\n\n"
+                f"Entry tolerance: {value}%\n\n"
+                f"Use `/settings` to see all your settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
+        elif data == "settings_paper_trading_reset":
+            message = """
+*🔄 RESET PAPER TRADING SETTINGS*
+━━━━━━━━━━━━━━━━━━━━
+
+*This will reset ALL paper trading settings to defaults:*
+
+• Enable Paper Trading: ✅ ON
+• Default Capital: ₹5,00,000
+• Max Positions: 15
+• Risk per Trade: 1.0%
+• Monitor Interval: 5 minutes
+• Max Position Size: 20%
+• Buy Execution: 09:20 IST
+• Daily Summary: 18:00 IST
+• Weekly Summary: 18:00 IST
+• Rebalance: 15:30 IST
+• Price Tolerance: 3.0%
+
+━━━━━━━━━━━━━━━━━━━━
+
+Are you sure you want to reset?
+"""
+
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Yes, Reset All", callback_data="settings_paper_trading_reset:confirm")],
+                [InlineKeyboardButton("❌ Cancel", callback_data="settings_paper_trading")]
+            ])
+
+            await safe_edit_message(query, message, reply_markup=keyboard)
+
+        elif data == "settings_paper_trading_reset:confirm":
+            # Reset all paper trading settings to defaults
+            with get_db_context() as db:
+                update_user_settings(db, user_id,
+                    paper_trading_enabled=True,
+                    paper_trading_default_capital=500000.0,
+                    paper_trading_max_positions=15,
+                    paper_trading_risk_percentage=1.0,
+                    paper_trading_monitor_interval_seconds=300,
+                    paper_trading_max_position_size_pct=20.0,
+                    paper_trading_buy_execution_time='09:15',
+                    paper_trading_daily_summary_time='18:00',
+                    paper_trading_weekly_summary_time='18:00',
+                    paper_trading_position_rebalance_time='15:30',
+                    paper_trading_entry_price_tolerance_pct=3.0
+                )
+
+            await safe_edit_message(
+                query,
+                "✅ *All paper trading settings reset to defaults!*\n\n"
+                "Use `/settings` to see your updated settings.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("◀️ Back to Paper Trading", callback_data="settings_paper_trading")]
+                ])
+            )
+
         # =====================================================================
         # INVESTMENT HORIZON SELECTION
         # =====================================================================
