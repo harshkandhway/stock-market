@@ -189,3 +189,5 @@ alembic.ini.bak
 # OneDrive specific files
 ~$*
 *.odtmp
+
+.cursor
