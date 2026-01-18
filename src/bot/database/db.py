@@ -235,6 +235,7 @@ def migrate_database():
                 with new_engine.connect() as conn:
                     conn.execute(text(
                         "ALTER TABLE user_settings ADD COLUMN paper_trading_default_capital FLOAT DEFAULT 500000.0"
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_default_capital FLOAT DEFAULT 500000.0"
                     ))
                     conn.commit()
                     safe_print("✅ Added paper_trading_default_capital column")
@@ -252,6 +253,7 @@ def migrate_database():
             if 'paper_trading_risk_percentage' not in columns:
                 with new_engine.connect() as conn:
                     conn.execute(text(
+                        "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_percentage FLOAT DEFAULT 1.0"
                         "ALTER TABLE user_settings ADD COLUMN paper_trading_risk_percentage FLOAT DEFAULT 1.0"
                     ))
                     conn.commit()
