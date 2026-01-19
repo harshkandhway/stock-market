@@ -138,24 +138,32 @@ class DailyBuyAlertsScheduler:
         """
         import csv
         import os
+        import pandas as pd
         
-        csv_path = os.path.join(os.path.dirname(__file__), '../../../data/stock_tickers.csv')
+        csv_path = os.path.join(os.path.dirname(__file__), '../../../data/stock_tickers_enhanced.csv')
         
         if not os.path.exists(csv_path):
-            logger.error(f"Stock tickers CSV not found at {csv_path}")
+            logger.error(f"Enhanced stock tickers CSV not found at {csv_path}")
+            raise FileNotFoundError(f"Required file not found: {csv_path}")
             return
         
         # Read all stock symbols
         stocks = []
         try:
-            with open(csv_path, 'r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                next(reader)  # Skip header
-                for row in reader:
-                    if row and len(row) > 0:
-                        symbol = row[0].strip().upper()
-                        if symbol:
-                            stocks.append(symbol)
+            # Read enhanced CSV with pandas
+            df = pd.read_csv(csv_path)
+            
+            # Filter out ETFs - only analyze stocks for daily alerts
+            if 'is_etf' in df.columns:
+                original_count = len(df)
+                df = df[df['is_etf'] == False]
+                logger.info(f"Filtered {original_count} entries to {len(df)} stocks (excluded {original_count - len(df)} ETFs)")
+            
+            # Extract stock symbols
+            for _, row in df.iterrows():
+                symbol = row['ticker'].strip().upper()
+                if symbol:
+                    stocks.append(symbol)
         except Exception as e:
             logger.error(f"Error reading stock tickers CSV: {e}")
             return

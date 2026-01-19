@@ -17,8 +17,11 @@ from src.bot.database.models import (
     PaperTradingLog, DailyBuySignal
 )
 from src.bot.services.paper_portfolio_service import PaperPortfolioService
+from src.bot.utils.paper_trading_logger import get_paper_trading_logger
+from src.bot.config import PAPER_TRADING_DRY_RUN
 
 logger = logging.getLogger(__name__)
+pt_logger = get_paper_trading_logger()  # Dedicated paper trading logger
 
 
 class PaperTradeExecutionService:
@@ -143,6 +146,19 @@ class PaperTradeExecutionService:
             logger.error("Position sizing failed for %s: %s", signal.symbol, sizing['error'])
             return None
 
+        # Improvement #2: DRY-RUN MODE CHECK
+        if PAPER_TRADING_DRY_RUN:
+            logger.info(
+                "🧪 [DRY RUN] Would have opened position: %s - %.2f shares @ ₹%.2f = ₹%.2f (Target: ₹%.2f, Stop: ₹%.2f)",
+                signal.symbol, sizing['shares'], current_price, sizing['position_value'],
+                signal.target, signal.stop_loss
+            )
+            pt_logger.info(
+                f"[DRY RUN] Would ENTRY | Session {session.id} | {signal.symbol} | "
+                f"{sizing['shares']:.2f} shares @ ₹{current_price:.2f} | Value: ₹{sizing['position_value']:.2f}"
+            )
+            return None  # Don't create position in dry-run mode
+
         # Create position
         position = PaperPosition(
             session_id=session.id,
@@ -210,6 +226,14 @@ class PaperTradeExecutionService:
             "✅ Position opened: %s - %d shares @ ₹%.2f = ₹%.2f (Target: ₹%.2f, Stop: ₹%.2f, R:R: %.2f)",
             signal.symbol, sizing['shares'], current_price, sizing['position_value'],
             signal.target, signal.stop_loss, signal.risk_reward
+        )
+
+        # Improvement #1: Log to dedicated paper trading log
+        pt_logger.info(
+            f"ENTRY | Session {session.id} | User {session.user_id} | "
+            f"{signal.symbol} | {sizing['shares']:.2f} shares @ ₹{current_price:.2f} | "
+            f"Value: ₹{sizing['position_value']:.2f} | Target: ₹{signal.target:.2f} | "
+            f"Stop: ₹{signal.stop_loss:.2f} | R:R: {signal.risk_reward:.2f} | Conf: {signal.confidence:.1f}%"
         )
 
         return position
@@ -369,6 +393,13 @@ class PaperTradeExecutionService:
             "🔴 Position closed: %s - %s | P&L: ₹%.2f (%+.2f%%) | %.2fR | %d days | Session: %d/%d wins",
             position.symbol, exit_reason, pnl, pnl_pct, r_multiple, days_held,
             session.winning_trades, session.total_trades
+        )
+
+        # Improvement #1: Log to dedicated paper trading log
+        pt_logger.info(
+            f"EXIT | Session {session.id} | User {session.user_id} | "
+            f"{position.symbol} | {exit_reason} | Entry: ₹{position.entry_price:.2f} → Exit: ₹{current_price:.2f} | "
+            f"P&L: ₹{pnl:.2f} ({pnl_pct:+.2f}%) | {r_multiple:.2f}R | Days: {days_held} | Winner: {is_winner}"
         )
 
         return trade

@@ -129,9 +129,10 @@ class PaperPortfolioService:
 
     def get_available_capital(self, session: PaperTradingSession) -> float:
         """
-        Calculate available (unallocated) capital
+        Get available (undeployed) capital
 
-        Available capital = current_capital - sum(open_position_values)
+        session.current_capital already represents the available cash
+        (it's updated when positions are entered/exited)
 
         Args:
             session: Paper trading session
@@ -139,24 +140,12 @@ class PaperPortfolioService:
         Returns:
             Available capital amount
         """
-        # Get all open positions
-        open_positions = self.db.query(PaperPosition).filter(
-            PaperPosition.session_id == session.id,
-            PaperPosition.is_open == True
-        ).all()
-
-        # Calculate total deployed capital
-        deployed_capital = sum(pos.position_value for pos in open_positions)
-
-        # Available capital
-        available = session.current_capital - deployed_capital
+        # session.current_capital is already the available cash
+        available = session.current_capital
 
         logger.debug(
-            "Capital - Total: ₹%.2f, Deployed: ₹%.2f (%.1f%%), Available: ₹%.2f (%.1f%%)",
-            session.current_capital, deployed_capital,
-            (deployed_capital / session.current_capital * 100) if session.current_capital > 0 else 0,
-            available,
-            (available / session.current_capital * 100) if session.current_capital > 0 else 0
+            "Available capital: ₹%.2f",
+            available
         )
 
         return max(0, available)

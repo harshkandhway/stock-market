@@ -816,3 +816,69 @@ def create_tables(engine):
 def drop_tables(engine):
     """Drop all tables from the database"""
     Base.metadata.drop_all(engine)
+
+
+class UserSignalRequest(Base):
+    """Track on-demand signal requests from users"""
+    __tablename__ = 'user_signal_requests'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.telegram_id'), nullable=False, index=True)
+    request_timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    
+    # Filter parameters (stored as JSON strings)
+    sectors = Column(Text)  # JSON array of sectors
+    market_caps = Column(Text)  # JSON array of market caps
+    include_etf = Column(Boolean, default=False)
+    min_confidence = Column(Float, default=70.0)
+    min_risk_reward = Column(Float, default=2.0)
+    recommendation_types = Column(Text, default='["STRONG BUY", "BUY"]')  # JSON array
+    
+    # Results
+    total_stocks_analyzed = Column(Integer)
+    total_signals_found = Column(Integer)
+    signals_sent = Column(Integer)
+    
+    # Metadata
+    analysis_duration_seconds = Column(Float)
+    cached = Column(Boolean, default=False)
+    error_message = Column(Text)
+    
+    # Relationships
+    responses = relationship("UserSignalResponse", back_populates="request", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<UserSignalRequest {self.id} - User {self.user_id} - {self.total_signals_found} signals>"
+
+
+class UserSignalResponse(Base):
+    """Individual signals sent to users from on-demand requests"""
+    __tablename__ = 'user_signal_responses'
+    
+    id = Column(Integer, primary_key=True)
+    request_id = Column(Integer, ForeignKey('user_signal_requests.id'), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.telegram_id'), nullable=False, index=True)
+    ticker = Column(String(50), nullable=False)
+    
+    # Signal details
+    recommendation = Column(Text, nullable=False)
+    recommendation_type = Column(String(50), nullable=False)
+    confidence = Column(Float, nullable=False)
+    risk_reward = Column(Float, nullable=False)
+    current_price = Column(Float, nullable=False)
+    target = Column(Float)
+    stop_loss = Column(Float)
+    
+    # Stock metadata
+    sector = Column(String(100))
+    market_cap = Column(String(50))
+    is_etf = Column(Boolean, default=False)
+    
+    # Timestamp
+    sent_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    request = relationship("UserSignalRequest", back_populates="responses")
+    
+    def __repr__(self):
+        return f"<UserSignalResponse {self.ticker} - {self.recommendation_type} - {self.confidence:.1f}%>"

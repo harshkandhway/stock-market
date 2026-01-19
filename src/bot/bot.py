@@ -75,6 +75,9 @@ from src.bot.handlers.paper_trading import (
 from src.bot.handlers.callbacks import (
     handle_callback_query
 )
+from src.bot.handlers.on_demand_signals import (
+    register_on_demand_handlers
+)
 from src.bot.services.alert_service import AlertService
 
 # Configure logging
@@ -201,6 +204,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         '🔔 Alerts': '/alerts',
         '💼 Portfolio': '/portfolio',
         '📈 Paper Trading': '/papertrade',
+        '📊 Scan Market': '/scanmarket',
         '📅 Schedule Reports': '/schedule',
         '⚙️ Settings': '/settings',
         'ℹ️ Help': '/help',
@@ -264,6 +268,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         elif command == '/menu':
             from src.bot.handlers.start import start_command
             await start_command(update, context)
+        elif command == '/scanmarket':
+            from src.bot.handlers.on_demand_signals import scan_market_command
+            await scan_market_command(update, context)
         return
     
     # If no match, suggest using commands
@@ -442,6 +449,10 @@ def create_bot_application() -> Application:
     
     # Paper trading commands
     application.add_handler(CommandHandler("papertrade", papertrade_command))
+    
+    # On-Demand BUY Signals - MUST be registered BEFORE general callback handler
+    register_on_demand_handlers(application)
+    logger.info("✅ On-demand signals handlers registered")
     
     # Callback query handler for inline buttons
     application.add_handler(CallbackQueryHandler(handle_callback_query))

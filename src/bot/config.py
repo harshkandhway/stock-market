@@ -113,7 +113,10 @@ PAPER_TRADING_DEFAULT_CAPITAL = float(os.getenv('PAPER_TRADING_DEFAULT_CAPITAL',
 PAPER_TRADING_DEFAULT_MAX_POSITIONS = int(os.getenv('PAPER_TRADING_DEFAULT_MAX_POSITIONS', '15'))
 PAPER_TRADING_DEFAULT_RISK_PCT = float(os.getenv('PAPER_TRADING_DEFAULT_RISK_PCT', '1.0'))
 PAPER_TRADING_MONITOR_INTERVAL = int(os.getenv('PAPER_TRADING_MONITOR_INTERVAL', '300'))  # 5 minutes
-PAPER_TRADING_MAX_POSITION_SIZE_PCT = float(os.getenv('PAPER_TRADING_MAX_POSITION_SIZE_PCT', '20'))
+PAPER_TRADING_MAX_POSITION_SIZE_PCT = float(os.getenv('PAPER_TRADING_MAX_POSITION_SIZE_PCT', '20.0'))
+
+# Dry-run mode (testing without database modifications)
+PAPER_TRADING_DRY_RUN = os.getenv('PAPER_TRADING_DRY_RUN', 'false').lower() == 'true'
 
 # Timing settings (IST)
 PAPER_TRADING_BUY_EXECUTION_TIME = os.getenv('PAPER_TRADING_BUY_EXECUTION_TIME', '09:20')
@@ -211,7 +214,8 @@ MAIN_MENU_BUTTONS = [
     ['📊 Analyze Stock', '📈 Compare Stocks'],
     ['⭐ Watchlist', '🔔 Alerts'],
     ['💼 Portfolio', '📈 Paper Trading'],
-    ['⚙️ Settings', 'ℹ️ Help'],
+    ['📊 Scan Market', '⚙️ Settings'],
+    ['ℹ️ Help'],
 ]
 
 ANALYSIS_ACTION_BUTTONS = [

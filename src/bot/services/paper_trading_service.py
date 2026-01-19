@@ -27,16 +27,19 @@ logger = logging.getLogger(__name__)
 class PaperTradingService:
     """Main service for orchestrating paper trading operations"""
 
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: Session, notification_callback=None):
         """
         Initialize paper trading service
 
         Args:
             db_session: Database session
+            notification_callback: Optional callback for sending notifications
+                                  Signature: async def callback(user_id, symbol, position, type)
         """
         self.db = db_session
         self.portfolio_service = PaperPortfolioService(db_session)
         self.execution_service = PaperTradeExecutionService(db_session)
+        self.notification_callback = notification_callback
 
     async def start_session(
         self,
@@ -291,9 +294,23 @@ class PaperTradingService:
                 current_price = await loop.run_in_executor(None, get_current_price, signal.symbol)
 
                 if current_price is None:
-                    # Fallback to signal price
-                    current_price = signal.current_price
-                    logger.warning("Using signal price for %s: ₹%.2f", signal.symbol, current_price)
+                    # Fix #3: Check signal staleness before using fallback price
+                    signal_age_minutes = (datetime.utcnow() - signal.analysis_date).total_seconds() / 60
+                    
+                    if signal_age_minutes > 60:  # Signal older than 1 hour
+                        logger.error(
+                            "Skipping %s - cannot fetch current price and signal is %.0f minutes old (stale)",
+                            signal.symbol, signal_age_minutes
+                        )
+                        result['skipped'] += 1
+                        continue  # Skip this stale signal
+                    
+                    # Signal is fresh (< 1 hour), safe to use
+                    current_price =signal.current_price
+                    logger.warning(
+                        "Using signal price for %s: ₹%.2f (signal is %.0f min old - acceptable)",
+                        signal.symbol, current_price, signal_age_minutes
+                    )
 
                 # Execute entry
                 position = await self.execution_service.enter_position(
@@ -302,6 +319,18 @@ class PaperTradingService:
 
                 if position:
                     result['opened'] += 1
+                    
+                    # Fix #1: Send individual notification for this position
+                    if self.notification_callback:
+                        try:
+                            await self.notification_callback(
+                                session.user_id, 
+                                signal.symbol, 
+                                position, 
+                                "individual"
+                            )
+                        except Exception as notify_error:
+                            logger.error(f"Failed to send individual notification: {notify_error}")
                 else:
                     result['skipped'] += 1
 
@@ -521,14 +550,18 @@ class PaperTradingService:
         return new_session
 
 
-def get_paper_trading_service(db_session: Session) -> PaperTradingService:
+def get_paper_trading_service(
+    db_session: Session, 
+    notification_callback=None
+) -> PaperTradingService:
     """
     Factory function to create paper trading service
 
     Args:
         db_session: Database session
+        notification_callback: Optional callback for sending notifications
 
     Returns:
         PaperTradingService instance
     """
-    return PaperTradingService(db_session)
+    return PaperTradingService(db_session, notification_callback)

@@ -466,33 +466,45 @@ class PaperTradingScheduler:
             logger.error(f"Error executing pending trades: {e}", exc_info=True)
 
     async def _send_buy_signals_summary_notification(self, result: dict):
-        """Send summary notification for buy signals execution"""
+        """Send personalized summary notification for buy signals execution"""
         try:
             with get_db_context() as db:
-                # Get all active sessions that had signals processed
+                # Fix #2: Send personalized summary to each user showing only THEIR results
                 from ..database.models import PaperTradingSession
-                active_sessions = db.query(PaperTradingSession).filter(
-                    PaperTradingSession.is_active == True
-                ).all()
-
-                summary_message = (
-                    f"🎯 *Daily Buy Signals Executed*\n\n"
-                    f"📈 *{result['signals_found']}* signals analyzed\n"
-                    f"✅ *{result['positions_opened']}* positions opened\n"
-                    f"⏭️ *{result['skipped']}* signals skipped\n\n"
-                    f"Signals processed across *{result['sessions_processed']}* active session(s)."
-                )
-
-                for session in active_sessions:
+                
+                # Create dict mapping user_id to their results
+                user_results = {}
+                for detail in result.get('details', []):
+                    user_id = detail.get('user_id')
+                    user_results[user_id] = {
+                        'opened': detail.get('opened', 0),
+                        'skipped': detail.get('skipped', 0)
+                    }
+                
+                # Send personalized notification to each user
+                for user_id, user_result in user_results.items():
                     try:
+                        # Create personalized message showing only THIS user's results
+                        summary_message = (
+                            f"🎯 *Daily Buy Signals Executed*\n\n"
+                            f"✅ *{user_result['opened']}* position(s) opened for you\n"
+                            f"⏭️ *{user_result['skipped']}* signal(s) skipped\n\n"
+                        )
+                        
+                        # Add context based on results
+                        if user_result['opened'] > 0:
+                            summary_message += f"Check /papertrade status for details."
+                        elif user_result['skipped'] > 0:
+                            summary_message += f"Positions were skipped (limit reached or already have position)."
+                        
                         await self.application.bot.send_message(
-                            chat_id=session.user_id,
+                            chat_id=user_id,
                             text=summary_message,
                             parse_mode='Markdown'
                         )
-                        logger.info(f"Sent buy signals summary to user {session.user_id}")
+                        logger.info(f"Sent personalized summary to user {user_id}: {user_result['opened']} opened, {user_result['skipped']} skipped")
                     except Exception as e:
-                        logger.error(f"Failed to send buy signals summary to user {session.user_id}: {e}")
+                        logger.error(f"Failed to send summary to user {user_id}: {e}")
 
         except Exception as e:
             logger.error(f"Failed to send buy signals summary notifications: {e}")
@@ -563,7 +575,11 @@ class PaperTradingScheduler:
 
         try:
             with get_db_context() as db:
-                trading_service = get_paper_trading_service(db)
+                # Pass notification callback to service for individual notifications
+                trading_service = get_paper_trading_service(
+                    db, 
+                    notification_callback=self._send_trade_execution_notification
+                )
                 result = await trading_service.execute_buy_signals()
 
                 logger.info(
