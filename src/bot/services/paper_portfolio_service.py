@@ -390,8 +390,8 @@ class PaperPortfolioService:
             'initial_capital': session.initial_capital,
             'current_cash': available_capital,
             'deployed_capital': deployed_capital,
-            'deployed_pct': (deployed_capital / session.current_capital * 100) if session.current_capital > 0 else 0,
-            'available_pct': (available_capital / session.current_capital * 100) if session.current_capital > 0 else 0,
+            'deployed_pct': (deployed_capital / total_capital * 100) if session.current_capital > 0 else 0,
+            'available_pct': (available_capital / total_capital * 100) if session.current_capital > 0 else 0,
             'peak_capital': session.peak_capital,
 
             # Positions
