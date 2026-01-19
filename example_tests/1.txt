@@ -1,0 +1,43 @@
+/papertrade status
+📊 PAPER TRADING STATUS
+
+━━━━━━━━━━━━━━━━━━━━
+SESSION OVERVIEW
+━━━━━━━━━━━━━━━━━━━━
+Started: 2026-01-11 20:44 IST
+Days Active: 7
+
+━━━━━━━━━━━━━━━━━━━━
+CAPITAL
+━━━━━━━━━━━━━━━━━━━━
+Initial: ₹100,000.00
+Current: ₹100,426.05
+Available: ₹0.00
+Deployed: ₹55,101.15 (121.6%)
+
+Total P&L: ₹+426.05 (+0.43%)
+Unrealized P&L: ₹+426.05
+
+━━━━━━━━━━━━━━━━━━━━
+OPEN POSITIONS (5/15)
+━━━━━━━━━━━━━━━━━━━━
+🟢 AXISBANK.NS: 15.0 @ ₹1274.10 (+2.5%)
+🔴 COALINDIA.NS: 27.0 @ ₹431.70 (-0.1%)
+🔴 TATAELXSI.BO: 1.0 @ ₹5612.40 (-0.9%)
+⚪ NGLFINE.BO: 5.0 @ ₹1447.50 (+0.0%)
+🟢 INDIANB.NS: 13.0 @ ₹850.60 (+0.1%)
+
+━━━━━━━━━━━━━━━━━━━━
+PERFORMANCE
+━━━━━━━━━━━━━━━━━━━━
+Total Trades: 0
+Win Rate: 0.0% (0W / 0L)
+
+Total Profit: ₹0.00
+Total Loss: ₹0.00
+Profit Factor: 0.00
+
+Max Drawdown: 0.00%
+
+Use /papertrade performance for detailed metrics
+Use /papertrade history for trade history
