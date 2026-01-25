@@ -8,6 +8,8 @@ Uses APScheduler to run checks every N minutes (configured in config.py).
 """
 
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from telegram import Bot
@@ -25,6 +27,9 @@ from ..utils.formatters import format_success, format_warning
 from ..config import ALERT_CHECK_INTERVAL_MINUTES
 
 logger = logging.getLogger(__name__)
+
+# Thread pool for running blocking price/analysis calls
+_executor = ThreadPoolExecutor(max_workers=2)
 
 
 class AlertService:
@@ -143,7 +148,11 @@ class AlertService:
     async def _check_price_alert(self, alert: Alert) -> bool:
         """Check price alert condition."""
         try:
-            current_price = get_current_price(alert.symbol)
+            # Run in executor to avoid blocking
+            loop = asyncio.get_event_loop()
+            current_price = await loop.run_in_executor(
+                _executor, get_current_price, alert.symbol
+            )
             
             condition = alert.params
             operator = condition.get('operator')
@@ -168,8 +177,11 @@ class AlertService:
     async def _check_rsi_alert(self, alert: Alert) -> bool:
         """Check RSI alert condition."""
         try:
-            # Perform analysis to get RSI
-            result = analyze_stock(alert.symbol)
+            # Perform analysis to get RSI (run in executor)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                _executor, analyze_stock, alert.symbol
+            )
             if result['status'] != 'success':
                 return False
             analysis_data = result['data']
@@ -197,8 +209,11 @@ class AlertService:
     async def _check_signal_change_alert(self, alert: Alert) -> bool:
         """Check signal change alert condition."""
         try:
-            # Get current analysis
-            result = analyze_stock(alert.symbol)
+            # Get current analysis (run in executor)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                _executor, analyze_stock, alert.symbol
+            )
             if result['status'] != 'success':
                 return False
             
@@ -286,7 +301,11 @@ class AlertService:
     async def _format_price_alert_notification(self, alert: Alert) -> str:
         """Format price alert notification."""
         try:
-            current_price = get_current_price(alert.symbol)
+            # Run in executor to avoid blocking
+            loop = asyncio.get_event_loop()
+            current_price = await loop.run_in_executor(
+                _executor, get_current_price, alert.symbol
+            )
             target_price = alert.params.get('value')
             
             message = (
@@ -307,8 +326,11 @@ class AlertService:
     async def _format_rsi_alert_notification(self, alert: Alert) -> str:
         """Format RSI alert notification."""
         try:
-            # Get current RSI
-            result = analyze_stock(alert.symbol)
+            # Get current RSI (run in executor)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                _executor, analyze_stock, alert.symbol
+            )
             if result['status'] == 'success':
                 rsi = result['data'].get('indicators', {}).get('rsi')
                 rsi_str = f"{rsi:.2f}" if rsi else "N/A"
@@ -337,8 +359,11 @@ class AlertService:
     async def _format_signal_change_notification(self, alert: Alert) -> str:
         """Format signal change alert notification."""
         try:
-            # Get current analysis
-            result = analyze_stock(alert.symbol)
+            # Get current analysis (run in executor)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                _executor, analyze_stock, alert.symbol
+            )
             if result['status'] == 'success':
                 recommendation = result['data'].get('recommendation', 'UNKNOWN')
                 confidence = result['data'].get('confidence', 0)

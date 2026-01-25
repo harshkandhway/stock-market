@@ -1,14 +1,14 @@
 """
-On-Demand Analysis Service
-Handles user-requested BUY signal analysis with filtering
-
-Author: Harsh Kandhway
-Date: January 19, 2026
+On-Demand BUY Signal Analysis Service
+Handles user-requested market scans with filtering capabilities
 """
 
 import logging
 import time
+import hashlib
 import json
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Optional
 from datetime import datetime, timedelta
 
@@ -16,9 +16,12 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from src.bot.database.models import UserSignalRequest, UserSignalResponse
-from src.bot.services.analysis_service import analyze_stock, get_current_price
+from src.bot.services.analysis_service import analyze_stock
 
 logger = logging.getLogger(__name__)
+
+# Thread pool for running blocking analysis
+_executor = ThreadPoolExecutor(max_workers=4)
 
 
 class OnDemandAnalysisService:
@@ -166,13 +169,16 @@ class OnDemandAnalysisService:
         for idx, stock in enumerate(stocks, 1):
             ticker = stock['ticker']
             try:
-                # Use existing analyzer (correct parameters)
-                result = analyze_stock(
+                # Run blocking analyze_stock in background thread to keep bot responsive
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    _executor,
+                    analyze_stock,
                     ticker,
-                    mode='balanced',
-                    timeframe='medium',
-                    horizon='3months',
-                    use_cache=False
+                    'balanced',  # mode
+                    'medium',    # timeframe
+                    '3months',   # horizon
+                    False        # use_cache
                 )
                 
                 # Log result for each stock
