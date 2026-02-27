@@ -767,6 +767,104 @@ TRADING_DAYS_PER_WEEK = 5
 TRADING_DAYS_PER_MONTH = 22
 TRADING_DAYS_PER_YEAR = 252
 
+# =============================================================================
+# SHORT-SELLING ENGINE CONFIGURATION
+# =============================================================================
+
+# Signal weights for short selling (total = 100)
+# Trend is heavier because trend-following is critical for shorts
+SHORT_SIGNAL_WEIGHTS = {
+    # TREND INDICATORS (45% total) — heavier for shorts
+    'price_vs_trend_ema': 17,
+    'price_vs_medium_ema': 12,
+    'ema_alignment': 11,
+    'adx_strength': 5,
+
+    # MOMENTUM INDICATORS (35% total)
+    'rsi_zone': 12,
+    'rsi_direction': 3,
+    'macd_signal': 8,
+    'macd_histogram': 4,
+    'macd_zero_line': 3,
+    'divergence': 5,
+
+    # CONFIRMATION INDICATORS (20% total) — slightly lower for shorts
+    'volume_confirmation': 7,
+    'volume_trend': 3,
+    'bollinger_position': 5,
+    'support_resistance': 5,
+}
+
+# Hard filters that BLOCK short entries (prevent shorting at extremes)
+SHORT_HARD_FILTERS = {
+    'block_short': [
+        {
+            'indicator': 'rsi',
+            'operator': '<',
+            'value': 25,
+            'reason': 'RSI < 25: Extremely oversold — high bounce probability, do NOT short'
+        },
+        {
+            'indicator': 'stoch_k',
+            'operator': '<',
+            'value': 15,
+            'reason': 'Stochastic < 15: Extremely oversold — bounce risk'
+        },
+        {
+            'indicator': 'bb_percent',
+            'operator': '<',
+            'value': -0.05,
+            'reason': 'Price well below lower Bollinger Band — overextended down'
+        },
+        {
+            'indicator': 'divergence',
+            'operator': '==',
+            'value': 'bullish',
+            'reason': 'Bullish divergence detected — momentum strengthening, avoid short'
+        },
+    ]
+}
+
+# Recommendation thresholds for short engine
+# High confidence = strong short signal
+SHORT_RECOMMENDATION_THRESHOLDS = {
+    'conservative': {
+        'STRONG_SHORT': 80,
+        'SHORT': 70,
+        'WEAK_SHORT': 62,
+        'NEUTRAL_UPPER': 55,
+        'NEUTRAL_LOWER': 45,
+        'AVOID_SHORT': 35,
+    },
+    'balanced': {
+        'STRONG_SHORT': 75,
+        'SHORT': 65,
+        'WEAK_SHORT': 58,
+        'NEUTRAL_UPPER': 50,
+        'NEUTRAL_LOWER': 42,
+        'AVOID_SHORT': 30,
+    },
+    'aggressive': {
+        'STRONG_SHORT': 68,
+        'SHORT': 58,
+        'WEAK_SHORT': 50,
+        'NEUTRAL_UPPER': 45,
+        'NEUTRAL_LOWER': 38,
+        'AVOID_SHORT': 25,
+    },
+}
+
+# Expected SHORT returns by horizon (downward moves, as positive percentages)
+SHORT_HORIZON_RETURNS = {
+    '1week':   {'min': 1.0, 'max': 2.5},
+    '2weeks':  {'min': 1.5, 'max': 4.0},
+    '1month':  {'min': 2.0, 'max': 6.0},
+    '3months': {'min': 3.0, 'max': 10.0},
+    '6months': {'min': 5.0, 'max': 15.0},
+    '1year':   {'min': 8.0, 'max': 25.0},
+}
+
+
 def get_expected_dates(horizon_key: str) -> dict:
     """Calculate expected buy/sell dates based on horizon"""
     from datetime import datetime, timedelta

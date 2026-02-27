@@ -1,0 +1,328 @@
+=================================================================
+TWIN SHORT ENGINE BACKTEST — 2024-06-01 -> 2025-07-01
+=================================================================
+  Capital: 200,000 | Conf >= 60% | Horizon: 30d
+  Momentum: Price < EMA-21, RSI 30-60, Vol > 20d avg
+
+  Loaded 143 stocks
+
+  Fetching NIFTY50 for Market Regime Detection...
+  Regime detection active.
+
+=================================================================
+PASS 1: Short signals (conf >= 60% + short momentum filter)...
+=================================================================
+  [1/143] ABCAPITAL... 0
+  [2/143] ADANIPORTS... 0
+  [3/143] AMBUJACEM... 0
+  [4/143] APLAPOLLO... 0
+  [5/143] APOLLOHOSP... 0
+  [6/143] ASIANPAINT... 4
+  [7/143] ASTRAL... 4
+  [8/143] ATUL... 0
+  [9/143] AUBANK... 0
+  [10/143] AUROPHARMA... 2
+  [11/143] AXISBANK... 0
+  [12/143] BAJAJ-AUTO... 1
+  [13/143] BAJAJFINSV... 0
+  [14/143] BAJFINANCE... 0
+  [15/143] BALKRISIND... 0
+  [16/143] BANKBARODA... 0
+  [17/143] BANKINDIA... 0
+  [18/143] BATAINDIA... 4
+  [19/143] BDL... 0
+  [20/143] BEL... 0
+  [21/143] BHARATFORG... 0
+  [22/143] BHARTIARTL... 0
+  [23/143] BHEL... 0
+  [24/143] BIOCON... 2
+  [25/143] BPCL... 0
+  [26/143] BRITANNIA... 0
+  [27/143] CANFINHOME... 0
+  [28/143] CENTRALBK... 4
+  [29/143] CHOLAFIN... 0
+  [30/143] CIPLA... 3
+  [31/143] COALINDIA... 4
+  [32/143] COFORGE... 0
+  [33/143] CONCOR... 1
+  [34/143] CROMPTON... 0
+  [35/143] CUMMINSIND... 2
+  [36/143] DEEPAKNTR... 3
+  [37/143] DELHIVERY... 1
+  [38/143] DEVYANI... 2
+  [39/143] DIVISLAB... 1
+  [40/143] DIXON... 1
+  [41/143] DLF... 2
+  [42/143] DRREDDY... 2
+  [43/143] EICHERMOT... 0
+  [44/143] EMAMILTD... 1
+  [45/143] ESCORTS... 1
+  [46/143] FEDERALBNK... 0
+  [47/143] GAIL... 0
+  [48/143] GODREJPROP... 0
+  [49/143] GRASIM... 0
+  [50/143] HAL... 0
+  [51/143] HAVELLS... 3
+  [52/143] HCLTECH... 0
+  [53/143] HDFCAMC... 0
+  [54/143] HDFCBANK... 0
+  [55/143] HEROMOTOCO... 1
+  [56/143] HINDALCO... 2
+  [57/143] HONAUT... 2
+  [58/143] HUDCO... 0
+  [59/143] ICICIBANK... 0
+  [60/143] IDFCFIRSTB... 3
+  [61/143] IIFL... 0
+  [62/143] INDIGO... 0
+  [63/143] INFY... 0
+  [64/143] IPCALAB... 2
+  [65/143] IRCTC... 1
+  [66/143] IRFC... 1
+  [67/143] ITC... 1
+  [68/143] JINDALSTEL... 2
+  [69/143] JKCEMENT... 0
+  [70/143] JSWENERGY... 1
+  [71/143] JSWSTEEL... 0
+  [72/143] JUBLFOOD... 0
+  [73/143] KALYANKJIL... 1
+  [74/143] KEI... 0
+  [75/143] KOTAKBANK... 0
+  [76/143] KPITTECH... 0
+  [77/143] LALPATHLAB... 1
+  [78/143] LICHSGFIN... 1
+  [79/143] LICI... 0
+  [80/143] LINDEINDIA... 1
+  [81/143] LLOYDSME... 0
+  [82/143] LT... 0
+  [83/143] LTTS... 7
+  [84/143] M&M... 1
+  [85/143] MANAPPURAM... 0
+  [86/143] MARICO... 0
+  [87/143] MARUTI... 1
+  [88/143] MAXHEALTH... 0
+  [89/143] METROPOLIS... 2
+  [90/143] MPHASIS... 1
+  [91/143] MRF... 0
+  [92/143] MUTHOOTFIN... 0
+  [93/143] NAM-INDIA... 0
+  [94/143] NAUKRI... 1
+  [95/143] NESTLEIND... 0
+  [96/143] NHPC... 0
+  [97/143] NMDC... 0
+  [98/143] NTPC... 3
+  [99/143] OBEROIRLTY... 1
+  [100/143] ONGC... 0
+  [101/143] PAGEIND... 0
+  [102/143] PERSISTENT... 0
+  [103/143] PETRONET... 1
+  [104/143] PFC... 5
+  [105/143] PHOENIXLTD... 0
+  [106/143] PIDILITIND... 0
+  [107/143] PNB... 1
+  [108/143] POLYCAB... 1
+  [109/143] POONAWALLA... 0
+  [110/143] POWERGRID... 1
+  [111/143] PRESTIGE... 0
+  [112/143] RAMCOCEM... 1
+  [113/143] RECLTD... 7
+  [114/143] RELAXO... 0
+  [115/143] RELIANCE... 0
+  [116/143] SAIL... 0
+  [117/143] SBILIFE... 0
+  [118/143] SBIN... 0
+  [119/143] SHRIRAMFIN... 0
+  [120/143] SJVN... 1
+  [121/143] SOLARINDS... 0
+  [122/143] SUNDARMFIN... 0
+  [123/143] SUNPHARMA... 2
+  [124/143] SUNTV... 3
+  [125/143] SUPREMEIND... 0
+  [126/143] SYNGENE... 0
+  [127/143] TATACHEM... 1
+  [128/143] TATACONSUM... 0
+  [129/143] TATAELXSI... 2
+  [130/143] TATASTEEL... 1
+  [131/143] TCS... 4
+  [132/143] TECHM... 0
+  [133/143] THERMAX... 3
+  [134/143] TIINDIA... 2
+  [135/143] TITAN... 1
+  [136/143] TORNTPHARM... 1
+  [137/143] TRENT... 0
+  [138/143] TVSMOTOR... 0
+  [139/143] ULTRACEMCO... 0
+  [140/143] VEDL... 1
+  [141/143] VOLTAS... 1
+  [142/143] WIPRO... 2
+  [143/143] ZYDUSLIFE... /Users/lexplosion/Trades/stock-market/backtests/backtest_twin_short.py:314: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  sdf['month'] = sdf['entry_date'].dt.to_period('M')
+1
+
+  Total short signals: 128
+  Range: 2025-03-20 -> 2025-07-01
+
+  Signals by month:
+    2025-03: 22 signals
+    2025-04: 27 signals
+    2025-05: 39 signals
+    2025-06: 39 signals
+    2025-07: 1 signals
+
+=================================================================
+PASS 2: 200,000 portfolio | Short positions | Trailing stops
+=================================================================
+  [SS] SHORT IDFCFIRSTB      55.62 x 539 =  29,982 | Conf: 83% | Tgt: -5.4% | Cash: 170,018
+  [SS] SHORT POLYCAB       5014.98 x   5 =  25,075 | Conf: 84% | Tgt: -6.9% | Cash: 144,944
+  [SS] SHORT ASTRAL        1300.25 x  23 =  29,906 | Conf: 82% | Tgt: -5.6% | Cash: 115,038
+  [SS] SHORT LTTS          4620.42 x   6 =  27,723 | Conf: 83% | Tgt: -5.5% | Cash: 87,315
+  [SS] SHORT TITAN         3065.88 x   9 =  27,593 | Conf: 82% | Tgt: -4.9% | Cash: 59,722
+  [S ] SHORT DELHIVERY      257.84 x  77 =  19,854 | Conf: 80% | Tgt: -6.1% | Cash: 39,869
+  [SS] SHORT TIINDIA       2698.30 x  11 =  29,681 | Conf: 84% | Tgt: -5.2% | Cash: 10,187
+  TARGET LTTS           6d -> Now TRAILING (+5.5% short gain)
+  TARGET IDFCFIRSTB    11d -> Now TRAILING (+5.4% short gain)
+  TARGET POLYCAB        9d -> Now TRAILING (+6.9% short gain)
+  TARGET DELHIVERY      7d -> Now TRAILING (+6.1% short gain)
+  TARGET TIINDIA        6d -> Now TRAILING (+5.2% short gain)
+  TRAIL IDFCFIRSTB    12d | +249 (+0.9%) | Cash: 40,418
+  TRAIL POLYCAB       10d | +1,064 (+4.3%) | Cash: 66,557
+  TRAIL LTTS           8d | +2,700 (+9.8%) | Cash: 96,979
+  TRAIL DELHIVERY      8d | +543 (+2.8%) | Cash: 117,377
+  TRAIL TIINDIA        7d | +880 (+3.0%) | Cash: 147,938
+  [SS] SHORT MPHASIS       2267.83 x  13 =  29,482 | Conf: 82% | Tgt: -6.2% | Cash: 118,456
+  [S ] SHORT TATAELXSI     4943.05 x   4 =  19,772 | Conf: 79% | Tgt: -5.9% | Cash: 98,684
+  MAX_LOSS TATAELXSI      3d | -2,008 (-10.1%) | Cash: 116,448
+  [S ] SHORT BATAINDIA     1207.99 x  16 =  19,328 | Conf: 80% | Tgt: -5.3% | Cash: 97,120
+  [S ] SHORT LTTS          4365.63 x   4 =  17,463 | Conf: 79% | Tgt: -5.8% | Cash: 79,658
+  MAX_LOSS TITAN         16d | -2,802 (-10.1%) | Cash: 104,449
+  MAX_LOSS MPHASIS        4d | -2,994 (-10.1%) | Cash: 130,937
+  [SS] SHORT JSWENERGY      513.29 x  58 =  29,771 | Conf: 86% | Tgt: -6.6% | Cash: 101,166
+  [SS] SHORT TATASTEEL      139.25 x 215 =  29,939 | Conf: 80% | Tgt: -6.2% | Cash: 71,228
+  TARGET JSWENERGY      2d -> Now TRAILING (+6.6% short gain)
+  [S ] SHORT DLF            654.35 x  30 =  19,630 | Conf: 78% | Tgt: -5.6% | Cash: 51,597
+  [S ] SHORT TATACHEM       825.62 x  24 =  19,815 | Conf: 78% | Tgt: -4.7% | Cash: 31,782
+  TRAIL JSWENERGY      5d | +1,533 (+5.2%) | Cash: 63,086
+  [S ] SHORT COALINDIA      388.71 x  51 =  19,824 | Conf: 77% | Tgt: -4.7% | Cash: 43,262
+  [S ] SHORT CONCOR         539.01 x  37 =  19,943 | Conf: 78% | Tgt: -5.2% | Cash: 23,318
+  TARGET LTTS           9d -> Now TRAILING (+5.8% short gain)
+  TARGET COALINDIA      4d -> Now TRAILING (+4.7% short gain)
+  TRAIL COALINDIA      5d | -34 (-0.1%) | Cash: 43,109
+  [S ] SHORT IRCTC          744.25 x  26 =  19,351 | Conf: 79% | Tgt: -5.2% | Cash: 23,758
+  [S ] SHORT ESCORTS       3132.86 x   6 =  18,797 | Conf: 77% | Tgt: -3.2% | Cash: 4,961
+  TIME ASTRAL        30d | -735 (-2.4%) | Cash: 34,132
+  TRAIL LTTS          13d | +638 (+3.7%) | Cash: 52,233
+  [S ] SHORT PNB             95.40 x 209 =  19,940 | Conf: 78% | Tgt: -8.8% | Cash: 32,293
+  MAX_LOSS ESCORTS        2d | -1,909 (-10.1%) | Cash: 49,182
+  [SS] SHORT CUMMINSIND    2860.04 x  10 =  28,600 | Conf: 84% | Tgt: -5.5% | Cash: 20,582
+  [S ] SHORT THERMAX       3306.49 x   6 =  19,839 | Conf: 79% | Tgt: -6.3% | Cash: 743
+  MAX_LOSS TATASTEEL     14d | -3,040 (-10.1%) | Cash: 27,641
+  [S ] SHORT OBEROIRLTY    1588.61 x  12 =  19,063 | Conf: 80% | Tgt: -5.9% | Cash: 8,578
+  MAX_LOSS DLF           13d | -1,993 (-10.1%) | Cash: 26,215
+  MAX_LOSS CONCOR        11d | -2,025 (-10.1%) | Cash: 44,133
+  MAX_LOSS IRCTC          7d | -1,965 (-10.1%) | Cash: 61,519
+  [SS] SHORT RECLTD         410.59 x  73 =  29,973 | Conf: 84% | Tgt: -6.8% | Cash: 31,546
+  [S ] SHORT CENTRALBK       36.61 x 546 =  19,991 | Conf: 79% | Tgt: -5.9% | Cash: 11,555
+  MAX_LOSS OBEROIRLTY     4d | -1,936 (-10.1%) | Cash: 28,683
+  [S ] SHORT CIPLA         1493.90 x  13 =  19,421 | Conf: 78% | Tgt: -4.7% | Cash: 9,262
+  MAX_LOSS TATACHEM      21d | -2,012 (-10.1%) | Cash: 27,065
+  MAX_LOSS CUMMINSIND    12d | -2,904 (-10.1%) | Cash: 52,761
+  [SS] SHORT HAVELLS       1553.44 x  19 =  29,515 | Conf: 81% | Tgt: -4.7% | Cash: 23,246
+  MAX_LOSS PNB           14d | -2,025 (-10.1%) | Cash: 41,160
+  [SS] SHORT ASIANPAINT    2294.20 x  13 =  29,825 | Conf: 85% | Tgt: -4.3% | Cash: 11,336
+  MAX_LOSS CENTRALBK     10d | -2,030 (-10.1%) | Cash: 29,297
+  [S ] SHORT VOLTAS        1258.74 x  15 =  18,881 | Conf: 78% | Tgt: -4.2% | Cash: 10,416
+  TIME BATAINDIA     30d | -262 (-1.3%) | Cash: 29,482
+  [S ] SHORT IPCALAB       1399.60 x  14 =  19,594 | Conf: 78% | Tgt: -5.5% | Cash: 9,888
+  MAX_LOSS THERMAX       21d | -2,015 (-10.1%) | Cash: 27,712
+  TARGET ASIANPAINT    10d -> Now TRAILING (+4.3% short gain)
+  [S ] SHORT COALINDIA      389.61 x  51 =  19,870 | Conf: 78% | Tgt: -3.6% | Cash: 7,842
+  TRAIL ASIANPAINT    13d | +96 (+0.4%) | Cash: 37,763
+  TARGET RECLTD        23d -> Now TRAILING (+6.8% short gain)
+  TARGET IPCALAB       11d -> Now TRAILING (+5.5% short gain)
+  [S ] SHORT NTPC           332.07 x  60 =  19,924 | Conf: 75% | Tgt: -4.1% | Cash: 17,839
+  TRAIL RECLTD        24d | +727 (+2.5%) | Cash: 48,539
+  TRAIL IPCALAB       12d | +148 (+0.8%) | Cash: 68,281
+  [S ] SHORT VEDL           438.01 x  45 =  19,711 | Conf: 77% | Tgt: -4.5% | Cash: 48,571
+  [S ] SHORT TCS           3421.57 x   5 =  17,108 | Conf: 76% | Tgt: -4.0% | Cash: 31,463
+  [SS] SHORT PFC            403.90 x  74 =  29,888 | Conf: 84% | Tgt: -3.9% | Cash: 1,575
+  TIME CIPLA         30d | -311 (-1.6%) | Cash: 20,684
+  [S ] SHORT DEVYANI        167.60 x 119 =  19,945 | Conf: 77% | Tgt: -4.9% | Cash: 739
+
+  Closing 8 open short positions...
+  [W] HAVELLS      END  24d | +63
+  [L] VOLTAS       END  22d | -1,045
+  [L] COALINDIA    END  13d | -36
+  [L] NTPC         END   9d | -60
+  [L] VEDL         END   8d | -1,285
+  [L] TCS          END   8d | -65
+  [L] PFC          END   7d | -1,506
+  [L] DEVYANI      END   1d | -156
+
+=================================================================
+TWIN SHORT ENGINE — FINAL RESULTS
+=================================================================
+Starting Capital:      200,000
+Final Capital:         171,493
+TOTAL RETURN:          -28,507 (-14.25%)
+Period:             2024-06-01 -> 2025-07-01
+Strategy:           Short Engine | Conf>=60% | Momentum | Trailing
+-----------------------------------------------------------------
+Total Trades:       36
+Win Rate:           30.6% (11W / 25L)
+-----------------------------------------------------------------
+Gross P&L:             -28,146
+Total Charges:             361
+NET P&L:               -28,507
+-----------------------------------------------------------------
+Avg Win:                  +786
+Avg Loss:               -1,486
+Max Win:                +2,700
+Max Loss:               -3,040
+Avg Days Held:      12.5
+=================================================================
+
+Trade Journal:
+----------------------------------------------------------------------------------------------------------------------------------
+  [W] IDFCFIRSTB   | 2025-03-20 -> 2025-04-08 |  12d |  29,982 |     +249 (+0.9%) | Trailing Stop
+  [L] ASTRAL       | 2025-03-24 -> 2025-05-12 |  30d |  29,906 |     -735 (-2.4%) | Time Stop (30d)
+  [W] POLYCAB      | 2025-03-24 -> 2025-04-08 |  10d |  25,075 |   +1,064 (+4.3%) | Trailing Stop
+  [W] LTTS         | 2025-03-26 -> 2025-04-08 |   8d |  27,723 |   +2,700 (+9.8%) | Trailing Stop
+  [W] DELHIVERY    | 2025-03-26 -> 2025-04-08 |   8d |  19,854 |     +543 (+2.8%) | Trailing Stop
+  [L] TITAN        | 2025-03-26 -> 2025-04-23 |  16d |  27,593 |   -2,802 (-10.1%) | Max Loss Stop (10%)
+  [W] TIINDIA      | 2025-03-27 -> 2025-04-08 |   7d |  29,681 |     +880 (+3.0%) | Trailing Stop
+  [L] TATAELXSI    | 2025-04-16 -> 2025-04-22 |   3d |  19,772 |   -2,008 (-10.1%) | Max Loss Stop (10%)
+  [L] MPHASIS      | 2025-04-16 -> 2025-04-23 |   4d |  29,482 |   -2,994 (-10.1%) | Max Loss Stop (10%)
+  [W] LTTS         | 2025-04-22 -> 2025-05-12 |  13d |  17,463 |     +638 (+3.7%) | Trailing Stop
+  [L] BATAINDIA    | 2025-04-22 -> 2025-06-04 |  30d |  19,328 |     -262 (-1.3%) | Time Stop (30d)
+  [W] JSWENERGY    | 2025-04-23 -> 2025-04-30 |   5d |  29,771 |   +1,533 (+5.2%) | Trailing Stop
+  [L] TATASTEEL    | 2025-04-23 -> 2025-05-14 |  14d |  29,939 |   -3,040 (-10.1%) | Max Loss Stop (10%)
+  [L] DLF          | 2025-04-28 -> 2025-05-16 |  13d |  19,630 |   -1,993 (-10.1%) | Max Loss Stop (10%)
+  [L] TATACHEM     | 2025-04-28 -> 2025-05-28 |  21d |  19,815 |   -2,012 (-10.1%) | Max Loss Stop (10%)
+  [L] COALINDIA    | 2025-04-30 -> 2025-05-08 |   5d |  19,824 |      -34 (-0.1%) | Trailing Stop
+  [L] CONCOR       | 2025-05-02 -> 2025-05-19 |  11d |  19,943 |   -2,025 (-10.1%) | Max Loss Stop (10%)
+  [L] IRCTC        | 2025-05-08 -> 2025-05-19 |   7d |  19,351 |   -1,965 (-10.1%) | Max Loss Stop (10%)
+  [L] ESCORTS      | 2025-05-09 -> 2025-05-13 |   2d |  18,797 |   -1,909 (-10.1%) | Max Loss Stop (10%)
+  [L] PNB          | 2025-05-12 -> 2025-05-30 |  14d |  19,940 |   -2,025 (-10.1%) | Max Loss Stop (10%)
+  [L] THERMAX      | 2025-05-13 -> 2025-06-11 |  21d |  19,839 |   -2,015 (-10.1%) | Max Loss Stop (10%)
+  [L] CUMMINSIND   | 2025-05-13 -> 2025-05-29 |  12d |  28,600 |   -2,904 (-10.1%) | Max Loss Stop (10%)
+  [L] OBEROIRLTY   | 2025-05-14 -> 2025-05-20 |   4d |  19,063 |   -1,936 (-10.1%) | Max Loss Stop (10%)
+  [W] RECLTD       | 2025-05-19 -> 2025-06-20 |  24d |  29,973 |     +727 (+2.5%) | Trailing Stop
+  [L] CENTRALBK    | 2025-05-19 -> 2025-06-02 |  10d |  19,991 |   -2,030 (-10.1%) | Max Loss Stop (10%)
+  [L] CIPLA        | 2025-05-20 -> 2025-07-01 |  30d |  19,421 |     -311 (-1.6%) | Time Stop (30d)
+  [W] HAVELLS      | 2025-05-29 -> 2025-07-01 |  24d |  29,515 |      +63 (+0.3%) | End of Backtest
+  [W] ASIANPAINT   | 2025-05-30 -> 2025-06-18 |  13d |  29,825 |      +96 (+0.4%) | Trailing Stop
+  [L] VOLTAS       | 2025-06-02 -> 2025-07-01 |  22d |  18,881 |   -1,045 (-5.5%) | End of Backtest
+  [W] IPCALAB      | 2025-06-04 -> 2025-06-20 |  12d |  19,594 |     +148 (+0.8%) | Trailing Stop
+  [L] COALINDIA    | 2025-06-13 -> 2025-07-01 |  13d |  19,870 |      -36 (-0.1%) | End of Backtest
+  [L] NTPC         | 2025-06-19 -> 2025-07-01 |   9d |  19,924 |      -60 (-0.3%) | End of Backtest
+  [L] VEDL         | 2025-06-20 -> 2025-07-01 |   8d |  19,711 |   -1,285 (-6.5%) | End of Backtest
+  [L] TCS          | 2025-06-20 -> 2025-07-01 |   8d |  17,108 |      -65 (-0.3%) | End of Backtest
+  [L] PFC          | 2025-06-23 -> 2025-07-01 |   7d |  29,888 |   -1,506 (-5.0%) | End of Backtest
+  [L] DEVYANI      | 2025-07-01 -> 2025-07-01 |   1d |  19,945 |     -156 (-0.7%) | End of Backtest
+
+By Exit Reason:
+  End of Backtest               : 8 trades | -4,089
+  Max Loss Stop (10%)           : 14 trades | -31,657
+  Time Stop (30d)               : 3 trades | -1,308
+  Trailing Stop                 : 11 trades | +8,546
+
+Saved to '/Users/lexplosion/Trades/stock-market/backtest_twin_short_trades.csv'

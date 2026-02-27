@@ -617,6 +617,15 @@ def calculate_all_indicators(df: pd.DataFrame, timeframe: str = 'medium') -> Dic
         }
     
     # Compile all indicators
+    
+    # ── V3: Macro Trend Indicators (Minervini Trend Template) ──
+    sma_150_ind = SMAIndicator(close, window=150)
+    sma_200_ind = SMAIndicator(close, window=200)
+    
+    # 52-Week High / Low (approx 252 trading days)
+    high_52w = high.rolling(window=252, min_periods=100).max().iloc[-1] if len(high) >= 100 else current_price
+    low_52w = low.rolling(window=252, min_periods=100).min().iloc[-1] if len(low) >= 100 else current_price
+
     indicators = {
         'current_price': current_price,
         'timeframe': timeframe,
@@ -635,6 +644,13 @@ def calculate_all_indicators(df: pd.DataFrame, timeframe: str = 'medium') -> Dic
         'price_vs_trend_ema': 'above' if current_price > latest_ema_trend else 'below',
         'price_vs_medium_ema': 'above' if current_price > latest_ema_medium else 'below',
         'price_vs_fast_ema': 'above' if current_price > latest_ema_fast else 'below',
+        
+        # Macro (Phase 14)
+        'sma_150': sma_150_ind.sma_indicator().iloc[-1] if len(close) >= 150 else 0,
+        'sma_200': sma_200_ind.sma_indicator().iloc[-1] if len(close) >= 200 else 0,
+        'sma_200_1m_ago': sma_200_ind.sma_indicator().iloc[-21] if len(close) >= 221 else 0,
+        'high_52w': high_52w,
+        'low_52w': low_52w,
         
         # RSI
         **rsi_data,

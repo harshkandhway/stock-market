@@ -43,6 +43,7 @@ from src.core.signals import (
     check_hard_filters, calculate_all_signals, get_confidence_level,
     determine_recommendation, generate_reasoning, generate_action_plan
 )
+from src.core.fundamentals import fetch_fundamentals
 from src.core.risk_management import (
     calculate_targets, calculate_stoploss, validate_risk_reward,
     calculate_trailing_stops, calculate_position_size,
@@ -146,6 +147,30 @@ def analyze_stock(
     
     is_buy_blocked, buy_block_reasons = check_hard_filters(indicators, 'buy')
     is_sell_blocked, sell_block_reasons = check_hard_filters(indicators, 'sell')
+    
+    # ── Phase 15: CANSLIM Fundamental Gate ──
+    fundamental_data = fetch_fundamentals(symbol)
+    eps_growth = fundamental_data.get('earningsGrowth', 0)
+    rev_growth = fundamental_data.get('revenueGrowth', 0)
+    roe = fundamental_data.get('returnOnEquity', 0)
+    
+    # CANSLIM Parameters: 25% Earnings Growth, 25% Revenue Growth, 15% ROE
+    if fundamental_data['valid']:
+        fails_canslim = False
+        reasons = []
+        if eps_growth < 0.25:
+            fails_canslim = True
+            reasons.append(f"Weak Earnings Growth ({eps_growth*100:.1f}% < 25%)")
+        if rev_growth < 0.25:
+            fails_canslim = True
+            reasons.append(f"Weak Revenue Growth ({rev_growth*100:.1f}% < 25%)")
+        if roe < 0.15:
+            fails_canslim = True
+            reasons.append(f"Weak ROE ({roe*100:.1f}% < 15%)")
+            
+        if fails_canslim:
+            is_buy_blocked = True
+            buy_block_reasons.append(f"CANSLIM Fundamental Failure: {', '.join(reasons)}")
     
     signal_data = calculate_all_signals(indicators, mode)
     confidence = signal_data['confidence']
@@ -281,6 +306,25 @@ def analyze_stock(
     
     trailing_data = calculate_trailing_stops(current_price, atr, mode)
     
+    # ── Phase 14: Multibagger Identification (Minervini Trend Template) ──
+    sma_150 = indicators.get('sma_150', 0)
+    sma_200 = indicators.get('sma_200', 0)
+    sma_200_1m_ago = indicators.get('sma_200_1m_ago', 0)
+    high_52w = indicators.get('high_52w', current_price)
+    low_52w = indicators.get('low_52w', current_price)
+    
+    is_multibagger_setup = False
+    if all([
+        sma_150 > 0 and sma_200 > 0,                       # 0. Valid data bounds
+        current_price > sma_150,                           # 1. Price > 150 SMA
+        current_price > sma_200,                           # 2. Price > 200 SMA
+        sma_150 > sma_200,                                 # 3. 150 SMA > 200 SMA
+        sma_200 > sma_200_1m_ago,                          # 4. 200 SMA is trending up (vs 1 month ago)
+        current_price >= (high_52w * 0.65),                # 5. Price within 35% of 52-week High (Relaxed from 25%)
+        current_price >= (low_52w * 1.20),                 # 6. Price at least 20% above 52-week Low (Relaxed from 30%)
+    ]):
+        is_multibagger_setup = True
+    
     return {
         'symbol': symbol,
         'mode': mode,
@@ -310,6 +354,8 @@ def analyze_stock(
         'trailing_data': trailing_data,
         'time_estimate': time_estimate,
         'safety_score': safety_score,
+        'is_multibagger_setup': is_multibagger_setup,
+        'fundamental_data': fundamental_data,
     }
 
 

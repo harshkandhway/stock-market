@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 import math
 from .config import (
     RISK_MODES, FIBONACCI_EXTENSION, CURRENCY_SYMBOL,
-    INVESTMENT_HORIZONS, TRADING_DAYS_PER_YEAR, TRADING_DAYS_PER_MONTH
+    INVESTMENT_HORIZONS, TRADING_DAYS_PER_YEAR, TRADING_DAYS_PER_MONTH,
+    SHORT_HORIZON_RETURNS
 )
 
 
@@ -217,17 +218,53 @@ def calculate_targets(
                     targets['horizon_targets'][horizon_key]['pattern_weight'] = pattern_weight
         
     else:  # short
-        # ATR-based target
+        # ATR-based target (downward)
         targets['atr_target'] = current_price - (atr_multiplier * atr)
         targets['atr_target_pct'] = ((current_price - targets['atr_target']) / current_price) * 100
-        
+
         # Support-based target
         targets['support_target'] = support
         targets['support_target_pct'] = ((current_price - support) / current_price) * 100
-        
-        # Conservative target (highest of targets, meaning smallest move)
+
+        # Conservative target (highest of targets = smallest downward move)
         targets['conservative_target'] = max(targets['atr_target'], targets['support_target'])
         targets['conservative_target_pct'] = ((current_price - targets['conservative_target']) / current_price) * 100
+
+        # =====================================================================
+        # SHORT HORIZON-BASED TARGETS — expected downward moves per horizon
+        # =====================================================================
+        targets['horizon_targets'] = {}
+
+        for horizon_key, horizon_config in INVESTMENT_HORIZONS.items():
+            short_returns = SHORT_HORIZON_RETURNS.get(horizon_key, {'min': 2.0, 'max': 8.0})
+
+            if mode == 'conservative':
+                target_pct = short_returns['min']
+            elif mode == 'aggressive':
+                target_pct = short_returns['max']
+            else:
+                target_pct = (short_returns['min'] + short_returns['max']) / 2
+
+            # Short target is BELOW current price
+            horizon_target = current_price * (1 - target_pct / 100)
+
+            # Blend: 70% horizon expectation + 30% ATR technical target
+            technical_target = targets['atr_target']
+            combined_target = (horizon_target * 0.7) + (technical_target * 0.3)
+
+            # Ensure target is below current price
+            combined_target = min(combined_target, current_price * 0.995)
+
+            targets['horizon_targets'][horizon_key] = {
+                'target': combined_target,
+                'target_pct': ((current_price - combined_target) / current_price) * 100,
+                'horizon_name': horizon_config['display_name'],
+                'timeframe': horizon_config['avg_days'],
+                'min_days': horizon_config['min_days'],
+                'max_days': horizon_config['max_days'],
+                'emoji': horizon_config['emoji'],
+                'is_recommended': horizon_key == horizon,
+            }
     
     # Recommended target based on SELECTED HORIZON
     if horizon in targets.get('horizon_targets', {}):

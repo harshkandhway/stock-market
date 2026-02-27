@@ -248,6 +248,7 @@ def run_backtest():
                         'entry_price': next_row['open'] * (1 + SLIPPAGE_PCT),
                         'target': analysis['target'],
                         'confidence': conf, 'composite': conf,
+                        'is_multibagger': analysis.get('is_multibagger_setup', False)
                     })
                     count += 1
             except: pass
@@ -329,11 +330,38 @@ def run_backtest():
                     continue
                 continue
             
-            if nr['high'] >= pos['target']:
+            if nr['high'] >= pos['target'] and not pos.get('is_multibagger', False):
                 pos['trailing'] = True
                 pos['peak_price'] = max(nr['high'], pos['target'])
                 pos['trail_stop'] = pos['peak_price'] * (1 - TRAIL_PCT)
                 print(f"  🎯 {sym:12s} TARGET  {pos['days']:3d}d → TRAILING")
+                continue
+            
+            # ── Phase 14: Multibagger Handling ──
+            # If it's a multibagger, we ignore the target and time stop, just trailing by 30% to ride the mega-trend.
+            if pos.get('is_multibagger', False):
+                if nr['high'] > pos['peak_price']:
+                    pos['peak_price'] = nr['high']
+                    # Use a very wide trailing stop for multibaggers (e.g., 20%) to avoid getting shaken out
+                    pos['trail_stop'] = pos['peak_price'] * (1 - 0.20)
+                
+                # Check multibagger trailing stop (down 20% from peak)
+                if nr['low'] <= pos['trail_stop']:
+                    xp = pos['trail_stop'] * (1 - SLIPPAGE_PCT)
+                    ch = calc_costs(pos['entry_price'], xp, pos['qty'])
+                    g = (xp - pos['entry_price']) * pos['qty']; n = g - ch
+                    cash += (pos['entry_price'] * pos['qty']) + n
+                    closed_trades.append({'symbol': sym, 'entry_time': pos['entry_time'],
+                        'exit_time': next_date, 'days_held': pos['days'],
+                        'entry_price': pos['entry_price'], 'exit_price': xp,
+                        'qty': pos['qty'], 'invested': pos['entry_price']*pos['qty'],
+                        'reason': 'Multibagger Trail (20%)', 'gross_pnl': g, 'charges': ch,
+                        'net_pnl': n, 'win': 1 if n > 0 else 0})
+                    to_close.append(sym)
+                    pct = (xp/pos['entry_price']-1)*100
+                    print(f"  🚀 {sym:12s} MB_TRAIL {pos['days']:3d}d | ₹{n:+,.0f} ({pct:+.1f}%) | Cash: ₹{cash:,.0f}")
+                    continue
+                # Multibaggers IGNORE the 63-day time stop!
                 continue
             
             if pos['days'] >= pos['time_stop']:
@@ -376,12 +404,15 @@ def run_backtest():
                 ep = sig['entry_price']; qty = int(alloc / ep)
                 if qty == 0: continue
                 inv = ep * qty; cash -= inv
+                is_mb = sig.get('is_multibagger', False)
                 open_positions[sym] = {
                     'entry_price': ep, 'entry_time': next_date,
                     'target': sig['target'], 'qty': qty,
                     'days': 0, 'time_stop': HORIZON_DAYS,
-                    'trailing': False, 'peak_price': 0, 'trail_stop': 0}
-                t = "🔥" if sig['confidence'] >= 80 else "🟢" if sig['confidence'] >= 70 else "🟡"
+                    'trailing': False, 'peak_price': ep, 'trail_stop': ep * (1 - 0.20) if is_mb else 0,
+                    'is_multibagger': is_mb
+                }
+                t = "🚀" if is_mb else "🔥" if sig['confidence'] >= 80 else "🟢" if sig['confidence'] >= 70 else "🟡"
                 print(f"  {t} BUY {sym:12s} ₹{ep:>8.2f} x {qty:3d} = ₹{inv:>7,.0f} | Conf:{sig['confidence']:.0f}% | Cash:₹{cash:,.0f}")
     
     print(f"\n  📋 Closing {len(open_positions)} open positions...")
