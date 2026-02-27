@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python bot_runner.py:*)"
+      "Bash(python bot_runner.py:*)",
+      "Bash(wc:*)"
     ]
   }
 }

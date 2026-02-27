@@ -1,0 +1,195 @@
+Universe: 147 unique stocks
+Downloading Upstox NSE instrument master...
+  ✅ Cached 2420 NSE EQ instrument keys
+
+Fetching Nifty 50 index...
+  ✅ Nifty: 250 candles
+  [1/147] ABCAPITAL... done (1 trades)
+  [2/147] ADANIPORTS... done (1 trades)
+  [3/147] AMBUJACEM... done (1 trades)
+  [4/147] APLAPOLLO... done (0 trades)
+  [5/147] APOLLOHOSP... done (1 trades)
+  [6/147] ASIANPAINT... done (0 trades)
+  [7/147] ASTRAL... done (0 trades)
+  [8/147] ATUL... done (0 trades)
+  [9/147] AUBANK... done (2 trades)
+  [10/147] AUROPHARMA... done (0 trades)
+  [11/147] AXISBANK... done (1 trades)
+  [12/147] BAJAJ-AUTO... done (0 trades)
+  [13/147] BAJAJFINSV... done (0 trades)
+  [14/147] BAJFINANCE... done (0 trades)
+  [15/147] BALKRISIND... done (0 trades)
+  [16/147] BANKBARODA... done (0 trades)
+  [17/147] BANKINDIA... done (1 trades)
+  [18/147] BATAINDIA... done (0 trades)
+  [19/147] BDL... done (1 trades)
+  [20/147] BEL... done (0 trades)
+  [21/147] BHARATFORG... done (0 trades)
+  [22/147] BHARTIARTL... done (1 trades)
+  [23/147] BHEL... done (0 trades)
+  [24/147] BIOCON... done (0 trades)
+  [25/147] BPCL... done (1 trades)
+  [26/147] BRITANNIA... done (1 trades)
+  [27/147] CANFINHOME... done (0 trades)
+  [28/147] CENTRALBK... done (0 trades)
+  [29/147] CHOLAFIN... done (0 trades)
+  [30/147] CIPLA... done (0 trades)
+  [31/147] COALINDIA... done (0 trades)
+  [32/147] COFORGE... done (0 trades)
+  [33/147] CONCOR... done (0 trades)
+  [34/147] CROMPTON... done (0 trades)
+  [35/147] CUMMINSIND... done (0 trades)
+  [36/147] DEEPAKNTR... done (0 trades)
+  [37/147] DELHIVERY... done (1 trades)
+  [38/147] DEVYANI... done (0 trades)
+  [39/147] DIVISLAB... done (1 trades)
+  [40/147] DIXON... done (0 trades)
+  [41/147] DLF... done (0 trades)
+  [42/147] DRREDDY... done (0 trades)
+  [43/147] EICHERMOT... done (1 trades)
+  [44/147] EMAMILTD... done (0 trades)
+  [45/147] ESCORTS... done (1 trades)
+  [46/147] FEDERALBNK... done (1 trades)
+  [47/147] GAIL... done (0 trades)
+  [48/147] GODREJPROP... done (0 trades)
+  [49/147] GRASIM... done (1 trades)
+  [50/147] HAL... done (1 trades)
+  [51/147] HAVELLS... done (0 trades)
+  [52/147] HCLTECH... done (0 trades)
+  [53/147] HDFCAMC... done (0 trades)
+  [54/147] HDFCBANK... done (1 trades)
+  [55/147] HEROMOTOCO... done (0 trades)
+  [56/147] HINDALCO... done (0 trades)
+  [57/147] HONAUT... done (0 trades)
+  [58/147] HUDCO... done (1 trades)
+  [59/147] ICICIBANK... done (1 trades)
+  [60/147] IDFCFIRSTB... done (1 trades)
+  [61/147] IIFL... done (0 trades)
+  [62/147] INDIGO... done (1 trades)
+  [63/147] INFY... done (0 trades)
+  [64/147] IPCALAB... done (0 trades)
+  [65/147] IRCTC... done (0 trades)
+  [66/147] IRFC... done (0 trades)
+  [67/147] ITC... done (0 trades)
+  [68/147] JINDALSTEL... done (0 trades)
+  [69/147] JKCEMENT... done (0 trades)
+  [70/147] JSWENERGY... done (0 trades)
+  [71/147] JSWSTEEL... done (0 trades)
+  [72/147] JUBLFOOD... done (0 trades)
+  [73/147] KALYANKJIL... done (0 trades)
+  [74/147] KEI... done (0 trades)
+  [75/147] KOTAKBANK... done (1 trades)
+  [76/147] KPITTECH... done (0 trades)
+  [77/147] LALPATHLAB... done (0 trades)
+  [78/147] LICHSGFIN... done (0 trades)
+  [79/147] LICI... done (0 trades)
+  [80/147] LINDEINDIA... done (1 trades)
+  [81/147] LLOYDSME... done (1 trades)
+  [82/147] LT... done (1 trades)
+  [83/147] LTTS... done (0 trades)
+  [84/147] M&M... done (1 trades)
+  [85/147] MANAPPURAM... done (2 trades)
+  [86/147] MARICO... done (1 trades)
+  [87/147] MARUTI... done (0 trades)
+  [88/147] MAXHEALTH... done (1 trades)
+  [89/147] METROPOLIS... done (0 trades)
+  [90/147] MPHASIS... done (0 trades)
+  [91/147] MRF... done (0 trades)
+  [92/147] MUTHOOTFIN... done (0 trades)
+  [93/147] NAM-INDIA... done (1 trades)
+  [94/147] NAUKRI... done (1 trades)
+  [95/147] NESTLEIND... done (1 trades)
+  [96/147] NHPC... done (1 trades)
+  [97/147] NMDC... done (0 trades)
+  [98/147] NTPC... done (0 trades)
+  [99/147] OBEROIRLTY... done (1 trades)
+  [100/147] ONGC... done (0 trades)
+  [101/147] PAGEIND... done (1 trades)
+  [102/147] PERSISTENT... done (0 trades)
+  [103/147] PETRONET... done (0 trades)
+  [104/147] PFC... done (0 trades)
+  [105/147] PHOENIXLTD... done (0 trades)
+  [106/147] PIDILITIND... done (1 trades)
+  [107/147] PNB... done (1 trades)
+  [108/147] POLYCAB... done (0 trades)
+  [109/147] POONAWALLA... done (0 trades)
+  [110/147] POWERGRID... done (0 trades)
+  [111/147] PRESTIGE... done (0 trades)
+  [112/147] RAMCOCEM... done (1 trades)
+  [113/147] RECLTD... done (0 trades)
+  [114/147] RELAXO... done (0 trades)
+  [115/147] RELIANCE... done (1 trades)
+  [116/147] SAIL... done (0 trades)
+  [117/147] SBILIFE... done (1 trades)
+  [118/147] SBIN... done (1 trades)
+  [119/147] SHRIRAMFIN... done (0 trades)
+  [120/147] SJVN... done (0 trades)
+  [121/147] SOLARINDS... done (1 trades)
+  [122/147] SUNDARMFIN... done (0 trades)
+  [123/147] SUNPHARMA... done (0 trades)
+  [124/147] SUNTV... done (0 trades)
+  [125/147] SUPREMEIND... done (1 trades)
+  [126/147] SYNGENE... done (0 trades)
+  [127/147] TATACHEM... done (0 trades)
+  [128/147] TATACONSUM... done (1 trades)
+  [129/147] TATAELXSI... done (0 trades)
+  [130/147] TATASTEEL... done (0 trades)
+  [131/147] TCS... done (0 trades)
+  [132/147] TECHM... done (1 trades)
+  [133/147] THERMAX... done (0 trades)
+  [134/147] TIINDIA... done (0 trades)
+  [135/147] TITAN... done (1 trades)
+  [136/147] TORNTPHARM... done (1 trades)
+  [137/147] TRENT... done (0 trades)
+  [138/147] TVSMOTOR... done (1 trades)
+  [139/147] ULTRACEMCO... done (0 trades)
+  [140/147] VEDL... done (0 trades)
+  [141/147] VOLTAS... done (0 trades)
+  [142/147] WIPRO... done (0 trades)
+  [143/147] ZYDUSLIFE... done (0 trades)
+
+📊 Processed 143 stocks, skipped 4
+
+============================================================
+🎯 UPSTOX REAL DATA — MIDCAP 150 + NIFTY 50 — RS + NO SL
+============================================================
+Data Source: Upstox V2 API (cached to data/upstox_cache/)
+Period: 2024-07-01 to 2025-07-01
+Universe: 143 stocks successfully processed
+Capital Per Trade: ₹100,000.00
+------------------------------------------------------------
+Total Trades: 52
+Win Rate:     75.00% (39W / 13L)
+Avg Days Held:34.7 days
+------------------------------------------------------------
+Gross P&L:    ₹262,897.33
+Total Charges:₹11,731.80
+NET P&L:      ₹251,165.53
+------------------------------------------------------------
+Avg Win:      ₹7,400.20
+Avg Loss:     ₹-2,880.19
+Max Win:      ₹18,752.60
+Max Loss:     ₹-7,804.50
+============================================================
+
+Detailed trades saved to 'backtest_upstox_midcap_rs_no_sl_trades.csv'
+Cached data saved to: /Users/lexplosion/Trades/stock-market/data/upstox_cache/
+
+Breakdown by Reason:
+reason
+End of Backtest    44
+Target Hit          8
+Name: count, dtype: int64
+
+Top 10 Trades by Net P&L:
+        symbol                entry_time                 exit_time       net_pnl           reason
+33   NAM-INDIA 2025-05-05 00:00:00+05:30 2025-05-20 00:00:00+05:30  18752.600175       Target Hit
+0    ABCAPITAL 2025-05-05 00:00:00+05:30 2025-06-06 00:00:00+05:30  17419.836242       Target Hit
+22  IDFCFIRSTB 2025-04-29 00:00:00+05:30 2025-07-01 00:00:00+05:30  15676.208808  End of Backtest
+26    LLOYDSME 2025-05-19 00:00:00+05:30 2025-06-05 00:00:00+05:30  15273.688666       Target Hit
+23      INDIGO 2025-06-13 00:00:00+05:30 2025-07-01 00:00:00+05:30  14087.562775  End of Backtest
+4       AUBANK 2025-05-06 00:00:00+05:30 2025-06-09 00:00:00+05:30  13110.598329       Target Hit
+29  MANAPPURAM 2025-05-08 00:00:00+05:30 2025-06-09 00:00:00+05:30  12540.513538       Target Hit
+32   MAXHEALTH 2025-04-25 00:00:00+05:30 2025-06-17 00:00:00+05:30  11372.060232       Target Hit
+1   ADANIPORTS 2025-05-07 00:00:00+05:30 2025-07-01 00:00:00+05:30  10822.817391  End of Backtest
+45   SOLARINDS 2025-05-05 00:00:00+05:30 2025-05-22 00:00:00+05:30   9872.411409       Target Hit

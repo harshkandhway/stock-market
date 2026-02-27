@@ -1,0 +1,200 @@
+=================================================================
+PASS 1: Pre-computing all buy signals across 143 stocks...
+=================================================================
+  Loaded 143 stocks + Nifty 50
+
+  [1/143] Scanning ABCAPITAL... 1 signals
+  [2/143] Scanning ADANIPORTS... 5 signals
+  [3/143] Scanning AMBUJACEM... 1 signals
+  [4/143] Scanning APLAPOLLO... 0 signals
+  [5/143] Scanning APOLLOHOSP... 2 signals
+  [6/143] Scanning ASIANPAINT... 0 signals
+  [7/143] Scanning ASTRAL... 0 signals
+  [8/143] Scanning ATUL... 0 signals
+  [9/143] Scanning AUBANK... 2 signals
+  [10/143] Scanning AUROPHARMA... 0 signals
+  [11/143] Scanning AXISBANK... 9 signals
+  [12/143] Scanning BAJAJ-AUTO... 0 signals
+  [13/143] Scanning BAJAJFINSV... 0 signals
+  [14/143] Scanning BAJFINANCE... 0 signals
+  [15/143] Scanning BALKRISIND... 0 signals
+  [16/143] Scanning BANKBARODA... 0 signals
+  [17/143] Scanning BANKINDIA... 1 signals
+  [18/143] Scanning BATAINDIA... 0 signals
+  [19/143] Scanning BDL... 2 signals
+  [20/143] Scanning BEL... 0 signals
+  [21/143] Scanning BHARATFORG... 0 signals
+  [22/143] Scanning BHARTIARTL... 3 signals
+  [23/143] Scanning BHEL... 0 signals
+  [24/143] Scanning BIOCON... 0 signals
+  [25/143] Scanning BPCL... 1 signals
+  [26/143] Scanning BRITANNIA... 5 signals
+  [27/143] Scanning CANFINHOME... 0 signals
+  [28/143] Scanning CENTRALBK... 0 signals
+  [29/143] Scanning CHOLAFIN... 0 signals
+  [30/143] Scanning CIPLA... 0 signals
+  [31/143] Scanning COALINDIA... 0 signals
+  [32/143] Scanning COFORGE... 0 signals
+  [33/143] Scanning CONCOR... 0 signals
+  [34/143] Scanning CROMPTON... 0 signals
+  [35/143] Scanning CUMMINSIND... 0 signals
+  [36/143] Scanning DEEPAKNTR... 0 signals
+  [37/143] Scanning DELHIVERY... 1 signals
+  [38/143] Scanning DEVYANI... 0 signals
+  [39/143] Scanning DIVISLAB... 1 signals
+  [40/143] Scanning DIXON... 0 signals
+  [41/143] Scanning DLF... 0 signals
+  [42/143] Scanning DRREDDY... 0 signals
+  [43/143] Scanning EICHERMOT... 1 signals
+  [44/143] Scanning EMAMILTD... 0 signals
+  [45/143] Scanning ESCORTS... 1 signals
+  [46/143] Scanning FEDERALBNK... 6 signals
+  [47/143] Scanning GAIL... 0 signals
+  [48/143] Scanning GODREJPROP... 0 signals
+  [49/143] Scanning GRASIM... 1 signals
+  [50/143] Scanning HAL... 2 signals
+  [51/143] Scanning HAVELLS... 0 signals
+  [52/143] Scanning HCLTECH... 0 signals
+  [53/143] Scanning HDFCAMC... 0 signals
+  [54/143] Scanning HDFCBANK... 15 signals
+  [55/143] Scanning HEROMOTOCO... 0 signals
+  [56/143] Scanning HINDALCO... 0 signals
+  [57/143] Scanning HONAUT... 0 signals
+  [58/143] Scanning HUDCO... 1 signals
+  [59/143] Scanning ICICIBANK... 3 signals
+  [60/143] Scanning IDFCFIRSTB... 4 signals
+  [61/143] Scanning IIFL... 0 signals
+  [62/143] Scanning INDIGO... 1 signals
+  [63/143] Scanning INFY... 0 signals
+  [64/143] Scanning IPCALAB... 0 signals
+  [65/143] Scanning IRCTC... 0 signals
+  [66/143] Scanning IRFC... 0 signals
+  [67/143] Scanning ITC... 0 signals
+  [68/143] Scanning JINDALSTEL... 0 signals
+  [69/143] Scanning JKCEMENT... 0 signals
+  [70/143] Scanning JSWENERGY... 0 signals
+  [71/143] Scanning JSWSTEEL... 0 signals
+  [72/143] Scanning JUBLFOOD... 0 signals
+  [73/143] Scanning KALYANKJIL... 0 signals
+  [74/143] Scanning KEI... 0 signals
+  [75/143] Scanning KOTAKBANK... 8 signals
+  [76/143] Scanning KPITTECH... 0 signals
+  [77/143] Scanning LALPATHLAB... 0 signals
+  [78/143] Scanning LICHSGFIN... 0 signals
+  [79/143] Scanning LICI... 0 signals
+  [80/143] Scanning LINDEINDIA... 1 signals
+  [81/143] Scanning LLOYDSME... 1 signals
+  [82/143] Scanning LT... 1 signals
+  [83/143] Scanning LTTS... 0 signals
+  [84/143] Scanning M&M... 1 signals
+  [85/143] Scanning MANAPPURAM... 11 signals
+  [86/143] Scanning MARICO... 6 signals
+  [87/143] Scanning MARUTI... 0 signals
+  [88/143] Scanning MAXHEALTH... 2 signals
+  [89/143] Scanning METROPOLIS... 0 signals
+  [90/143] Scanning MPHASIS... 0 signals
+  [91/143] Scanning MRF... 2 signals
+  [92/143] Scanning MUTHOOTFIN... 0 signals
+  [93/143] Scanning NAM-INDIA... 3 signals
+  [94/143] Scanning NAUKRI... 1 signals
+  [95/143] Scanning NESTLEIND... 5 signals
+  [96/143] Scanning NHPC... 8 signals
+  [97/143] Scanning NMDC... 0 signals
+  [98/143] Scanning NTPC... 0 signals
+  [99/143] Scanning OBEROIRLTY... 1 signals
+  [100/143] Scanning ONGC... 0 signals
+  [101/143] Scanning PAGEIND... 2 signals
+  [102/143] Scanning PERSISTENT... 0 signals
+  [103/143] Scanning PETRONET... 0 signals
+  [104/143] Scanning PFC... 0 signals
+  [105/143] Scanning PHOENIXLTD... 0 signals
+  [106/143] Scanning PIDILITIND... 6 signals
+  [107/143] Scanning PNB... 1 signals
+  [108/143] Scanning POLYCAB... 0 signals
+  [109/143] Scanning POONAWALLA... 0 signals
+  [110/143] Scanning POWERGRID... 0 signals
+  [111/143] Scanning PRESTIGE... 0 signals
+  [112/143] Scanning RAMCOCEM... 1 signals
+  [113/143] Scanning RECLTD... 0 signals
+  [114/143] Scanning RELAXO... 0 signals
+  [115/143] Scanning RELIANCE... 2 signals
+  [116/143] Scanning SAIL... 0 signals
+  [117/143] Scanning SBILIFE... 5 signals
+  [118/143] Scanning SBIN... 3 signals
+  [119/143] Scanning SHRIRAMFIN... 0 signals
+  [120/143] Scanning SJVN... 0 signals
+  [121/143] Scanning SOLARINDS... 1 signals
+  [122/143] Scanning SUNDARMFIN... 0 signals
+  [123/143] Scanning SUNPHARMA... 0 signals
+  [124/143] Scanning SUNTV... 0 signals
+  [125/143] Scanning SUPREMEIND... 1 signals
+  [126/143] Scanning SYNGENE... 0 signals
+  [127/143] Scanning TATACHEM... 0 signals
+  [128/143] Scanning TATACONSUM... 4 signals
+  [129/143] Scanning TATAELXSI... 0 signals
+  [130/143] Scanning TATASTEEL... 0 signals
+  [131/143] Scanning TCS... 0 signals
+  [132/143] Scanning TECHM... 2 signals
+  [133/143] Scanning THERMAX... 0 signals
+  [134/143] Scanning TIINDIA... 0 signals
+  [135/143] Scanning TITAN... 1 signals
+  [136/143] Scanning TORNTPHARM... 1 signals
+  [137/143] Scanning TRENT... 0 signals
+  [138/143] Scanning TVSMOTOR... 2 signals
+  [139/143] Scanning ULTRACEMCO... 0 signals
+  [140/143] Scanning VEDL... 0 signals
+  [141/143] Scanning VOLTAS... 0 signals
+  [142/143] Scanning WIPRO... 0 signals
+  [143/143] Scanning ZYDUSLIFE... 0 signals
+
+  📊 Total raw signals found: 152
+  📅 First signal: 2025-04-24
+  📅 Last signal:  2025-07-01
+
+=================================================================
+PASS 2: Simulating ₹1L sequential portfolio (compounding)...
+=================================================================
+
+  🟢 Trade #1: BUY AXISBANK | ₹1200.30 x 83 = ₹99,625 | Target: ₹1364.35 | Conf: 72.9% | RS: +16.9%
+  📋 END OF BACKTEST | P&L: ₹-2,558 | Capital: ₹97,442
+
+  🟢 Trade #2: BUY SUPREMEIND | ₹4404.40 x 22 = ₹96,897 | Target: ₹5540.67 | Conf: 70.3% | RS: +19.9%
+  📋 END OF BACKTEST | P&L: ₹-941 | Capital: ₹96,501
+
+  🟢 Trade #3: BUY HDFCBANK | ₹1003.50 x 96 = ₹96,336 | Target: ₹1092.62 | Conf: 76.5% | RS: +2.1%
+  📋 END OF BACKTEST | P&L: ₹-72 | Capital: ₹96,430
+
+=================================================================
+💰 ₹1 LAKH SEQUENTIAL PORTFOLIO — FINAL RESULTS
+=================================================================
+Starting Capital:   ₹   100,000
+Ending Capital:     ₹    96,430
+TOTAL RETURN:       ₹    -3,570 (-3.57%)
+Period:             Jul 2024 → Jul 2025 (Upstox data)
+-----------------------------------------------------------------
+Total Trades:       3
+Win Rate:           0.0% (0W / 3L)
+Days in Trades:     47 / 187 trading days
+Capital Utilization:25%
+-----------------------------------------------------------------
+Gross P&L:          ₹    -2,921
+Total Charges:      ₹       650
+NET P&L:            ₹    -3,570
+-----------------------------------------------------------------
+Avg Loss:           ₹    -1,190 (-1.2%)
+Max Win:            ₹       -72
+Max Loss:           ₹    -2,558
+=================================================================
+
+📋 Complete Trade Journal:
+--------------------------------------------------------------------------------------------------------------
+  ❌ # 1 | AXISBANK     | 2025-04-24 → 2025-07-01 |  47d | ₹   -2,558 | Capital: ₹    97,442 | End of Backtest
+  ❌ # 2 | SUPREMEIND   | 2025-07-01 → 2025-07-01 |   0d | ₹     -941 | Capital: ₹    96,501 | End of Backtest
+  ❌ # 3 | HDFCBANK     | 2025-07-01 → 2025-07-01 |   0d | ₹      -72 | Capital: ₹    96,430 | End of Backtest
+
+📈 Capital Growth Journey (₹100,000 → ₹96,430):
+  # 1 AXISBANK     ₹    97,442 ███████
+  # 2 SUPREMEIND   ₹    96,501 ██████
+  # 3 HDFCBANK     ₹    96,430 ██████
+
+Saved to 'backtest_1lakh_sequential_trades.csv'

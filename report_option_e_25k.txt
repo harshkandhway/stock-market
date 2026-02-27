@@ -1,0 +1,369 @@
+=================================================================
+OPTION E v2: 250-STOCK UNIVERSE
+Period: 2024-06-01 → 2025-07-01
+=================================================================
+
+📥 Loading/downloading data for 250 stocks...
+  ... 50/250 loaded (0 downloaded from API)
+  ... 100/250 loaded (0 downloaded from API)
+  ... 150/250 loaded (0 downloaded from API)
+  ... 200/250 loaded (0 downloaded from API)
+  ... 250/250 loaded (0 downloaded from API)
+  ✅ Loaded 247 stocks (of 250 attempted)
+
+=================================================================
+PASS 1: Scanning 247 stocks (conf≥60% + momentum)...
+=================================================================
+  [1/247] 20MICRONS... 2
+  [2/247] 21STCENMGM... 0
+  [3/247] 360ONE... 0
+  [4/247] 3IINFOLTD... 0
+  [5/247] 3MINDIA... 0
+  [6/247] 3PLAND... 0
+  [7/247] 5PAISA... 0
+  [8/247] 63MOONS... 0
+  [9/247] A2ZINFRA... 0
+  [10/247] AAATECH... 0
+  [11/247] AADHARHFC... 1
+  [12/247] AAKASH... 0
+  [13/247] AAREYDRUGS... 2
+  [14/247] AARON... 0
+  [15/247] AARTECH... 0
+  [16/247] AARTIDRUGS... 2
+  [17/247] AARTIIND... 0
+  [18/247] AARTIPHARM... 0
+  [19/247] AARTISURF... 0
+  [20/247] AARVI... 0
+  [21/247] AAVAS... 0
+  [22/247] ABB... 0
+  [23/247] ABBOTINDIA... 5
+  [24/247] ABCAPITAL... 0
+  [25/247] ABCOTS... 0
+  [26/247] ABDL... 0
+  [27/247] ABFRL... 0
+  [28/247] ABGSEC... 2
+  [29/247] ABINFRA... 0
+  [30/247] ABREL... 0
+  [31/247] ABSLAMC... 0
+  [32/247] ADANIPORTS... 1
+  [33/247] AIAENG... 0
+  [34/247] AMBUJACEM... 0
+  [35/247] APLAPOLLO... 0
+  [36/247] APOLLOHOSP... 1
+  [37/247] ASIANPAINT... 0
+  [38/247] ASTRAL... 0
+  [39/247] ATUL... 0
+  [40/247] AUBANK... 0
+  [41/247] AUROPHARMA... 0
+  [42/247] AXISBANK... 1
+  [43/247] BAJAJ-AUTO... 0
+  [44/247] BAJAJFINSV... 0
+  [45/247] BAJFINANCE... 1
+  [46/247] BALKRISIND... 0
+  [47/247] BANDHANBNK... 1
+  [48/247] BANKBARODA... 0
+  [49/247] BANKINDIA... 0
+  [50/247] BATAINDIA... 0
+  [51/247] BDL... 0
+  [52/247] BEL... 0
+  [53/247] BERGEPAINT... 1
+  [54/247] BHARATFORG... 0
+  [55/247] BHARTIARTL... 0
+  [56/247] BHEL... 0
+  [57/247] BIOCON... 2
+  [58/247] BLUEDART... 0
+  [59/247] BOSCHLTD... 0
+  [60/247] BPCL... 1
+  [61/247] BRITANNIA... 1
+  [62/247] BSE... 0
+  [63/247] CAMPUS... 0
+  [64/247] CAMS... 0
+  [65/247] CANBK... 0
+  [66/247] CANFINHOME... 0
+  [67/247] CARBORUNIV... 0
+  [68/247] CDSL... 0
+  [69/247] CEATLTD... 0
+  [70/247] CENTRALBK... 0
+  [71/247] CGPOWER... 0
+  [72/247] CHAMBLFERT... 0
+  [73/247] CHOLAFIN... 0
+  [74/247] CIPLA... 1
+  [75/247] CLEAN... 0
+  [76/247] COALINDIA... 0
+  [77/247] COCHINSHIP... 1
+  [78/247] COFORGE... 0
+  [79/247] COLPAL... 0
+  [80/247] CONCOR... 0
+  [81/247] COROMANDEL... 0
+  [82/247] CROMPTON... 0
+  [83/247] CUMMINSIND... 0
+  [84/247] DABUR... 0
+  [85/247] DEEPAKNTR... 0
+  [86/247] DELHIVERY... 0
+  [87/247] DEVYANI... 0
+  [88/247] DIVISLAB... 0
+  [89/247] DIXON... 0
+  [90/247] DLF... 0
+  [91/247] DMART... 0
+  [92/247] DRREDDY... 0
+  [93/247] EICHERMOT... 1
+  [94/247] EIDPARRY... 0
+  [95/247] ELGIEQUIP... 0
+  [96/247] EMAMILTD... 0
+  [97/247] EMCURE... 0
+  [98/247] ESCORTS... 0
+  [99/247] EXIDEIND... 0
+  [100/247] FEDERALBNK... 2
+  [101/247] FINEORG... 1
+  [102/247] FINPIPE... 0
+  [103/247] FLUOROCHEM... 0
+  [104/247] GAIL... 0
+  [105/247] GLENMARK... 0
+  [106/247] GNFC... 0
+  [107/247] GODREJCP... 0
+  [108/247] GODREJPROP... 0
+  [109/247] GPPL... 0
+  [110/247] GRAPHITE... 0
+  [111/247] GRASIM... 1
+  [112/247] GRINDWELL... 0
+  [113/247] GRSE... 0
+  [114/247] GSPL... 1
+  [115/247] HAL... 0
+  [116/247] HAPPSTMNDS... 0
+  [117/247] HATSUN... 0
+  [118/247] HAVELLS... 0
+  [119/247] HCLTECH... 0
+  [120/247] HDFCAMC... 0
+  [121/247] HDFCBANK... 3
+  [122/247] HEROMOTOCO... 0
+  [123/247] HINDALCO... 1
+  [124/247] HINDCOPPER... 0
+  [125/247] HINDPETRO... 0
+  [126/247] HONAUT... 0
+  [127/247] HUDCO... 1
+  [128/247] ICICIBANK... 1
+  [129/247] IDEA... 0
+  [130/247] IDFCFIRSTB... 0
+  [131/247] IEX... 0
+  [132/247] IIFL... 0
+  [133/247] INDIANB... 0
+  [134/247] INDIGO... 0
+  [135/247] INFY... 0
+  [136/247] IOC... 0
+  [137/247] IPCALAB... 1
+  [138/247] IRCTC... 0
+  [139/247] IREDA... 0
+  [140/247] IRFC... 0
+  [141/247] ITC... 0
+  [142/247] JINDALSTEL... 2
+  [143/247] JKCEMENT... 0
+  [144/247] JSWENERGY... 0
+  [145/247] JSWINFRA... 0
+  [146/247] JSWSTEEL... 0
+  [147/247] JUBLFOOD... 0
+  [148/247] KAJARIACER... 0
+  [149/247] KALYANKJIL... 1
+  [150/247] KEI... 0
+  [151/247] KOTAKBANK... 4
+  [152/247] KPITTECH... 1
+  [153/247] LALPATHLAB... 0
+  [154/247] LICHSGFIN... 0
+  [155/247] LICI... 0
+  [156/247] LINDEINDIA... 0
+  [157/247] LLOYDSME... 0
+  [158/247] LT... 1
+  [159/247] LTTS... 0
+  [160/247] LUPIN... 1
+  [161/247] M&M... 0
+  [162/247] MANAPPURAM... 1
+  [163/247] MARICO... 0
+  [164/247] MARUTI... 0
+  [165/247] MAXHEALTH... 2
+  [166/247] MCX... 0
+  [167/247] METROPOLIS... 0
+  [168/247] MOTHERSON... 0
+  [169/247] MPHASIS... 0
+  [170/247] MRF... 0
+  [171/247] MUTHOOTFIN... 0
+  [172/247] NAM-INDIA... 1
+  [173/247] NAUKRI... 0
+  [174/247] NAVINFLUOR... 0
+  [175/247] NESTLEIND... 1
+  [176/247] NHPC... 3
+  [177/247] NMDC... 0
+  [178/247] NTPC... 0
+  [179/247] NYKAA... 1
+  [180/247] OBEROIRLTY... 0
+  [181/247] OFSS... 0
+  [182/247] ONGC... 0
+  [183/247] PAGEIND... 1
+  [184/247] PAYTM... 0
+  [185/247] PERSISTENT... 0
+  [186/247] PETRONET... 0
+  [187/247] PFC... 0
+  [188/247] PHOENIXLTD... 0
+  [189/247] PIDILITIND... 0
+  [190/247] PIIND... 0
+  [191/247] PNB... 0
+  [192/247] POLICYBZR... 1
+  [193/247] POLYCAB... 0
+  [194/247] POONAWALLA... 0
+  [195/247] POWERGRID... 1
+  [196/247] PRESTIGE... 0
+  [197/247] PVRINOX... 0
+  [198/247] RAMCOCEM... 0
+  [199/247] RATNAMANI... 0
+  [200/247] RAYMOND... 0
+  [201/247] RECLTD... 0
+  [202/247] RELAXO... 0
+  [203/247] RELIANCE... 0
+  [204/247] SAIL... 0
+  [205/247] SAPPHIRE... 1
+  [206/247] SBILIFE... 0
+  [207/247] SBIN... 0
+  [208/247] SHRIRAMFIN... 0
+  [209/247] SIEMENS... 0
+  [210/247] SJVN... 0
+  [211/247] SOLARINDS... 0
+  [212/247] SRF... 0
+  [213/247] STARHEALTH... 0
+  [214/247] SUNDARMFIN... 0
+  [215/247] SUNPHARMA... 0
+  [216/247] SUNTV... 0
+  [217/247] SUPREMEIND... 0
+  [218/247] SUZLON... 2
+  [219/247] SYNGENE... 0
+  [220/247] TANLA... 0
+  [221/247] TATACHEM... 0
+  [222/247] TATACOMM... 0
+  [223/247] TATACONSUM... 0
+  [224/247] TATAELXSI... 0
+  [225/247] TATAPOWER... 0
+  [226/247] TATASTEEL... 0
+  [227/247] TATATECH... 0
+  [228/247] TCS... 0
+  [229/247] TECHM... 0
+  [230/247] THERMAX... 0
+  [231/247] TIINDIA... 0
+  [232/247] TITAN... 1
+  [233/247] TORNTPHARM... 0
+  [234/247] TRENT... 0
+  [235/247] TVSMOTOR... 0
+  [236/247] ULTRACEMCO... 1
+  [237/247] UNIONBANK... 1
+  [238/247] UPL... 1
+  [239/247] UTIAMC... 0
+  [240/247] VBL... 0
+  [241/247] VEDL... 1
+  [242/247] VOLTAS... 0
+  [243/247] WHIRLPOOL... 0
+  [244/247] WIPRO... 0
+  [245/247] YESBANK... 0
+  [246/247] ZEEL... 0
+  [247/247] ZYDUSLIFE... 0
+
+  📊 Total signals: 69
+  📅 Range: 2025-03-20 → 2025-07-01
+/Users/lexplosion/Trades/stock-market/backtests/backtest_option_e_250.py:262: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  sdf['month'] = sdf['entry_date'].dt.to_period('M')
+
+  📅 Signals by month:
+    2025-03: 3 signals
+    2025-04: 13 signals
+    2025-05: 16 signals
+    2025-06: 36 signals
+    2025-07: 1 signals
+
+=================================================================
+PASS 2: ₹200,000 | Kelly sizing | Trailing stops
+=================================================================
+  🟢 BUY KOTAKBANK    ₹  406.61 x  61 = ₹ 24,803 | Conf:72% | Cash:₹175,197
+  🟢 BUY UPL          ₹  668.62 x  37 = ₹ 24,739 | Conf:78% | Cash:₹150,458
+  🟢 BUY BERGEPAINT   ₹  501.50 x  49 = ₹ 24,574 | Conf:74% | Cash:₹125,885
+  🟢 BUY LUPIN        ₹ 2092.04 x  11 = ₹ 23,012 | Conf:74% | Cash:₹102,872
+  🟢 BUY ULTRACEMCO   ₹11329.07 x   2 = ₹ 22,658 | Conf:70% | Cash:₹80,214
+  🟢 BUY FEDERALBNK   ₹  190.69 x 131 = ₹ 24,980 | Conf:76% | Cash:₹55,234
+  🟢 BUY HDFCBANK     ₹  933.43 x  26 = ₹ 24,269 | Conf:72% | Cash:₹30,964
+  🟢 BUY ICICIBANK    ₹ 1358.36 x  18 = ₹ 24,450 | Conf:71% | Cash:₹6,514
+  🎯 KOTAKBANK    TARGET   18d → TRAILING
+  🎯 BERGEPAINT   TARGET   18d → TRAILING
+  🟢 BUY UNIONBANK    ₹  128.64 x  50 = ₹  6,432 | Conf:75% | Cash:₹82
+  🔄 KOTAKBANK    TRAIL   22d | ₹+1,793 (+7.5%) | Cash: ₹26,678
+  🔄 BERGEPAINT   TRAIL   20d | ₹+3,078 (+12.8%) | Cash: ₹54,329
+  🟢 BUY APOLLOHOSP   ₹ 6961.45 x   3 = ₹ 20,884 | Conf:73% | Cash:₹33,445
+  🟢 BUY NAM-INDIA    ₹  645.54 x  38 = ₹ 24,531 | Conf:72% | Cash:₹8,914
+  🟢 BUY AXISBANK     ₹ 1167.47 x   7 = ₹  8,172 | Conf:72% | Cash:₹742
+  🎯 UNIONBANK    TARGET   28d → TRAILING
+  🔄 UNIONBANK    TRAIL   29d | ₹+1,081 (+17.0%) | Cash: ₹8,255
+  🟢 BUY SUZLON       ₹   67.07 x 123 = ₹  8,249 | Conf:72% | Cash:₹6
+  🎯 HDFCBANK     TARGET   36d → TRAILING
+  🎯 NAM-INDIA    TARGET   28d → TRAILING
+  🔄 NAM-INDIA    TRAIL   30d | ₹+5,052 (+20.8%) | Cash: ₹29,588
+  🟢 BUY GRASIM       ₹ 2710.81 x   9 = ₹ 24,397 | Conf:74% | Cash:₹5,191
+  🟢 BUY HINDALCO     ₹  661.16 x   7 = ₹  4,628 | Conf:71% | Cash:₹563
+  ⏰ UPL          TSTOP    63d | ₹-1,266 | Cash: ₹24,036
+  🟢 BUY AARTIDRUGS   ₹  455.45 x  52 = ₹ 23,684 | Conf:71% | Cash:₹352
+  🎯 FEDERALBNK   TARGET   55d → TRAILING
+
+  📋 Closing 11 open positions...
+  ❌ LUPIN        END  59d | ₹-1,514
+  ✅ ULTRACEMCO   END  57d | ₹+1,685
+  ✅ FEDERALBNK   END  56d | ₹+3,584 (trailing)
+  ✅ HDFCBANK     END  54d | ₹+1,805 (trailing)
+  ✅ ICICIBANK    END  53d | ₹+1,244
+  ✅ APOLLOHOSP   END  46d | ₹+1,533
+  ✅ AXISBANK     END  46d | ₹+14
+  ❌ SUZLON       END  19d | ₹-10
+  ✅ GRASIM       END  15d | ₹+1,154
+  ✅ HINDALCO     END  15d | ₹+217
+  ✅ AARTIDRUGS   END   4d | ₹+660
+
+=================================================================
+💰 OPTION E v2: 247-STOCK UNIVERSE — RESULTS
+=================================================================
+Starting Capital:   ₹   200,000
+Final Capital:      ₹   220,110
+TOTAL RETURN:       ₹   +20,110 (+10.05%)
+Period:             2024-06-01 → 2025-07-01
+Universe:           247 stocks
+Strategy:           Conf≥60% + Momentum + Kelly + Trail
+-----------------------------------------------------------------
+Total Trades:       16
+Win Rate:           81.2% (13W / 3L)
+-----------------------------------------------------------------
+Gross P&L:          ₹   +20,832
+Total Charges:      ₹       722
+NET P&L:            ₹   +20,110
+-----------------------------------------------------------------
+Avg Win:            ₹    +1,762
+Avg Loss:           ₹      -930
+Max Win:            ₹    +5,052
+Max Loss:           ₹    -1,514
+=================================================================
+
+📋 Trade Journal:
+----------------------------------------------------------------------------------------------------------------------------------
+  ✅ KOTAKBANK    | 2025-03-20 → 2025-04-25 |  22d | ₹ 24,803 | ₹  +1,793 | Trailing Stop
+  ✅ BERGEPAINT   | 2025-03-24 → 2025-04-25 |  20d | ₹ 24,574 | ₹  +3,078 | Trailing Stop
+  ❌ UPL          | 2025-03-24 → 2025-06-26 |  63d | ₹ 24,739 | ₹  -1,266 | Time Stop (63d)
+  ❌ LUPIN        | 2025-04-04 → 2025-07-01 |  59d | ₹ 23,012 | ₹  -1,514 | End of Backtest
+  ✅ ULTRACEMCO   | 2025-04-08 → 2025-07-01 |  57d | ₹ 22,658 | ₹  +1,685 | End of Backtest
+  ✅ FEDERALBNK   | 2025-04-09 → 2025-07-01 |  56d | ₹ 24,980 | ₹  +3,584 | End of Backtest (trailing)
+  ✅ HDFCBANK     | 2025-04-15 → 2025-07-01 |  54d | ₹ 24,269 | ₹  +1,805 | End of Backtest (trailing)
+  ✅ ICICIBANK    | 2025-04-16 → 2025-07-01 |  53d | ₹ 24,450 | ₹  +1,244 | End of Backtest
+  ✅ UNIONBANK    | 2025-04-23 → 2025-06-04 |  29d | ₹  6,432 | ₹  +1,081 | Trailing Stop
+  ✅ NAM-INDIA    | 2025-04-28 → 2025-06-10 |  30d | ₹ 24,531 | ₹  +5,052 | Trailing Stop
+  ✅ APOLLOHOSP   | 2025-04-28 → 2025-07-01 |  46d | ₹ 20,884 | ₹  +1,533 | End of Backtest
+  ✅ AXISBANK     | 2025-04-28 → 2025-07-01 |  46d | ₹  8,172 | ₹     +14 | End of Backtest
+  ❌ SUZLON       | 2025-06-05 → 2025-07-01 |  19d | ₹  8,249 | ₹     -10 | End of Backtest
+  ✅ GRASIM       | 2025-06-11 → 2025-07-01 |  15d | ₹ 24,397 | ₹  +1,154 | End of Backtest
+  ✅ HINDALCO     | 2025-06-11 → 2025-07-01 |  15d | ₹  4,628 | ₹    +217 | End of Backtest
+  ✅ AARTIDRUGS   | 2025-06-26 → 2025-07-01 |   4d | ₹ 23,684 | ₹    +660 | End of Backtest
+
+📊 By Exit Reason:
+  End of Backtest               : 9 trades | ₹+4,983
+  End of Backtest (trailing)    : 2 trades | ₹+5,388
+  Time Stop (63d)               : 1 trades | ₹-1,266
+  Trailing Stop                 : 4 trades | ₹+11,004
+
+Saved to 'backtest_option_e_250_trades.csv'

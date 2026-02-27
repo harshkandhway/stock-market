@@ -1,0 +1,203 @@
+=================================================================
+PASS 1: Pre-computing all buy signals...
+=================================================================
+  Loaded 143 stocks + Nifty 50
+
+  [1/143] ABCAPITAL... 1
+  [2/143] ADANIPORTS... 5
+  [3/143] AMBUJACEM... 1
+  [4/143] APLAPOLLO... 0
+  [5/143] APOLLOHOSP... 2
+  [6/143] ASIANPAINT... 0
+  [7/143] ASTRAL... 0
+  [8/143] ATUL... 0
+  [9/143] AUBANK... 2
+  [10/143] AUROPHARMA... 0
+  [11/143] AXISBANK... 9
+  [12/143] BAJAJ-AUTO... 0
+  [13/143] BAJAJFINSV... 0
+  [14/143] BAJFINANCE... 0
+  [15/143] BALKRISIND... 0
+  [16/143] BANKBARODA... 0
+  [17/143] BANKINDIA... 1
+  [18/143] BATAINDIA... 0
+  [19/143] BDL... 2
+  [20/143] BEL... 0
+  [21/143] BHARATFORG... 0
+  [22/143] BHARTIARTL... 3
+  [23/143] BHEL... 0
+  [24/143] BIOCON... 0
+  [25/143] BPCL... 1
+  [26/143] BRITANNIA... 5
+  [27/143] CANFINHOME... 0
+  [28/143] CENTRALBK... 0
+  [29/143] CHOLAFIN... 0
+  [30/143] CIPLA... 0
+  [31/143] COALINDIA... 0
+  [32/143] COFORGE... 0
+  [33/143] CONCOR... 0
+  [34/143] CROMPTON... 0
+  [35/143] CUMMINSIND... 0
+  [36/143] DEEPAKNTR... 0
+  [37/143] DELHIVERY... 1
+  [38/143] DEVYANI... 0
+  [39/143] DIVISLAB... 1
+  [40/143] DIXON... 0
+  [41/143] DLF... 0
+  [42/143] DRREDDY... 0
+  [43/143] EICHERMOT... 1
+  [44/143] EMAMILTD... 0
+  [45/143] ESCORTS... 1
+  [46/143] FEDERALBNK... 6
+  [47/143] GAIL... 0
+  [48/143] GODREJPROP... 0
+  [49/143] GRASIM... 1
+  [50/143] HAL... 2
+  [51/143] HAVELLS... 0
+  [52/143] HCLTECH... 0
+  [53/143] HDFCAMC... 0
+  [54/143] HDFCBANK... 15
+  [55/143] HEROMOTOCO... 0
+  [56/143] HINDALCO... 0
+  [57/143] HONAUT... 0
+  [58/143] HUDCO... 1
+  [59/143] ICICIBANK... 3
+  [60/143] IDFCFIRSTB... 4
+  [61/143] IIFL... 0
+  [62/143] INDIGO... 1
+  [63/143] INFY... 0
+  [64/143] IPCALAB... 0
+  [65/143] IRCTC... 0
+  [66/143] IRFC... 0
+  [67/143] ITC... 0
+  [68/143] JINDALSTEL... 0
+  [69/143] JKCEMENT... 0
+  [70/143] JSWENERGY... 0
+  [71/143] JSWSTEEL... 0
+  [72/143] JUBLFOOD... 0
+  [73/143] KALYANKJIL... 0
+  [74/143] KEI... 0
+  [75/143] KOTAKBANK... 8
+  [76/143] KPITTECH... 0
+  [77/143] LALPATHLAB... 0
+  [78/143] LICHSGFIN... 0
+  [79/143] LICI... 0
+  [80/143] LINDEINDIA... 1
+  [81/143] LLOYDSME... 1
+  [82/143] LT... 1
+  [83/143] LTTS... 0
+  [84/143] M&M... 1
+  [85/143] MANAPPURAM... 11
+  [86/143] MARICO... 6
+  [87/143] MARUTI... 0
+  [88/143] MAXHEALTH... 2
+  [89/143] METROPOLIS... 0
+  [90/143] MPHASIS... 0
+  [91/143] MRF... 2
+  [92/143] MUTHOOTFIN... 0
+  [93/143] NAM-INDIA... 3
+  [94/143] NAUKRI... 1
+  [95/143] NESTLEIND... 5
+  [96/143] NHPC... 8
+  [97/143] NMDC... 0
+  [98/143] NTPC... 0
+  [99/143] OBEROIRLTY... 1
+  [100/143] ONGC... 0
+  [101/143] PAGEIND... 2
+  [102/143] PERSISTENT... 0
+  [103/143] PETRONET... 0
+  [104/143] PFC... 0
+  [105/143] PHOENIXLTD... 0
+  [106/143] PIDILITIND... 6
+  [107/143] PNB... 1
+  [108/143] POLYCAB... 0
+  [109/143] POONAWALLA... 0
+  [110/143] POWERGRID... 0
+  [111/143] PRESTIGE... 0
+  [112/143] RAMCOCEM... 1
+  [113/143] RECLTD... 0
+  [114/143] RELAXO... 0
+  [115/143] RELIANCE... 2
+  [116/143] SAIL... 0
+  [117/143] SBILIFE... 5
+  [118/143] SBIN... 3
+  [119/143] SHRIRAMFIN... 0
+  [120/143] SJVN... 0
+  [121/143] SOLARINDS... 1
+  [122/143] SUNDARMFIN... 0
+  [123/143] SUNPHARMA... 0
+  [124/143] SUNTV... 0
+  [125/143] SUPREMEIND... 1
+  [126/143] SYNGENE... 0
+  [127/143] TATACHEM... 0
+  [128/143] TATACONSUM... 4
+  [129/143] TATAELXSI... 0
+  [130/143] TATASTEEL... 0
+  [131/143] TCS... 0
+  [132/143] TECHM... 2
+  [133/143] THERMAX... 0
+  [134/143] TIINDIA... 0
+  [135/143] TITAN... 1
+  [136/143] TORNTPHARM... 1
+  [137/143] TRENT... 0
+  [138/143] TVSMOTOR... 2
+  [139/143] ULTRACEMCO... 0
+  [140/143] VEDL... 0
+  [141/143] VOLTAS... 0
+  [142/143] WIPRO... 0
+  [143/143] ZYDUSLIFE... 0
+
+  📊 Total signals: 152
+  📅 Range: 2025-04-24 → 2025-07-01
+
+=================================================================
+PASS 2: ₹100,000 portfolio | ₹20,000/position | 5 slots
+=================================================================
+  🟢 BUY AXISBANK     ₹ 1200.30 x  16 = ₹ 19,205 | Target: ₹1364.35 | Cash left: ₹80,795
+  🟢 BUY HDFCBANK     ₹  963.36 x  20 = ₹ 19,267 | Target: ₹1050.73 | Cash left: ₹61,528
+  🟢 BUY ICICIBANK    ₹ 1411.41 x  14 = ₹ 19,760 | Target: ₹1533.97 | Cash left: ₹41,768
+  🟢 BUY NHPC         ₹   89.69 x 222 = ₹ 19,911 | Target: ₹107.98 | Cash left: ₹21,857
+  🟢 BUY NESTLEIND    ₹ 1214.61 x  16 = ₹ 19,434 | Target: ₹1380.74 | Cash left: ₹2,423
+
+  📋 Closing 5 open positions at end of backtest...
+  ❌ AXISBANK     END          48d | ₹-493
+  ✅ HDFCBANK     END          47d | ₹+789
+  ✅ ICICIBANK    END          47d | ₹+224
+  ❌ NHPC         END          47d | ₹-999
+  ❌ NESTLEIND    END          47d | ₹-216
+
+=================================================================
+💰 ₹100,000 PORTFOLIO — ₹20,000/position — RESULTS
+=================================================================
+Starting Capital:   ₹   100,000
+Final Capital:      ₹    99,304
+TOTAL RETURN:       ₹      -696 (-0.70%)
+Period:             Jul 2024 → Jul 2025 (Upstox data)
+Position Size:      ₹20,000 (5 slots)
+-----------------------------------------------------------------
+Total Trades:       5
+Win Rate:           40.0% (2W / 3L)
+Max Positions Held: —
+-----------------------------------------------------------------
+Gross P&L:          ₹      -479
+Total Charges:      ₹       217
+NET P&L:            ₹      -696
+-----------------------------------------------------------------
+Avg Win:            ₹      +506
+Avg Loss:           ₹      -569
+Max Win:            ₹      +789
+Max Loss:           ₹      -999
+=================================================================
+
+📋 Trade Journal:
+------------------------------------------------------------------------------------------------------------------------
+  ❌ AXISBANK     | 2025-04-24 → 2025-07-01 |  48d | ₹ 19,205 invested | ₹   -493 | End of Backtest
+  ✅ HDFCBANK     | 2025-04-25 → 2025-07-01 |  47d | ₹ 19,267 invested | ₹   +789 | End of Backtest
+  ✅ ICICIBANK    | 2025-04-25 → 2025-07-01 |  47d | ₹ 19,760 invested | ₹   +224 | End of Backtest
+  ❌ NHPC         | 2025-04-25 → 2025-07-01 |  47d | ₹ 19,911 invested | ₹   -999 | End of Backtest
+  ❌ NESTLEIND    | 2025-04-25 → 2025-07-01 |  47d | ₹ 19,434 invested | ₹   -216 | End of Backtest
+
+📊 Summary by Exit Reason:
+  End of Backtest     : 5 trades | ₹-696 total P&L
+
+Saved to 'backtest_1lakh_portfolio_trades.csv'

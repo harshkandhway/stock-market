@@ -1,0 +1,607 @@
+=================================================================
+OPTION E v2: 500-STOCK UNIVERSE
+Period: 2024-06-01 → 2025-07-01
+=================================================================
+
+📥 Loading/downloading data for 500 stocks...
+  ... 50/500 loaded (0 downloaded from API)
+  ... 100/500 loaded (0 downloaded from API)
+  ... 150/500 loaded (0 downloaded from API)
+  ... 200/500 loaded (0 downloaded from API)
+  ... 250/500 loaded (0 downloaded from API)
+  ... 300/500 loaded (0 downloaded from API)
+  ... 350/500 loaded (0 downloaded from API)
+  ... 400/500 loaded (0 downloaded from API)
+  ... 450/500 loaded (0 downloaded from API)
+  ... 500/500 loaded (0 downloaded from API)
+  ✅ Loaded 470 stocks (of 500 attempted)
+
+=================================================================
+PASS 1: Scanning 470 stocks (conf≥60% + momentum)...
+=================================================================
+  [1/470] 20MICRONS... 2
+  [2/470] 21STCENMGM... 0
+  [3/470] 360ONE... 0
+  [4/470] 3IINFOLTD... 0
+  [5/470] 3MINDIA... 0
+  [6/470] 3PLAND... 0
+  [7/470] 5PAISA... 0
+  [8/470] 63MOONS... 0
+  [9/470] A2ZINFRA... 0
+  [10/470] AAATECH... 0
+  [11/470] AADHARHFC... 1
+  [12/470] AAKASH... 0
+  [13/470] AAREYDRUGS... 2
+  [14/470] AARON... 0
+  [15/470] AARTECH... 0
+  [16/470] AARTIDRUGS... 2
+  [17/470] AARTIIND... 0
+  [18/470] AARTIPHARM... 0
+  [19/470] AARTISURF... 0
+  [20/470] AARVI... 0
+  [21/470] AAVAS... 0
+  [22/470] ABB... 0
+  [23/470] ABBOTINDIA... 5
+  [24/470] ABCAPITAL... 0
+  [25/470] ABCOTS... 0
+  [26/470] ABDL... 0
+  [27/470] ABFRL... 0
+  [28/470] ABGSEC... 2
+  [29/470] ABINFRA... 0
+  [30/470] ABREL... 0
+  [31/470] ABSLAMC... 0
+  [32/470] ABSLBANETF... 0
+  [33/470] ABSLLIQUID... 2
+  [34/470] ABSLNN50ET... 1
+  [35/470] ABSLPSE... 2
+  [36/470] ACC... 0
+  [37/470] ACCELYA... 0
+  [38/470] ACCURACY... 0
+  [39/470] ACE... 0
+  [40/470] ACEINTEG... 0
+  [41/470] ACI... 0
+  [42/470] ACL... 0
+  [43/470] ACMESOLAR... 0
+  [44/470] ACUTAAS... 0
+  [45/470] ADANIENSOL... 0
+  [46/470] ADANIENT... 0
+  [47/470] ADANIGREEN... 0
+  [48/470] ADANIPORTS... 1
+  [49/470] ADANIPOWER... 1
+  [50/470] ADFFOODS... 0
+  [51/470] ADL... 0
+  [52/470] ADOR... 0
+  [53/470] ADROITINFO... 0
+  [54/470] ADSL... 0
+  [55/470] ADVANIHOTR... 0
+  [56/470] ADVENZYMES... 0
+  [57/470] AEGISLOG... 0
+  [58/470] AEROENTER... 0
+  [59/470] AEROFLEX... 0
+  [60/470] AERONEU... 0
+  [61/470] AETHER... 0
+  [62/470] AFCONS... 0
+  [63/470] AFFLE... 0
+  [64/470] AFFORDABLE... 0
+  [65/470] AFIL... 0
+  [66/470] AFSL... 0
+  [67/470] AGARIND... 0
+  [68/470] AGI... 0
+  [69/470] AGIIL... 0
+  [70/470] AGROPHOS... 0
+  [71/470] AHLADA... 0
+  [72/470] AHLEAST... 0
+  [73/470] AHLUCONT... 0
+  [74/470] AIAENG... 0
+  [75/470] AIIL... 0
+  [76/470] AIRAN... 0
+  [77/470] AIROLAM... 0
+  [78/470] AJANTPHARM... 0
+  [79/470] AJMERA... 1
+  [80/470] AJOONI... 0
+  [81/470] AKASH... 0
+  [82/470] AKG... 0
+  [83/470] AKI... 0
+  [84/470] AKSHAR... 0
+  [85/470] AKSHARCHEM... 0
+  [86/470] AKSHOPTFBR... 0
+  [87/470] AKUMS... 0
+  [88/470] AKZOINDIA... 2
+  [89/470] ALANKIT... 0
+  [90/470] ALBERTDAVD... 0
+  [91/470] ALEMBICLTD... 0
+  [92/470] ALICON... 0
+  [93/470] ALIVUS... 0
+  [94/470] ALKALI... 0
+  [95/470] ALKEM... 2
+  [96/470] ALKYLAMINE... 0
+  [97/470] ALLCARGO... 0
+  [98/470] ALLDIGI... 0
+  [99/470] ALMONDZ... 0
+  [100/470] ALOKINDS... 1
+  [101/470] ALPA... 1
+  [102/470] ALPHA... 1
+  [103/470] ALPHAETF... 0
+  [104/470] ALPHAGEO... 0
+  [105/470] ALPL30IETF... 1
+  [106/470] AMBER... 0
+  [107/470] AMBICAAGAR... 0
+  [108/470] AMBIKCO... 0
+  [109/470] AMBUJACEM... 0
+  [110/470] AMDIND... 0
+  [111/470] AMJLAND... 0
+  [112/470] AMNPLST... 0
+  [113/470] AMRUTANJAN... 0
+  [114/470] ANANDRATHI... 0
+  [115/470] ANANTRAJ... 0
+  [116/470] ANDHRAPAP... 0
+  [117/470] ANDHRSUGAR... 0
+  [118/470] ANIKINDS... 0
+  [119/470] ANMOL... 0
+  [120/470] ANTELOPUS... 0
+  [121/470] ANTGRAPHIC... 0
+  [122/470] ANUHPHR... 0
+  [123/470] ANUP... 0
+  [124/470] ANURAS... 0
+  [125/470] APARINDS... 0
+  [126/470] APCL... 1
+  [127/470] APCOTEXIND... 1
+  [128/470] APEX... 0
+  [129/470] APLAPOLLO... 0
+  [130/470] APLLTD... 0
+  [131/470] APOLLO... 0
+  [132/470] APOLLOHOSP... 1
+  [133/470] APOLLOPIPE... 0
+  [134/470] APOLLOTYRE... 0
+  [135/470] APOLSINHOT... 0
+  [136/470] APTECHT... 0
+  [137/470] APTUS... 0
+  [138/470] AQYLON... 0
+  [139/470] ARCHIDPLY... 0
+  [140/470] ARCHIES... 0
+  [141/470] ARE&M... 0
+  [142/470] ARENTERP... 0
+  [143/470] ARIES... 0
+  [144/470] ARIHANTCAP... 0
+  [145/470] ARIHANTSUP... 0
+  [146/470] ARKADE... 0
+  [147/470] ARMANFIN... 0
+  [148/470] AROGRANITE... 0
+  [149/470] ARROWGREEN... 0
+  [150/470] ARTEMISMED... 0
+  [151/470] ARTNIRMAN... 0
+  [152/470] ARVIND... 0
+  [153/470] ARVINDFASN... 0
+  [154/470] ARVSMART... 0
+  [155/470] ASAHIINDIA... 0
+  [156/470] ASAHISONG... 2
+  [157/470] ASAL... 0
+  [158/470] ASALCBR... 0
+  [159/470] ASHAPURMIN... 0
+  [160/470] ASHIANA... 0
+  [161/470] ASHIMASYN... 0
+  [162/470] ASHOKA... 0
+  [163/470] ASHOKAMET... 0
+  [164/470] ASHOKLEY... 2
+  [165/470] ASIANENE... 0
+  [166/470] ASIANHOTNR... 0
+  [167/470] ASIANPAINT... 0
+  [168/470] ASIANTILES... 0
+  [169/470] ASKAUTOLTD... 1
+  [170/470] ASMS... 0
+  [171/470] ASPINWALL... 0
+  [172/470] ASTEC... 0
+  [173/470] ASTERDM... 0
+  [174/470] ASTRAL... 0
+  [175/470] ASTRAMICRO... 0
+  [176/470] ASTRAZEN... 0
+  [177/470] ASTRON... 0
+  [178/470] ATALREAL... 0
+  [179/470] ATAM... 0
+  [180/470] ATGL... 0
+  [181/470] ATL... 0
+  [182/470] ATLANTAA... 0
+  [183/470] ATLASCYCLE... 0
+  [184/470] ATUL... 0
+  [185/470] ATULAUTO... 0
+  [186/470] AUBANK... 0
+  [187/470] AURIONPRO... 0
+  [188/470] AUROPHARMA... 0
+  [189/470] AURUM... 0
+  [190/470] AUTOAXLES... 0
+  [191/470] AUTOBEES... 0
+  [192/470] AUTOIETF... 0
+  [193/470] AUTOIND... 0
+  [194/470] AVADHSUGAR... 0
+  [195/470] AVALON... 0
+  [196/470] AVANTEL... 0
+  [197/470] AVANTIFEED... 0
+  [198/470] AVG... 0
+  [199/470] AVL... 0
+  [200/470] AVONMORE... 1
+  [201/470] AVROIND... 0
+  [202/470] AVTNPL... 0
+  [203/470] AWFIS... 0
+  [204/470] AWHCL... 0
+  [205/470] AWL... 0
+  [206/470] AXISBANK... 1
+  [207/470] AXISBNKETF... 1
+  [208/470] AXISBPSETF... 6
+  [209/470] AXISCADES... 0
+  [210/470] AXISCETF... 2
+  [211/470] AXISGOLD... 1
+  [212/470] AXISHCETF... 5
+  [213/470] AXISILVER... 0
+  [214/470] AXISNIFTY... 1
+  [215/470] AXISTECETF... 0
+  [216/470] AXSENSEX... 3
+  [217/470] AYMSYNTEX... 1
+  [218/470] AZAD... 0
+  [219/470] BAFNAPH... 0
+  [220/470] BAGFILMS... 0
+  [221/470] BAIDFIN... 0
+  [222/470] BAJAJ-AUTO... 0
+  [223/470] BAJAJCON... 0
+  [224/470] BAJAJELEC... 0
+  [225/470] BAJAJFINSV... 0
+  [226/470] BAJAJHCARE... 0
+  [227/470] BAJAJHFL... 0
+  [228/470] BAJAJHIND... 0
+  [229/470] BAJAJHLDNG... 0
+  [230/470] BAJEL... 0
+  [231/470] BAJFINANCE... 1
+  [232/470] BALAJEE... 0
+  [233/470] BALAJITELE... 0
+  [234/470] BALAMINES... 0
+  [235/470] BALAXI... 0
+  [236/470] BALKRISHNA... 0
+  [237/470] BALKRISIND... 0
+  [238/470] BALMLAWRIE... 0
+  [239/470] BALPHARMA... 0
+  [240/470] BALRAMCHIN... 0
+  [241/470] BALUFORGE... 0
+  [242/470] BANARBEADS... 0
+  [243/470] BANARISUG... 0
+  [244/470] BANCOINDIA... 1
+  [245/470] BANDHANBNK... 1
+  [246/470] BANG... 0
+  [247/470] BANKA... 0
+  [248/470] BANKADD... 0
+  [249/470] BANKBARODA... 0
+  [250/470] BANKBEES... 1
+  [251/470] BANKBETA... 1
+  [252/470] BANKBETF... 1
+  [253/470] BANKETF... 0
+  [254/470] BANKIETF... 3
+  [255/470] BANKINDIA... 0
+  [256/470] BANKNIFTY1... 4
+  [257/470] BANKPSU... 0
+  [258/470] BANSALWIRE... 0
+  [259/470] BANSWRAS... 0
+  [260/470] BASF... 0
+  [261/470] BASML... 0
+  [262/470] BATAINDIA... 0
+  [263/470] BAYERCROP... 0
+  [264/470] BBETF0432... 1
+  [265/470] BBL... 0
+  [266/470] BBNPNBETF... 0
+  [267/470] BBNPPGOLD... 3
+  [268/470] BBOX... 0
+  [269/470] BBTC... 0
+  [270/470] BBTCL... 0
+  [271/470] BCLIND... 0
+  [272/470] BCONCEPTS... 0
+  [273/470] BDL... 0
+  [274/470] BEARDSELL... 0
+  [275/470] BEL... 0
+  [276/470] BERGEPAINT... 1
+  [277/470] BHARATFORG... 0
+  [278/470] BHARTIARTL... 0
+  [279/470] BHEL... 0
+  [280/470] BIOCON... 2
+  [281/470] BLUEDART... 0
+  [282/470] BOSCHLTD... 0
+  [283/470] BPCL... 1
+  [284/470] BRITANNIA... 1
+  [285/470] BSE... 0
+  [286/470] CAMPUS... 0
+  [287/470] CAMS... 0
+  [288/470] CANBK... 0
+  [289/470] CANFINHOME... 0
+  [290/470] CARBORUNIV... 0
+  [291/470] CDSL... 0
+  [292/470] CEATLTD... 0
+  [293/470] CENTRALBK... 0
+  [294/470] CGPOWER... 0
+  [295/470] CHAMBLFERT... 0
+  [296/470] CHOLAFIN... 0
+  [297/470] CIPLA... 1
+  [298/470] CLEAN... 0
+  [299/470] COALINDIA... 0
+  [300/470] COCHINSHIP... 1
+  [301/470] COFORGE... 0
+  [302/470] COLPAL... 0
+  [303/470] CONCOR... 0
+  [304/470] COROMANDEL... 0
+  [305/470] CROMPTON... 0
+  [306/470] CUMMINSIND... 0
+  [307/470] DABUR... 0
+  [308/470] DEEPAKNTR... 0
+  [309/470] DELHIVERY... 0
+  [310/470] DEVYANI... 0
+  [311/470] DIVISLAB... 0
+  [312/470] DIXON... 0
+  [313/470] DLF... 0
+  [314/470] DMART... 0
+  [315/470] DRREDDY... 0
+  [316/470] EICHERMOT... 1
+  [317/470] EIDPARRY... 0
+  [318/470] ELGIEQUIP... 0
+  [319/470] EMAMILTD... 0
+  [320/470] EMCURE... 0
+  [321/470] ESCORTS... 0
+  [322/470] EXIDEIND... 0
+  [323/470] FEDERALBNK... 2
+  [324/470] FINEORG... 1
+  [325/470] FINPIPE... 0
+  [326/470] FLUOROCHEM... 0
+  [327/470] GAIL... 0
+  [328/470] GLENMARK... 0
+  [329/470] GNFC... 0
+  [330/470] GODREJCP... 0
+  [331/470] GODREJPROP... 0
+  [332/470] GPPL... 0
+  [333/470] GRAPHITE... 0
+  [334/470] GRASIM... 1
+  [335/470] GRINDWELL... 0
+  [336/470] GRSE... 0
+  [337/470] GSPL... 1
+  [338/470] HAL... 0
+  [339/470] HAPPSTMNDS... 0
+  [340/470] HATSUN... 0
+  [341/470] HAVELLS... 0
+  [342/470] HCLTECH... 0
+  [343/470] HDFCAMC... 0
+  [344/470] HDFCBANK... 3
+  [345/470] HEROMOTOCO... 0
+  [346/470] HINDALCO... 1
+  [347/470] HINDCOPPER... 0
+  [348/470] HINDPETRO... 0
+  [349/470] HONAUT... 0
+  [350/470] HUDCO... 1
+  [351/470] ICICIBANK... 1
+  [352/470] IDEA... 0
+  [353/470] IDFCFIRSTB... 0
+  [354/470] IEX... 0
+  [355/470] IIFL... 0
+  [356/470] INDIANB... 0
+  [357/470] INDIGO... 0
+  [358/470] INFY... 0
+  [359/470] IOC... 0
+  [360/470] IPCALAB... 1
+  [361/470] IRCTC... 0
+  [362/470] IREDA... 0
+  [363/470] IRFC... 0
+  [364/470] ITC... 0
+  [365/470] JINDALSTEL... 2
+  [366/470] JKCEMENT... 0
+  [367/470] JSWENERGY... 0
+  [368/470] JSWINFRA... 0
+  [369/470] JSWSTEEL... 0
+  [370/470] JUBLFOOD... 0
+  [371/470] KAJARIACER... 0
+  [372/470] KALYANKJIL... 1
+  [373/470] KEI... 0
+  [374/470] KOTAKBANK... 4
+  [375/470] KPITTECH... 1
+  [376/470] LALPATHLAB... 0
+  [377/470] LICHSGFIN... 0
+  [378/470] LICI... 0
+  [379/470] LINDEINDIA... 0
+  [380/470] LLOYDSME... 0
+  [381/470] LT... 1
+  [382/470] LTTS... 0
+  [383/470] LUPIN... 1
+  [384/470] M&M... 0
+  [385/470] MANAPPURAM... 1
+  [386/470] MARICO... 0
+  [387/470] MARUTI... 0
+  [388/470] MAXHEALTH... 2
+  [389/470] MCX... 0
+  [390/470] METROPOLIS... 0
+  [391/470] MOTHERSON... 0
+  [392/470] MPHASIS... 0
+  [393/470] MRF... 0
+  [394/470] MUTHOOTFIN... 0
+  [395/470] NAM-INDIA... 1
+  [396/470] NAUKRI... 0
+  [397/470] NAVINFLUOR... 0
+  [398/470] NESTLEIND... 1
+  [399/470] NHPC... 3
+  [400/470] NMDC... 0
+  [401/470] NTPC... 0
+  [402/470] NYKAA... 1
+  [403/470] OBEROIRLTY... 0
+  [404/470] OFSS... 0
+  [405/470] ONGC... 0
+  [406/470] PAGEIND... 1
+  [407/470] PAYTM... 0
+  [408/470] PERSISTENT... 0
+  [409/470] PETRONET... 0
+  [410/470] PFC... 0
+  [411/470] PHOENIXLTD... 0
+  [412/470] PIDILITIND... 0
+  [413/470] PIIND... 0
+  [414/470] PNB... 0
+  [415/470] POLICYBZR... 1
+  [416/470] POLYCAB... 0
+  [417/470] POONAWALLA... 0
+  [418/470] POWERGRID... 1
+  [419/470] PRESTIGE... 0
+  [420/470] PVRINOX... 0
+  [421/470] RAMCOCEM... 0
+  [422/470] RATNAMANI... 0
+  [423/470] RAYMOND... 0
+  [424/470] RECLTD... 0
+  [425/470] RELAXO... 0
+  [426/470] RELIANCE... 0
+  [427/470] SAIL... 0
+  [428/470] SAPPHIRE... 1
+  [429/470] SBILIFE... 0
+  [430/470] SBIN... 0
+  [431/470] SHRIRAMFIN... 0
+  [432/470] SIEMENS... 0
+  [433/470] SJVN... 0
+  [434/470] SOLARINDS... 0
+  [435/470] SRF... 0
+  [436/470] STARHEALTH... 0
+  [437/470] SUNDARMFIN... 0
+  [438/470] SUNPHARMA... 0
+  [439/470] SUNTV... 0
+  [440/470] SUPREMEIND... 0
+  [441/470] SUZLON... 2
+  [442/470] SYNGENE... 0
+  [443/470] TANLA... 0
+  [444/470] TATACHEM... 0
+  [445/470] TATACOMM... 0
+  [446/470] TATACONSUM... 0
+  [447/470] TATAELXSI... 0
+  [448/470] TATAPOWER... 0
+  [449/470] TATASTEEL... 0
+  [450/470] TATATECH... 0
+  [451/470] TCS... 0
+  [452/470] TECHM... 0
+  [453/470] THERMAX... 0
+  [454/470] TIINDIA... 0
+  [455/470] TITAN... 1
+  [456/470] TORNTPHARM... 0
+  [457/470] TRENT... 0
+  [458/470] TVSMOTOR... 0
+  [459/470] ULTRACEMCO... 1
+  [460/470] UNIONBANK... 1
+  [461/470] UPL... 1
+  [462/470] UTIAMC... 0
+  [463/470] VBL... 0
+  [464/470] VEDL... 1
+  [465/470] VOLTAS... 0
+  [466/470] WHIRLPOOL... 0
+  [467/470] WIPRO... 0
+  [468/470] YESBANK... 0
+  [469/470] ZEEL... 0
+  [470/470] ZYDUSLIFE... 0
+
+  📊 Total signals: 127
+  📅 Range: 2025-03-20 → 2025-07-01
+/Users/lexplosion/Trades/stock-market/backtests/backtest_option_e_250.py:262: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  sdf['month'] = sdf['entry_date'].dt.to_period('M')
+
+  📅 Signals by month:
+    2025-03: 5 signals
+    2025-04: 28 signals
+    2025-05: 29 signals
+    2025-06: 61 signals
+    2025-07: 4 signals
+
+=================================================================
+PASS 2: ₹200,000 | Kelly sizing | Trailing stops
+=================================================================
+  🟢 BUY KOTAKBANK    ₹  406.61 x  61 = ₹ 24,803 | Conf:72% | Cash:₹175,197
+  🟢 BUY UPL          ₹  668.62 x  37 = ₹ 24,739 | Conf:78% | Cash:₹150,458
+  🟢 BUY BERGEPAINT   ₹  501.50 x  49 = ₹ 24,574 | Conf:74% | Cash:₹125,885
+  🟢 BUY BBNPPGOLD    ₹   85.69 x 291 = ₹ 24,935 | Conf:71% | Cash:₹100,950
+  🟢 BUY AXISGOLD     ₹   76.13 x 328 = ₹ 24,969 | Conf:71% | Cash:₹75,981
+  🟢 BUY ASKAUTOLTD   ₹  450.45 x  55 = ₹ 24,775 | Conf:76% | Cash:₹51,206
+  🟢 BUY AXISBPSETF   ₹   12.81 x 1951 = ₹ 24,998 | Conf:73% | Cash:₹26,208
+  🟢 BUY LUPIN        ₹ 2092.04 x  11 = ₹ 23,012 | Conf:74% | Cash:₹3,196
+  🟢 BUY FEDERALBNK   ₹  190.69 x  16 = ₹  3,051 | Conf:76% | Cash:₹145
+  🎯 KOTAKBANK    TARGET   18d → TRAILING
+  🎯 AXISGOLD     TARGET   14d → TRAILING
+  🎯 BBNPPGOLD    TARGET   16d → TRAILING
+  🎯 BERGEPAINT   TARGET   18d → TRAILING
+  🔄 AXISGOLD     TRAIL   16d | ₹+1,399 (+5.8%) | Cash: ₹26,513
+  🟢 BUY UNIONBANK    ₹  128.64 x 194 = ₹ 24,956 | Conf:75% | Cash:₹1,557
+  🔄 KOTAKBANK    TRAIL   22d | ₹+1,793 (+7.5%) | Cash: ₹28,153
+  🔄 BERGEPAINT   TRAIL   20d | ₹+3,078 (+12.8%) | Cash: ₹55,804
+  🟢 BUY ALPA         ₹  115.01 x 217 = ₹ 24,958 | Conf:75% | Cash:₹30,846
+  🔄 BBNPPGOLD    TRAIL   21d | ₹+2,128 (+8.8%) | Cash: ₹57,909
+  🟢 BUY AXISHCETF    ₹  141.82 x 176 = ₹ 24,961 | Conf:76% | Cash:₹32,948
+  🟢 BUY APOLLOHOSP   ₹ 6961.45 x   3 = ₹ 20,884 | Conf:73% | Cash:₹12,064
+  🟢 BUY NAM-INDIA    ₹  645.54 x  18 = ₹ 11,620 | Conf:72% | Cash:₹444
+  🎯 UNIONBANK    TARGET   29d → TRAILING
+  🔄 UNIONBANK    TRAIL   30d | ₹+4,194 (+17.0%) | Cash: ₹29,594
+  🟢 BUY BANKIETF     ₹   57.86 x 432 = ₹ 24,995 | Conf:73% | Cash:₹4,599
+  🟢 BUY BANKNIFTY1   ₹  571.24 x   8 = ₹  4,570 | Conf:70% | Cash:₹29
+  🎯 NAM-INDIA    TARGET   28d → TRAILING
+  🔄 NAM-INDIA    TRAIL   30d | ₹+2,393 (+20.8%) | Cash: ₹14,042
+  🟢 BUY BBNPPGOLD    ₹   94.09 x 149 = ₹ 14,020 | Conf:77% | Cash:₹22
+  🎯 ASKAUTOLTD   TARGET   59d → TRAILING
+  🔄 ASKAUTOLTD   TRAIL   62d | ₹+3,755 (+15.4%) | Cash: ₹28,552
+  🎯 FEDERALBNK   TARGET   56d → TRAILING
+  🟢 BUY AXSENSEX     ₹   86.49 x 289 = ₹ 24,995 | Conf:76% | Cash:₹3,557
+  🟢 BUY ABSLPSE      ₹   10.30 x 345 = ₹  3,554 | Conf:75% | Cash:₹3
+
+  📋 Closing 12 open positions...
+  ✅ UPL          END  68d | ₹+10
+  ❌ AXISBPSETF   END  62d | ₹-203
+  ❌ LUPIN        END  60d | ₹-1,514
+  ✅ FEDERALBNK   END  57d | ₹+438 (trailing)
+  ❌ ALPA         END  48d | ₹-2,739
+  ✅ AXISHCETF    END  46d | ₹+864
+  ✅ APOLLOHOSP   END  46d | ₹+1,533
+  ✅ BANKIETF     END  20d | ₹+213
+  ✅ BANKNIFTY1   END  20d | ₹+151
+  ✅ BBNPPGOLD    END  16d | ₹+45
+  ❌ AXSENSEX     END   1d | ₹-336
+  ❌ ABSLPSE      END   1d | ₹-29
+
+=================================================================
+💰 OPTION E v2: 470-STOCK UNIVERSE — RESULTS
+=================================================================
+Starting Capital:   ₹   200,000
+Final Capital:      ₹   217,173
+TOTAL RETURN:       ₹   +17,173 (+8.59%)
+Period:             2024-06-01 → 2025-07-01
+Universe:           470 stocks
+Strategy:           Conf≥60% + Momentum + Kelly + Trail
+-----------------------------------------------------------------
+Total Trades:       19
+Win Rate:           73.7% (14W / 5L)
+-----------------------------------------------------------------
+Gross P&L:          ₹   +18,037
+Total Charges:      ₹       864
+NET P&L:            ₹   +17,173
+-----------------------------------------------------------------
+Avg Win:            ₹    +1,571
+Avg Loss:           ₹      -964
+Max Win:            ₹    +4,194
+Max Loss:           ₹    -2,739
+=================================================================
+
+📋 Trade Journal:
+----------------------------------------------------------------------------------------------------------------------------------
+  ✅ KOTAKBANK    | 2025-03-20 → 2025-04-25 |  22d | ₹ 24,803 | ₹  +1,793 | Trailing Stop
+  ✅ BERGEPAINT   | 2025-03-24 → 2025-04-25 |  20d | ₹ 24,574 | ₹  +3,078 | Trailing Stop
+  ✅ UPL          | 2025-03-24 → 2025-07-01 |  68d | ₹ 24,739 | ₹     +10 | End of Backtest
+  ✅ BBNPPGOLD    | 2025-03-25 → 2025-04-28 |  21d | ₹ 24,935 | ₹  +2,128 | Trailing Stop
+  ✅ AXISGOLD     | 2025-03-26 → 2025-04-23 |  16d | ₹ 24,969 | ₹  +1,399 | Trailing Stop
+  ✅ ASKAUTOLTD   | 2025-04-01 → 2025-07-01 |  62d | ₹ 24,775 | ₹  +3,755 | Trailing Stop
+  ❌ AXISBPSETF   | 2025-04-02 → 2025-07-01 |  62d | ₹ 24,998 | ₹    -203 | End of Backtest
+  ❌ LUPIN        | 2025-04-04 → 2025-07-01 |  60d | ₹ 23,012 | ₹  -1,514 | End of Backtest
+  ✅ FEDERALBNK   | 2025-04-09 → 2025-07-01 |  57d | ₹  3,051 | ₹    +438 | End of Backtest (trailing)
+  ✅ UNIONBANK    | 2025-04-23 → 2025-06-04 |  30d | ₹ 24,956 | ₹  +4,194 | Trailing Stop
+  ❌ ALPA         | 2025-04-25 → 2025-07-01 |  48d | ₹ 24,958 | ₹  -2,739 | End of Backtest
+  ✅ AXISHCETF    | 2025-04-28 → 2025-07-01 |  46d | ₹ 24,961 | ₹    +864 | End of Backtest
+  ✅ APOLLOHOSP   | 2025-04-28 → 2025-07-01 |  46d | ₹ 20,884 | ₹  +1,533 | End of Backtest
+  ✅ NAM-INDIA    | 2025-04-28 → 2025-06-10 |  30d | ₹ 11,620 | ₹  +2,393 | Trailing Stop
+  ✅ BANKIETF     | 2025-06-04 → 2025-07-01 |  20d | ₹ 24,995 | ₹    +213 | End of Backtest
+  ✅ BANKNIFTY1   | 2025-06-04 → 2025-07-01 |  20d | ₹  4,570 | ₹    +151 | End of Backtest
+  ✅ BBNPPGOLD    | 2025-06-10 → 2025-07-01 |  16d | ₹ 14,020 | ₹     +45 | End of Backtest
+  ❌ AXSENSEX     | 2025-07-01 → 2025-07-01 |   1d | ₹ 24,995 | ₹    -336 | End of Backtest
+  ❌ ABSLPSE      | 2025-07-01 → 2025-07-01 |   1d | ₹  3,554 | ₹     -29 | End of Backtest
+
+📊 By Exit Reason:
+  End of Backtest               : 11 trades | ₹-2,004
+  End of Backtest (trailing)    : 1 trades | ₹+438
+  Trailing Stop                 : 7 trades | ₹+18,739
+
+Saved to 'backtest_option_e_250_trades.csv'
